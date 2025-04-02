@@ -1,6 +1,6 @@
 module git.wh64.net/muffin/goMuffin
 
-go 1.23.2
+go 1.24.1
 
 require (
 	github.com/LoperLee/golang-hangul-toolkit v1.1.0
