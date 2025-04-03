@@ -140,7 +140,7 @@ func dataLengthRun(s *discordgo.Session, m any) {
 	// 지금은 임시방편
 	embed := &discordgo.MessageEmbed{
 		Title:       "저장된 데이터량",
-		Description: "총합: " + utils.InlineCode(strconv.Itoa(sum)) + "개",
+		Description: fmt.Sprintf("총합: %s개", utils.InlineCode(strconv.Itoa(sum))),
 		Color:       int(utils.EDefault),
 		Fields: []*discordgo.MessageEmbedField{
 			{
@@ -163,7 +163,7 @@ func dataLengthRun(s *discordgo.Session, m any) {
 				Inline: true,
 			},
 			{
-				Name:   username + "님이 가르쳐준 데이터량",
+				Name:   fmt.Sprintf("%s님이 가르쳐준 데이터량", username),
 				Value:  utils.InlineCode(strconv.Itoa(userLearnLength)) + "개",
 				Inline: true,
 			},

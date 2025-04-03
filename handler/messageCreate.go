@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"strings"
@@ -65,7 +66,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 				if _, err := databases.Texts.InsertOne(context.TODO(), databases.InsertText{
 					Text:      content,
-					Persona:   "user:" + m.Author.Username,
+					Persona:   fmt.Sprintf("user:%s", m.Author.Username),
 					CreatedAt: time.Now(),
 				}); err != nil {
 					log.Fatalln(err)
@@ -108,7 +109,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if x > 2 && len(learnDatas) != 0 {
 				data := learnDatas[rand.Intn(len(learnDatas))]
 				user, _ := s.User(data.UserId)
-				s.ChannelMessageSendReply(m.ChannelID, data.Result+"\n"+utils.InlineCode(user.Username+"님이 알려주셨어요."), m.Reference())
+				s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
 				return
 			}
 

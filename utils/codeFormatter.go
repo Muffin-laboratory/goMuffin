@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 )
 
@@ -18,12 +18,12 @@ const (
 	RelativeTime = "R"
 )
 
-func InlineCode(str string) string {
-	return "`" + str + "`"
+func InlineCode(content string) string {
+	return fmt.Sprintf("`%s`", content)
 }
 
 func CodeBlockWithLanguage(language string, content string) string {
-	return "```" + language + "\n" + content + "\n" + "```"
+	return fmt.Sprintf("```%s\n%s\n```", language, content)
 }
 
 func CodeBlock(content string) string {
@@ -31,9 +31,9 @@ func CodeBlock(content string) string {
 }
 
 func Time(time *time.Time) string {
-	return "<t:" + strconv.FormatInt(time.Unix(), 10) + ">"
+	return fmt.Sprintf("<t:%d>", time.Unix())
 }
 
 func TimeWithStyle(time *time.Time, style string) string {
-	return "<t:" + strconv.FormatInt(time.Unix(), 10) + ":" + style + ">"
+	return fmt.Sprintf("<t:%d:%s>", time.Unix(), style)
 }

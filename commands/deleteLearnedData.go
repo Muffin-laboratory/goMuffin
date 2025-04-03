@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -121,7 +122,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		data := datas[i]
 
 		options = append(options, discordgo.SelectMenuOption{
-			Label:       strconv.Itoa(i+1) + "번 지식",
+			Label:       fmt.Sprintf("%d번 지식", i+1),
 			Description: data.Result,
 			Value:       utils.DeleteLearnedData + data.Id.Hex() + `&No.` + strconv.Itoa(i+1),
 		})
@@ -129,10 +130,9 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 	}
 
 	embed := &discordgo.MessageEmbed{
-		Title: command + " 삭제",
-		Description: utils.CodeBlockWithLanguage("md", "# "+command+" 에 대한 대답 중 하나를 선ㅌ택하여 삭제해주세요.\n"+
-			description),
-		Color: int(utils.EDefault),
+		Title:       fmt.Sprintf("%s 삭제", command),
+		Description: utils.CodeBlockWithLanguage("md", fmt.Sprintf("# %s에 대한 대답 중 하나를 선ㅌ택하여 삭제해주세요.\n%s", command, description)),
+		Color:       int(utils.EDefault),
 	}
 
 	components := []discordgo.MessageComponent{

@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"runtime"
 
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -28,11 +29,11 @@ var InformationCommand *Command = &Command{
 func informationRun(s *discordgo.Session, m any) {
 	owner, _ := s.User(configs.Config.Bot.OwnerId)
 	embed := &discordgo.MessageEmbed{
-		Title: s.State.User.Username + "의 정보",
+		Title: fmt.Sprintf("%s의 정보", s.State.User.Username),
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "운영 체제",
-				Value: utils.InlineCode(runtime.GOOS + " " + runtime.GOARCH),
+				Value: utils.InlineCode(fmt.Sprintf("%s %s", runtime.GOOS, runtime.GOARCH)),
 			},
 			{
 				Name:  "제작자",

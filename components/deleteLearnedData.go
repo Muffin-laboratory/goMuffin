@@ -2,6 +2,7 @@ package components
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/commands"
@@ -68,7 +69,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 			Embeds: &[]*discordgo.MessageEmbed{
 				{
 					Title:       "✅ 삭제 완료",
-					Description: itemId + "번을 삭ㅈ제했어요.",
+					Description: fmt.Sprintf("%s번을 삭ㅈ제했어요.", itemId),
 					Color:       int(utils.ESuccess),
 				},
 			},

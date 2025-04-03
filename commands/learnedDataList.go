@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -34,7 +33,7 @@ var LearnedDataListCommand *Command = &Command{
 
 func getDescriptions(datas *[]databases.Learn) (descriptions []string) {
 	for _, data := range *datas {
-		descriptions = append(descriptions, "- "+data.Command+": "+data.Result)
+		descriptions = append(descriptions, fmt.Sprintf("- %s: %s", data.Command, data.Result))
 	}
 	return
 }
@@ -103,8 +102,8 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 	cur.All(context.TODO(), &datas)
 
 	embed := &discordgo.MessageEmbed{
-		Title:       globalName + "님이 알려주신 지식",
-		Description: utils.CodeBlockWithLanguage("md", "# 총 "+strconv.Itoa(len(datas))+"개에요.\n"+strings.Join(getDescriptions(&datas), "\n")),
+		Title:       fmt.Sprintf("%s님이 알려주신 지식", globalName),
+		Description: utils.CodeBlockWithLanguage("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(datas), strings.Join(getDescriptions(&datas), "\n"))),
 		Color:       int(utils.EDefault),
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: avatarUrl,

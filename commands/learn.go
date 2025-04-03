@@ -53,7 +53,7 @@ var LearnCommand *Command = &Command{
 
 func addPrefix(arr []string) (newArr []string) {
 	for _, item := range arr {
-		newArr = append(newArr, "- "+item)
+		newArr = append(newArr, fmt.Sprintf("- %s", item))
 	}
 	return
 }
@@ -123,7 +123,8 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	disallows := []string{
 		"@everyone",
 		"@here",
-		"<@" + configs.Config.Bot.OwnerId + ">"}
+		fmt.Sprintf("<@%s>", configs.Config.Bot.OwnerId),
+	}
 
 	for _, ig := range ignores {
 		if strings.Contains(command, ig) {
@@ -191,7 +192,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 	embed := &discordgo.MessageEmbed{
 		Title:       "✅ 성공",
-		Description: hangul.GetJosa(command, hangul.EUL_REUL) + " 배웠어요.",
+		Description: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
 		Color:       int(utils.ESuccess),
 	}
 

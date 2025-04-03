@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -50,7 +51,7 @@ func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
 	commands := []string{}
 	for _, command := range d.Commands {
 		if command.Category == category {
-			commands = append(commands, "- "+command.Name+": "+command.Description)
+			commands = append(commands, fmt.Sprintf("- %s: %s", command.Name, command.Description))
 		}
 	}
 	return commands
@@ -61,7 +62,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	embed := &discordgo.MessageEmbed{
 		Color: int(utils.EDefault),
 		Footer: &discordgo.MessageEmbedFooter{
-			Text: "버전:" + configs.MUFFIN_VERSION,
+			Text: fmt.Sprintf("버전: %s", configs.MUFFIN_VERSION),
 		},
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: s.State.User.AvatarURL("512"),
@@ -82,13 +83,12 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	}
 
 	if commandName == "" || Discommand.Commands[commandName] == nil {
-		embed.Title = s.State.User.Username + "의 도움말"
+		embed.Title = fmt.Sprintf("%s의 도움말", s.State.User.Username)
 		embed.Description = utils.CodeBlockWithLanguage(
 			"md",
-			"# 일반\n"+
-				strings.Join(getCommandsByCategory(Discommand, Generals), "\n")+
-				"\n\n# 채팅\n"+
-				strings.Join(getCommandsByCategory(Discommand, Chattings), "\n"),
+			fmt.Sprintf("# 일반\n%s\n\n# 채팅\n%s",
+				strings.Join(getCommandsByCategory(Discommand, Generals), "\n"),
+				strings.Join(getCommandsByCategory(Discommand, Chattings), "\n")),
 		)
 
 		switch m := m.(type) {
@@ -107,7 +107,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 	command := Discommand.Commands[commandName]
 
-	embed.Title = s.State.User.Username + "의 " + command.Name + " 도움말"
+	embed.Title = fmt.Sprintf("%s의 %s 도움말", s.State.User.Username, command.Name)
 	embed.Fields = []*discordgo.MessageEmbedField{
 		{
 			Name:   "설명",
