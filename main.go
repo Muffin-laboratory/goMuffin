@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -22,7 +21,7 @@ func main() {
 
 	dg, err := discordgo.New("Bot " + config.Bot.Token)
 	if err != nil {
-		fmt.Println("[goMuffin] 봇의 세션을 만들수가 없어요.")
+		log.Println("[goMuffin] 봇의 세션을 만들수가 없어요.")
 		log.Fatalln(err)
 	}
 
@@ -46,7 +45,7 @@ func main() {
 		}
 	}()
 
-	fmt.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
+	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
