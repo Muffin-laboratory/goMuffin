@@ -27,7 +27,7 @@ func CodeBlockWithLanguage(language string, content string) string {
 }
 
 func CodeBlock(content string) string {
-	return "```\n" + content + "\n" + "```"
+	return fmt.Sprintf("```\n%s\n```", content)
 }
 
 func Time(time *time.Time) string {
