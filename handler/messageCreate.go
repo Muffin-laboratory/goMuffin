@@ -110,7 +110,17 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if x > 2 && len(learnDatas) != 0 {
 				data := learnDatas[rand.Intn(len(learnDatas))]
 				user, _ := s.User(data.UserId)
-				s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
+				result := data.Result
+
+				result = strings.ReplaceAll(result, "{user.name}", m.Author.Username)
+				result = strings.ReplaceAll(result, "{user.mention}", m.Author.Mention())
+				result = strings.ReplaceAll(result, "{user.globalName}", m.Author.GlobalName)
+				result = strings.ReplaceAll(result, "{user.id}", m.Author.ID)
+				result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
+				result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.TimeWithStyle(configs.UpdatedAt, utils.RelativeTime))
+				result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.TimeWithStyle(configs.StartedAt, utils.RelativeTime))
+
+				s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
 				return
 			}
 

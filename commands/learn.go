@@ -13,6 +13,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var arguments = utils.InlineCode("{user.name}") + "\n" +
+	utils.InlineCode("{user.mention}") + "\n" +
+	utils.InlineCode("{user.globalName}") + "\n" +
+	utils.InlineCode("{user.id}") + "\n" +
+	utils.InlineCode("{muffin.version}") + "\n" +
+	utils.InlineCode("{muffin.updatedAt}") + "\n" +
+	utils.InlineCode("{muffin.statedAt}")
+
 var LearnCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
@@ -40,6 +48,7 @@ var LearnCommand *Command = &Command{
 			fmt.Sprintf("%s배워 안녕 안녕!", configs.Config.Bot.Prefix),
 			fmt.Sprintf("%s배워 \"야 죽을래?\" \"아니요 ㅠㅠㅠ\"", configs.Config.Bot.Prefix),
 			fmt.Sprintf("%s배워 미간은_누구야? 이봇의_개발자요", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\"", configs.Config.Bot.Prefix),
 		},
 	},
 	Category: Chattings,
@@ -75,6 +84,11 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 					{
 						Name:   "사용법",
 						Value:  utils.InlineCode(c.DetailedDescription.Usage),
+						Inline: true,
+					},
+					{
+						Name:   "사용 가능한 인자",
+						Value:  arguments,
 						Inline: true,
 					},
 					{
