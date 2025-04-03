@@ -49,30 +49,12 @@ var DataLengthCommand *Command = &Command{
 	},
 }
 
-func getLength(data dataType, userId string) {
+func getLength(data dataType, coll *mongo.Collection, filter bson.D) {
 	var err error
 	var cur *mongo.Cursor
 	var datas []bson.M
 
-	switch data {
-	case text:
-		cur, err = databases.Texts.Find(context.TODO(), bson.D{{}})
-	case muffin:
-		cur, err = databases.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
-	case nsfw:
-		cur, err = databases.Texts.Find(context.TODO(), bson.D{
-			{
-				Key: "persona",
-				Value: bson.M{
-					"$regex": "^user",
-				},
-			},
-		})
-	case learn:
-		cur, err = databases.Learns.Find(context.TODO(), bson.D{{}})
-	case userLearn:
-		cur, err = databases.Learns.Find(context.TODO(), bson.D{{Key: "user_id", Value: userId}})
-	}
+	cur, err = coll.Find(context.TODO(), filter)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -113,11 +95,18 @@ func dataLengthRun(s *discordgo.Session, m any) {
 			})
 	}
 
-	go getLength(text, "")
-	go getLength(muffin, "")
-	go getLength(nsfw, "")
-	go getLength(learn, "")
-	go getLength(userLearn, userId)
+	go getLength(text, databases.Texts, bson.D{{}})
+	go getLength(muffin, databases.Texts, bson.D{{Key: "persona", Value: "muffin"}})
+	go getLength(nsfw, databases.Texts, bson.D{
+		{
+			Key: "persona",
+			Value: bson.M{
+				"$regex": "^user",
+			},
+		},
+	})
+	go getLength(learn, databases.Learns, bson.D{{}})
+	go getLength(userLearn, databases.Learns, bson.D{{Key: "user_id", Value: userId}})
 
 	for range 5 {
 		resp := <-ch
@@ -134,6 +123,7 @@ func dataLengthRun(s *discordgo.Session, m any) {
 			userLearnLength = resp.length
 		}
 	}
+	close(ch)
 
 	sum := textLength + learnLength
 

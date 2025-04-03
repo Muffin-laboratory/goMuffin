@@ -105,6 +105,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			for range 2 {
 				<-ch
 			}
+			close(ch)
 
 			if x > 2 && len(learnDatas) != 0 {
 				data := learnDatas[rand.Intn(len(learnDatas))]
