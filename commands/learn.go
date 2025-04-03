@@ -35,10 +35,10 @@ var LearnCommand *Command = &Command{
 	},
 	Aliases: []string{"공부"},
 	DetailedDescription: &DetailedDescription{
-		Usage: "머핀아 배워 (등록할 단어) (대답)",
+		Usage: fmt.Sprintf("%s배워 (등록할 단어) (대답)", configs.Config.Bot.Prefix),
 		Examples: []string{"머핀아 배워 안녕 안녕!",
-			"머핀아 배워 \"야 죽을래?\" \"아니요 ㅠㅠㅠ\"",
-			"머핀아 배워 미간은_누구야? 이봇의_개발자요",
+			fmt.Sprintf("%s배워 \"야 죽을래?\" \"아니요 ㅠㅠㅠ\"", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s배워 미간은_누구야? 이봇의_개발자요", configs.Config.Bot.Prefix),
 		},
 	},
 	Category: Chattings,

@@ -12,10 +12,10 @@ import (
 var InformationCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "정보",
-		Description: "머핀봇의 정보를 알ㄹ려줘요.",
+		Description: fmt.Sprintf("머핀봇의 정보를 알ㄹ려줘요."),
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: "머핀아 정보",
+		Usage: fmt.Sprintf("%s정보", configs.Config.Bot.Prefix),
 	},
 	Category: Generals,
 	MessageRun: func(ctx *MsgContext) {

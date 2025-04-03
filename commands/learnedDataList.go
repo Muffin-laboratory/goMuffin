@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -20,7 +21,7 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Aliases: []string{"list", "목록", "지식목록"},
 	DetailedDescription: &DetailedDescription{
-		Usage: "머핀아 리스트",
+		Usage: fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
 	},
 	Category: Chattings,
 	MessageRun: func(ctx *MsgContext) {

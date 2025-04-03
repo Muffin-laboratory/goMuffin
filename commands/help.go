@@ -34,8 +34,8 @@ var HelpCommand *Command = &Command{
 	},
 	Aliases: []string{"도움", "명령어", "help"},
 	DetailedDescription: &DetailedDescription{
-		Usage:    "머핀아 도움말 [명령어]",
-		Examples: []string{"머핀아 도움말", "머핀아 도움말 배워"},
+		Usage:    fmt.Sprintf("%s도움말 [명령어]", configs.Config.Bot.Prefix),
+		Examples: []string{fmt.Sprintf("%s도움말", configs.Config.Bot.Prefix), fmt.Sprintf("%s도움말 배워", configs.Config.Bot.Prefix)},
 	},
 	Category: Generals,
 	MessageRun: func(ctx *MsgContext) {

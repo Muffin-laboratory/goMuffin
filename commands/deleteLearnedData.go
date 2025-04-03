@@ -3,9 +3,9 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -27,8 +27,8 @@ var DeleteLearnedDataCommand *Command = &Command{
 	},
 	Aliases: []string{"잊어", "지워"},
 	DetailedDescription: &DetailedDescription{
-		Usage:    "머핀아 삭제 (삭제할 단어)",
-		Examples: []string{"머핀아 삭제 머핀"},
+		Usage:    fmt.Sprintf("%s삭제 (삭제할 단어)", configs.Config.Bot.Prefix),
+		Examples: []string{fmt.Sprintf("%s삭제 머핀", configs.Config.Bot.Prefix)},
 	},
 	Category: Chattings,
 	MessageRun: func(ctx *MsgContext) {
@@ -124,9 +124,9 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		options = append(options, discordgo.SelectMenuOption{
 			Label:       fmt.Sprintf("%d번 지식", i+1),
 			Description: data.Result,
-			Value:       utils.DeleteLearnedData + data.Id.Hex() + `&No.` + strconv.Itoa(i+1),
+			Value:       fmt.Sprintf("%s%s&No.%d", utils.DeleteLearnedData, data.Id.Hex(), i+1),
 		})
-		description += strconv.Itoa(i+1) + ". " + data.Result + "\n"
+		description += fmt.Sprintf("%d. %s\n", i+1, data.Result)
 	}
 
 	embed := &discordgo.MessageEmbed{
