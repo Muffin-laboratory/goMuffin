@@ -28,6 +28,25 @@ func argParser(content string) (args []string) {
 	return
 }
 
+func resultParser(content string, s *discordgo.Session, m *discordgo.MessageCreate) string {
+	result := content
+	userCreatedAt, _ := discordgo.SnowflakeTimestamp(m.Author.ID)
+
+	result = strings.ReplaceAll(result, "{user.name}", m.Author.Username)
+	result = strings.ReplaceAll(result, "{user.mention}", m.Author.Mention())
+	result = strings.ReplaceAll(result, "{user.globalName}", m.Author.GlobalName)
+	result = strings.ReplaceAll(result, "{user.id}", m.Author.ID)
+	result = strings.ReplaceAll(result, "{user.createdAt}", utils.TimeWithStyle(&userCreatedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.TimeWithStyle(&m.Member.JoinedAt, utils.RelativeTime))
+
+	result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
+	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.TimeWithStyle(configs.UpdatedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.TimeWithStyle(configs.StartedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.name}", s.State.User.Username)
+	result = strings.ReplaceAll(result, "{muffin.id}", s.State.User.ID)
+	return result
+}
+
 // MessageCreate is handlers of messageCreate event
 func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	config := configs.Config
@@ -110,15 +129,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if x > 2 && len(learnDatas) != 0 {
 				data := learnDatas[rand.Intn(len(learnDatas))]
 				user, _ := s.User(data.UserId)
-				result := data.Result
-
-				result = strings.ReplaceAll(result, "{user.name}", m.Author.Username)
-				result = strings.ReplaceAll(result, "{user.mention}", m.Author.Mention())
-				result = strings.ReplaceAll(result, "{user.globalName}", m.Author.GlobalName)
-				result = strings.ReplaceAll(result, "{user.id}", m.Author.ID)
-				result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
-				result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.TimeWithStyle(configs.UpdatedAt, utils.RelativeTime))
-				result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.TimeWithStyle(configs.StartedAt, utils.RelativeTime))
+				result := resultParser(data.Result, s, m)
 
 				s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
 				return
