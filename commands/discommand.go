@@ -110,10 +110,11 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *di
 func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, c := range d.Components {
 		if (!c.Parse(&ComponentContext{s, i, c})) {
-			return
+			continue
 		}
 
 		c.Run(&ComponentContext{s, i, c})
+		break
 	}
 }
 
