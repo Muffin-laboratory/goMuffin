@@ -4,7 +4,7 @@ import "time"
 
 var StartedAt *time.Time
 
-func TimeStart() {
+func init() {
 	now := time.Now()
 	StartedAt = &now
 }

@@ -16,7 +16,6 @@ import (
 )
 
 func main() {
-	configs.TimeStart()
 	config := configs.Config
 
 	dg, err := discordgo.New("Bot " + config.Bot.Token)
@@ -40,15 +39,12 @@ func main() {
 	dg.Open()
 
 	defer func() {
-		if err := databases.Client.Disconnect(context.TODO()); err != nil {
-			panic(err)
-		}
+		dg.Close()
+		databases.Client.Disconnect(context.TODO())
 	}()
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
-
-	dg.Close()
 }
