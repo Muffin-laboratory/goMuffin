@@ -24,6 +24,18 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 			}
 
 			userId = customId[len(utils.DeleteLearnedDataCancel):]
+			if i.Member.User.ID == userId {
+				i.Update(&discordgo.InteractionResponseData{
+					Embeds: []*discordgo.MessageEmbed{
+						{
+							Title:       "❌ 취소",
+							Description: "지식 삭제 작업ㅇ을 취소했어요.",
+							Color:       utils.EmbedFail,
+						},
+					},
+				})
+				return false
+			}
 		} else {
 			if !strings.HasPrefix(customId, utils.DeleteLearnedDataUserId) {
 				return false
@@ -39,7 +51,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 					{
 						Title:       "❌ 오류",
 						Description: "당신은 해당 권한이 없ㅇ어요.",
-						Color:       int(utils.EmbedFail),
+						Color:       utils.EmbedFail,
 					},
 				},
 				Components: []discordgo.MessageComponent{},

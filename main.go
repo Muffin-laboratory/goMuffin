@@ -39,7 +39,7 @@ func main() {
 	dg.Open()
 
 	for _, cmd := range commands.Discommand.Commands {
-		dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
+		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
 	}
 
 	defer func() {

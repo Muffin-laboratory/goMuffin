@@ -54,3 +54,11 @@ func (i *InteractionCreate) DeferUpdate() {
 func (i *InteractionCreate) EditReply(data *discordgo.WebhookEdit) {
 	i.Session.InteractionResponseEdit(i.Interaction, data)
 }
+
+// Update to this interaction.
+func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) {
+	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseUpdateMessage,
+		Data: data,
+	})
+}
