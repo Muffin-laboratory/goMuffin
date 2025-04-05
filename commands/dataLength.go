@@ -66,8 +66,6 @@ func getLength(data dataType, coll *mongo.Collection, filter bson.D) {
 }
 
 func dataLengthRun(s *discordgo.Session, m any) {
-	var i *discordgo.Interaction
-	var referance *discordgo.MessageReference
 	var username, userId, channelId string
 	var textLength,
 		muffinLength,
@@ -80,19 +78,11 @@ func dataLengthRun(s *discordgo.Session, m any) {
 		username = m.Author.Username
 		userId = m.Author.ID
 		channelId = m.ChannelID
-		referance = m.Reference()
-	case *discordgo.InteractionCreate:
+	case *utils.InteractionCreate:
+		m.DeferReply(true)
 		username = m.Member.User.Username
 		userId = m.Member.User.ID
 		channelId = m.ChannelID
-		i = m.Interaction
-		s.InteractionRespond(i,
-			&discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Flags: discordgo.MessageFlagsEphemeral,
-				},
-			})
 	}
 
 	go getLength(text, databases.Texts, bson.D{{}})
@@ -161,11 +151,11 @@ func dataLengthRun(s *discordgo.Session, m any) {
 		},
 	}
 
-	switch m.(type) {
+	switch m := m.(type) {
 	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(channelId, embed, referance)
-	case *discordgo.InteractionCreate:
-		s.InteractionResponseEdit(i, &discordgo.WebhookEdit{
+		s.ChannelMessageSendEmbedReply(channelId, embed, m.Reference())
+	case *utils.InteractionCreate:
+		m.EditReply(&discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{embed},
 		})
 	}

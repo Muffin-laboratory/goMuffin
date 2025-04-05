@@ -67,19 +67,10 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 				Color: utils.EmbedFail,
 			}, m.Reference())
 		}
-	case *discordgo.InteractionCreate:
-		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
+	case *utils.InteractionCreate:
+		m.DeferReply(true)
 
-		optsMap := map[string]*discordgo.ApplicationCommandInteractionDataOption{}
-		for _, opt := range m.ApplicationCommandData().Options {
-			optsMap[opt.Name] = opt
-		}
-		if opt, ok := optsMap["단어"]; ok {
+		if opt, ok := m.Options["단어"]; ok {
 			command = opt.StringValue()
 		}
 		userId = m.Member.User.ID
@@ -96,8 +87,8 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 			switch m := m.(type) {
 			case *discordgo.MessageCreate:
 				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *discordgo.InteractionCreate:
-				s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+			case *utils.InteractionCreate:
+				m.EditReply(&discordgo.WebhookEdit{
 					Embeds: &[]*discordgo.MessageEmbed{embed},
 				})
 			}
@@ -108,8 +99,8 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		switch m := m.(type) {
 		case *discordgo.MessageCreate:
 			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *discordgo.InteractionCreate:
-			s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+		case *utils.InteractionCreate:
+			m.EditReply(&discordgo.WebhookEdit{
 				Embeds: &[]*discordgo.MessageEmbed{embed},
 			})
 		}
@@ -165,8 +156,8 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 			Components: components,
 			Reference:  m.Reference(),
 		})
-	case *discordgo.InteractionCreate:
-		s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+	case *utils.InteractionCreate:
+		m.EditReply(&discordgo.WebhookEdit{
 			Embeds:     &[]*discordgo.MessageEmbed{embed},
 			Components: &components,
 		})

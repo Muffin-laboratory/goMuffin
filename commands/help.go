@@ -72,13 +72,11 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		commandName = Discommand.Aliases[strings.Join(*args, " ")]
-	case *discordgo.InteractionCreate:
-		optsMap := map[string]*discordgo.ApplicationCommandInteractionDataOption{}
-		for _, opt := range m.ApplicationCommandData().Options {
-			optsMap[opt.Name] = opt
-		}
-		if opt, ok := optsMap["명령어"]; ok {
+	case *utils.InteractionCreate:
+		if opt, ok := m.Options["도움말"]; ok {
 			commandName = opt.StringValue()
+		} else {
+			commandName = ""
 		}
 	}
 
@@ -94,12 +92,9 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		switch m := m.(type) {
 		case *discordgo.MessageCreate:
 			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *discordgo.InteractionCreate:
-			s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-				Type: discordgo.InteractionResponseChannelMessageWithSource,
-				Data: &discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{embed},
-				},
+		case *utils.InteractionCreate:
+			m.Reply(&discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{embed},
 			})
 		}
 		return
@@ -148,12 +143,9 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *discordgo.InteractionCreate:
-		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
-			},
+	case *utils.InteractionCreate:
+		m.Reply(&discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
 		})
 	}
 }

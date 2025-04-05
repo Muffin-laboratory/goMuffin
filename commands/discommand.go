@@ -3,6 +3,7 @@ package commands
 import (
 	"sync"
 
+	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -42,13 +43,13 @@ type MsgContext struct {
 
 type ChatInputContext struct {
 	Session *discordgo.Session
-	Inter   *discordgo.InteractionCreate
+	Inter   *utils.InteractionCreate
 	Command *Command
 }
 
 type ComponentContext struct {
 	Session   *discordgo.Session
-	Inter     *discordgo.InteractionCreate
+	Inter     *utils.InteractionCreate
 	Component *Component
 }
 
@@ -104,16 +105,26 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *di
 	if command == nil {
 		return
 	}
-	command.ChatInputRun(&ChatInputContext{s, i, command})
+	command.ChatInputRun(&ChatInputContext{s, &utils.InteractionCreate{
+		InteractionCreate: i,
+		Session:           s,
+		Options:           utils.GetInteractionOptions(i),
+	}, command})
 }
 
 func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	for _, c := range d.Components {
-		if (!c.Parse(&ComponentContext{s, i, c})) {
+		if (!c.Parse(&ComponentContext{s, &utils.InteractionCreate{
+			InteractionCreate: i,
+			Session:           s,
+		}, c})) {
 			continue
 		}
 
-		c.Run(&ComponentContext{s, i, c})
+		c.Run(&ComponentContext{s, &utils.InteractionCreate{
+			InteractionCreate: i,
+			Session:           s,
+		}, c})
 		break
 	}
 }

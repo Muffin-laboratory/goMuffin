@@ -107,26 +107,16 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 		command = strings.ReplaceAll((*args)[0], "_", " ")
 		result = strings.ReplaceAll((*args)[1], "_", " ")
-	case *discordgo.InteractionCreate:
-		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
+	case *utils.InteractionCreate:
+		m.DeferReply(true)
 
 		userId = m.Member.User.ID
 
-		optsMap := map[string]*discordgo.ApplicationCommandInteractionDataOption{}
-		for _, opt := range m.ApplicationCommandData().Options {
-			optsMap[opt.Name] = opt
-		}
-
-		if opt, ok := optsMap["단어"]; ok {
+		if opt, ok := m.Options["단어"]; ok {
 			command = opt.StringValue()
 		}
 
-		if opt, ok := optsMap["대답"]; ok {
+		if opt, ok := m.Options["대답"]; ok {
 			result = opt.StringValue()
 		}
 	}
@@ -156,8 +146,8 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 			switch m := m.(type) {
 			case *discordgo.MessageCreate:
 				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *discordgo.InteractionCreate:
-				s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+			case *utils.InteractionCreate:
+				m.EditReply(&discordgo.WebhookEdit{
 					Embeds: &[]*discordgo.MessageEmbed{embed},
 				})
 			}
@@ -176,8 +166,8 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 			switch m := m.(type) {
 			case *discordgo.MessageCreate:
 				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *discordgo.InteractionCreate:
-				s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+			case *utils.InteractionCreate:
+				m.EditReply(&discordgo.WebhookEdit{
 					Embeds: &[]*discordgo.MessageEmbed{embed},
 				})
 			}
@@ -201,8 +191,8 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		switch m := m.(type) {
 		case *discordgo.MessageCreate:
 			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *discordgo.InteractionCreate:
-			s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+		case *utils.InteractionCreate:
+			m.EditReply(&discordgo.WebhookEdit{
 				Embeds: &[]*discordgo.MessageEmbed{embed},
 			})
 		}
@@ -218,8 +208,8 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *discordgo.InteractionCreate:
-		s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+	case *utils.InteractionCreate:
+		m.EditReply(&discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{embed},
 		})
 	}

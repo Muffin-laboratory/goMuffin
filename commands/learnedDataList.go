@@ -47,13 +47,8 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 		userId = m.Author.ID
 		globalName = m.Author.GlobalName
 		avatarUrl = m.Author.AvatarURL("512")
-	case *discordgo.InteractionCreate:
-		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
+	case *utils.InteractionCreate:
+		m.DeferReply(true)
 
 		userId = m.Member.User.ID
 		globalName = m.Member.User.GlobalName
@@ -72,8 +67,8 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 			switch m := m.(type) {
 			case *discordgo.MessageCreate:
 				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *discordgo.InteractionCreate:
-				s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+			case *utils.InteractionCreate:
+				m.EditReply(&discordgo.WebhookEdit{
 					Embeds: &[]*discordgo.MessageEmbed{embed},
 				})
 			}
@@ -90,8 +85,8 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 		switch m := m.(type) {
 		case *discordgo.MessageCreate:
 			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *discordgo.InteractionCreate:
-			s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+		case *utils.InteractionCreate:
+			m.EditReply(&discordgo.WebhookEdit{
 				Embeds: &[]*discordgo.MessageEmbed{embed},
 			})
 		}
@@ -114,8 +109,8 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *discordgo.InteractionCreate:
-		s.InteractionResponseEdit(m.Interaction, &discordgo.WebhookEdit{
+	case *utils.InteractionCreate:
+		m.EditReply(&discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{embed},
 		})
 	}

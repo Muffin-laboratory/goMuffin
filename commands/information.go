@@ -63,12 +63,9 @@ func informationRun(s *discordgo.Session, m any) {
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *discordgo.InteractionCreate:
-		s.InteractionRespond(m.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
-			},
+	case *utils.InteractionCreate:
+		m.Reply(&discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{embed},
 		})
 	}
 }
