@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/components"
@@ -37,6 +38,13 @@ func main() {
 	go dg.AddHandler(handler.InteractionCreate)
 
 	dg.Open()
+
+	go func() {
+		for {
+			dg.UpdateCustomStatus("ㅅ살려주세요..!")
+			time.Sleep(time.Minute * 10)
+		}
+	}()
 
 	for _, cmd := range commands.Discommand.Commands {
 		if cmd.Name == "도움말" {
