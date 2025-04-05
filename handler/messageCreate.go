@@ -36,12 +36,12 @@ func resultParser(content string, s *discordgo.Session, m *discordgo.MessageCrea
 	result = strings.ReplaceAll(result, "{user.mention}", m.Author.Mention())
 	result = strings.ReplaceAll(result, "{user.globalName}", m.Author.GlobalName)
 	result = strings.ReplaceAll(result, "{user.id}", m.Author.ID)
-	result = strings.ReplaceAll(result, "{user.createdAt}", utils.TimeWithStyle(&userCreatedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.TimeWithStyle(&m.Member.JoinedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{user.createdAt}", utils.Time(&userCreatedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(&m.Member.JoinedAt, utils.RelativeTime))
 
 	result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
-	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.TimeWithStyle(configs.UpdatedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.TimeWithStyle(configs.StartedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.Time(configs.StartedAt, utils.RelativeTime))
 	result = strings.ReplaceAll(result, "{muffin.name}", s.State.User.Username)
 	result = strings.ReplaceAll(result, "{muffin.id}", s.State.User.ID)
 	return result

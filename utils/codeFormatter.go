@@ -22,18 +22,16 @@ func InlineCode(content string) string {
 	return fmt.Sprintf("`%s`", content)
 }
 
-func CodeBlockWithLanguage(language string, content string) string {
+func CodeBlock(language string, content string) string {
+	if content == "" {
+		return fmt.Sprintf("```\n%s\n```", language)
+	}
 	return fmt.Sprintf("```%s\n%s\n```", language, content)
 }
 
-func CodeBlock(content string) string {
-	return fmt.Sprintf("```\n%s\n```", content)
-}
-
-func Time(time *time.Time) string {
-	return fmt.Sprintf("<t:%d>", time.Unix())
-}
-
-func TimeWithStyle(time *time.Time, style string) string {
+func Time(time *time.Time, style string) string {
+	if style == "" {
+		return fmt.Sprintf("<t:%d>", time.Unix())
+	}
 	return fmt.Sprintf("<t:%d:%s>", time.Unix(), style)
 }

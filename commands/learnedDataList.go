@@ -104,7 +104,7 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s님이 알려주신 지식", globalName),
-		Description: utils.CodeBlockWithLanguage("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(datas), strings.Join(getDescriptions(&datas), "\n"))),
+		Description: utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(datas), strings.Join(getDescriptions(&datas), "\n"))),
 		Color:       utils.EmbedDefault,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: avatarUrl,

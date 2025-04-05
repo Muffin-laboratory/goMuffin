@@ -45,12 +45,12 @@ func informationRun(s *discordgo.Session, m any) {
 			},
 			{
 				Name:   "최근에 업데이트된 날짜",
-				Value:  utils.TimeWithStyle(configs.UpdatedAt, utils.RelativeTime),
+				Value:  utils.Time(configs.UpdatedAt, utils.RelativeTime),
 				Inline: true,
 			},
 			{
 				Name:   "업타임",
-				Value:  utils.TimeWithStyle(configs.StartedAt, utils.RelativeTime),
+				Value:  utils.Time(configs.StartedAt, utils.RelativeTime),
 				Inline: true,
 			},
 		},

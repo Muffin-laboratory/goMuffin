@@ -84,7 +84,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 	if commandName == "" || Discommand.Commands[commandName] == nil {
 		embed.Title = fmt.Sprintf("%s의 도움말", s.State.User.Username)
-		embed.Description = utils.CodeBlockWithLanguage(
+		embed.Description = utils.CodeBlock(
 			"md",
 			fmt.Sprintf("# 일반\n%s\n\n# 채팅\n%s",
 				strings.Join(getCommandsByCategory(Discommand, Generals), "\n"),
@@ -124,7 +124,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	if command.Aliases != nil {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:  "별칭",
-			Value: utils.CodeBlockWithLanguage("md", strings.Join(addPrefix(command.Aliases), "\n")),
+			Value: utils.CodeBlock("md", strings.Join(addPrefix(command.Aliases), "\n")),
 		})
 	} else {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
@@ -136,7 +136,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	if command.DetailedDescription.Examples != nil {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:  "예시",
-			Value: utils.CodeBlockWithLanguage("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
+			Value: utils.CodeBlock("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
 		})
 	} else {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
