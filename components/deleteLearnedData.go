@@ -42,7 +42,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 						{
 							Title:       "❌ 오류",
 							Description: "당신은 해당 권한이 없ㅇ어요.",
-							Color:       int(utils.EFail),
+							Color:       int(utils.EmbedFail),
 						},
 					},
 					Components: []discordgo.MessageComponent{},
@@ -70,7 +70,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 				{
 					Title:       "✅ 삭제 완료",
 					Description: fmt.Sprintf("%s번을 삭ㅈ제했어요.", itemId),
-					Color:       int(utils.ESuccess),
+					Color:       int(utils.EmbedSuccess),
 				},
 			},
 			Components: &[]discordgo.MessageComponent{},

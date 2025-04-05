@@ -1,9 +1,7 @@
 package utils
 
-type EmbedColorType int
-
 const (
-	EDefault EmbedColorType = 0xaddb87
-	EFail    EmbedColorType = 0xff0000
-	ESuccess EmbedColorType = 0x00ff00
+	EmbedDefault int = 0xaddb87
+	EmbedFail    int = 0xff0000
+	EmbedSuccess int = 0x00ff00
 )

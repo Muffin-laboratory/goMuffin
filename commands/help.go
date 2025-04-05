@@ -60,7 +60,7 @@ func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
 func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	var commandName string
 	embed := &discordgo.MessageEmbed{
-		Color: int(utils.EDefault),
+		Color: utils.EmbedDefault,
 		Footer: &discordgo.MessageEmbedFooter{
 			Text: fmt.Sprintf("버전: %s", configs.MUFFIN_VERSION),
 		},

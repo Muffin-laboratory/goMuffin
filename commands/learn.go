@@ -100,7 +100,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 						Value: utils.CodeBlockWithLanguage("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
 					},
 				},
-				Color: int(utils.EFail),
+				Color: utils.EmbedFail,
 			}, m.Reference())
 			return
 		}
@@ -150,7 +150,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 			embed := &discordgo.MessageEmbed{
 				Title:       "❌ 오류",
 				Description: "해ㄷ당 단어는 배우기 껄끄ㄹ럽네요.",
-				Color:       int(utils.EFail),
+				Color:       utils.EmbedFail,
 			}
 
 			switch m := m.(type) {
@@ -170,7 +170,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 			embed := &discordgo.MessageEmbed{
 				Title:       "❌ 오류",
 				Description: "해당 단ㅇ어의 대답으로 하기 좀 그렇ㄴ네요.",
-				Color:       int(utils.EFail),
+				Color:       utils.EmbedFail,
 			}
 
 			switch m := m.(type) {
@@ -195,7 +195,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		embed := &discordgo.MessageEmbed{
 			Title:       "❌ 오류",
 			Description: "단어를 배우는데 오류가 생겼어요.",
-			Color:       int(utils.EFail),
+			Color:       utils.EmbedFail,
 		}
 
 		switch m := m.(type) {
@@ -212,7 +212,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	embed := &discordgo.MessageEmbed{
 		Title:       "✅ 성공",
 		Description: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
-		Color:       int(utils.ESuccess),
+		Color:       utils.EmbedSuccess,
 	}
 
 	switch m := m.(type) {

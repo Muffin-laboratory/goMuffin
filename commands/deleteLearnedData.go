@@ -64,7 +64,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 						Value: utils.CodeBlockWithLanguage("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
 					},
 				},
-				Color: int(utils.EFail),
+				Color: utils.EmbedFail,
 			}, m.Reference())
 		}
 	case *discordgo.InteractionCreate:
@@ -89,7 +89,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 	if err != nil {
 		embed := &discordgo.MessageEmbed{
 			Title: "❌ 오류",
-			Color: int(utils.EFail),
+			Color: utils.EmbedFail,
 		}
 		if err == mongo.ErrNoDocuments {
 			embed.Description = "해당 하는 지식ㅇ을 찾을 수 없어요."
@@ -132,7 +132,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s 삭제", command),
 		Description: utils.CodeBlockWithLanguage("md", fmt.Sprintf("# %s에 대한 대답 중 하나를 선ㅌ택하여 삭제해주세요.\n%s", command, description)),
-		Color:       int(utils.EDefault),
+		Color:       utils.EmbedDefault,
 	}
 
 	components := []discordgo.MessageComponent{

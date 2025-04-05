@@ -54,7 +54,7 @@ func informationRun(s *discordgo.Session, m any) {
 				Inline: true,
 			},
 		},
-		Color: int(utils.EDefault),
+		Color: utils.EmbedDefault,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: s.State.User.AvatarURL("512"),
 		},
