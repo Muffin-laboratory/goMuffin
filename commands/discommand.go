@@ -63,8 +63,8 @@ const (
 	Generals  Category = "일반"
 )
 
-var commandMutex *sync.Mutex = &sync.Mutex{}
-var componentMutex *sync.Mutex = &sync.Mutex{}
+var commandMutex sync.Mutex
+var componentMutex sync.Mutex
 
 func new() *DiscommandStruct {
 	discommand := DiscommandStruct{
@@ -76,6 +76,7 @@ func new() *DiscommandStruct {
 }
 
 func (d *DiscommandStruct) LoadCommand(c *Command) {
+	defer commandMutex.Unlock()
 	commandMutex.Lock()
 	d.Commands[c.Name] = c
 	d.Aliases[c.Name] = c.Name
@@ -83,13 +84,12 @@ func (d *DiscommandStruct) LoadCommand(c *Command) {
 	for _, alias := range c.Aliases {
 		d.Aliases[alias] = c.Name
 	}
-	commandMutex.Unlock()
 }
 
 func (d *DiscommandStruct) LoadComponent(c *Component) {
+	defer componentMutex.Unlock()
 	componentMutex.Lock()
 	d.Components = append(d.Components, c)
-	componentMutex.Unlock()
 }
 
 func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {

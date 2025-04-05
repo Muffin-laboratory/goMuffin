@@ -19,16 +19,7 @@ var HelpCommand *Command = &Command{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "명령어",
 				Description: "해당 명령어에 대ㅎ한 도움말을 볼 수 있어요.",
-				Choices: func() []*discordgo.ApplicationCommandOptionChoice {
-					choices := []*discordgo.ApplicationCommandOptionChoice{}
-					for _, command := range Discommand.Commands {
-						choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
-							Name:  command.Name,
-							Value: command.Name,
-						})
-					}
-					return choices
-				}(),
+				Choices:     []*discordgo.ApplicationCommandOptionChoice{},
 			},
 		},
 	},
@@ -73,7 +64,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	case *discordgo.MessageCreate:
 		commandName = Discommand.Aliases[strings.Join(*args, " ")]
 	case *utils.InteractionCreate:
-		if opt, ok := m.Options["도움말"]; ok {
+		if opt, ok := m.Options["명령어"]; ok {
 			commandName = opt.StringValue()
 		} else {
 			commandName = ""
