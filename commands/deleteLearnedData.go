@@ -10,7 +10,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 var DeleteLearnedDataCommand *Command = &Command{
@@ -79,23 +78,11 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 	cur, err := databases.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
 	if err != nil {
 		embed := &discordgo.MessageEmbed{
-			Title: "❌ 오류",
-			Color: utils.EmbedFail,
-		}
-		if err == mongo.ErrNoDocuments {
-			embed.Description = "해당 하는 지식ㅇ을 찾을 수 없어요."
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
-			return
+			Title:       "❌ 오류",
+			Description: "데이터를 가져오는데 실패했어요.",
+			Color:       utils.EmbedFail,
 		}
 
-		embed.Description = "데이터를 가져오는데 실패했어요."
 		switch m := m.(type) {
 		case *discordgo.MessageCreate:
 			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
@@ -108,6 +95,24 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 	}
 
 	cur.All(context.TODO(), &datas)
+
+	if len(datas) < 1 {
+		embed := &discordgo.MessageEmbed{
+			Title:       "❌ 오류",
+			Description: "해당 하는 지식ㅇ을 찾을 수 없어요.",
+			Color:       utils.EmbedFail,
+		}
+
+		switch m := m.(type) {
+		case *discordgo.MessageCreate:
+			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
+		case *utils.InteractionCreate:
+			m.EditReply(&discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{embed},
+			})
+		}
+		return
+	}
 
 	for i := range len(datas) {
 		data := datas[i]
