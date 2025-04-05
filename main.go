@@ -38,6 +38,10 @@ func main() {
 
 	dg.Open()
 
+	for _, cmd := range commands.Discommand.Commands {
+		dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
+	}
+
 	defer func() {
 		dg.Close()
 		databases.Client.Disconnect(context.TODO())
