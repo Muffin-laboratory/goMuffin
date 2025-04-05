@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -28,7 +29,8 @@ const (
 	userLearn
 )
 
-var ch chan chStruct = make(chan chStruct)
+var dataLengthCh chan chStruct = make(chan chStruct)
+var dataLengthWg sync.WaitGroup
 
 var DataLengthCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
@@ -50,6 +52,7 @@ var DataLengthCommand *Command = &Command{
 }
 
 func getLength(data dataType, coll *mongo.Collection, filter bson.D) {
+	defer dataLengthWg.Done()
 	var err error
 	var cur *mongo.Cursor
 	var datas []bson.M
@@ -62,7 +65,7 @@ func getLength(data dataType, coll *mongo.Collection, filter bson.D) {
 	defer cur.Close(context.TODO())
 
 	cur.All(context.TODO(), &datas)
-	ch <- chStruct{name: data, length: len(datas)}
+	dataLengthCh <- chStruct{name: data, length: len(datas)}
 }
 
 func dataLengthRun(s *discordgo.Session, m any) {
@@ -85,6 +88,7 @@ func dataLengthRun(s *discordgo.Session, m any) {
 		channelId = m.ChannelID
 	}
 
+	dataLengthWg.Add(5)
 	go getLength(text, databases.Texts, bson.D{{}})
 	go getLength(muffin, databases.Texts, bson.D{{Key: "persona", Value: "muffin"}})
 	go getLength(nsfw, databases.Texts, bson.D{
@@ -98,8 +102,12 @@ func dataLengthRun(s *discordgo.Session, m any) {
 	go getLength(learn, databases.Learns, bson.D{{}})
 	go getLength(userLearn, databases.Learns, bson.D{{Key: "user_id", Value: userId}})
 
-	for range 5 {
-		resp := <-ch
+	go func() {
+		dataLengthWg.Wait()
+		close(dataLengthCh)
+	}()
+
+	for resp := range dataLengthCh {
 		switch dataType(resp.name) {
 		case text:
 			textLength = resp.length
@@ -113,7 +121,6 @@ func dataLengthRun(s *discordgo.Session, m any) {
 			userLearnLength = resp.length
 		}
 	}
-	close(ch)
 
 	sum := textLength + learnLength
 
