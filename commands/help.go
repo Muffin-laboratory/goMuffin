@@ -93,7 +93,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 	command := Discommand.Commands[commandName]
 
-	embed.Title = fmt.Sprintf("%s의 %s 도움말", s.State.User.Username, command.Name)
+	embed.Title = fmt.Sprintf("%s의 %s 명령어의 도움말", s.State.User.Username, command.Name)
 	embed.Fields = []*discordgo.MessageEmbedField{
 		{
 			Name:   "설명",
