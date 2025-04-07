@@ -33,11 +33,11 @@ func informationRun(s *discordgo.Session, m any) {
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:  "운영 체제",
-				Value: utils.InlineCode(fmt.Sprintf("%s %s", runtime.GOOS, runtime.GOARCH)),
+				Value: utils.InlineCode(fmt.Sprintf("%s %s", runtime.GOARCH, runtime.GOOS)),
 			},
 			{
 				Name:  "제작자",
-				Value: owner.Username,
+				Value: utils.InlineCode(owner.Username),
 			},
 			{
 				Name:  "버전",
@@ -49,7 +49,7 @@ func informationRun(s *discordgo.Session, m any) {
 				Inline: true,
 			},
 			{
-				Name:   "업타임",
+				Name:   "시작한 시각",
 				Value:  utils.Time(configs.StartedAt, utils.RelativeTime),
 				Inline: true,
 			},
