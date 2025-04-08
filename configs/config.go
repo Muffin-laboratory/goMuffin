@@ -23,6 +23,7 @@ type MuffinConfig struct {
 	Bot         botConfig
 	Train       trainConfig
 	DatabaseURL string
+	DBName      string
 }
 
 func loadConfig() *MuffinConfig {
@@ -57,6 +58,7 @@ func setConfig(config *MuffinConfig) {
 	config.Train.UserID = getValue("TRAIN_USER_ID")
 
 	config.DatabaseURL = getRequiredValue("DATABASE_URL")
+	config.DBName = getRequiredValue("DATABASE_NAME")
 }
 
 var Config *MuffinConfig = loadConfig()

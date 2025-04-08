@@ -3,6 +3,7 @@ package databases
 import (
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -22,4 +23,4 @@ type Learn struct {
 	CreatedAt time.Time `bson:"created_at"`
 }
 
-var Learns *mongo.Collection = Client.Database("muffin_ai_test").Collection("learn")
+var Learns *mongo.Collection = Client.Database(configs.Config.DBName).Collection("learn")
