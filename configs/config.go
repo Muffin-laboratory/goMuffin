@@ -27,11 +27,7 @@ type MuffinConfig struct {
 }
 
 func loadConfig() *MuffinConfig {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("[goMuffin] 봇의 설절파일을 불러올 수가 없어요.")
-		log.Fatalln(err)
-	}
+	godotenv.Load()
 	config := &MuffinConfig{Bot: botConfig{}, Train: trainConfig{}}
 	setConfig(config)
 
