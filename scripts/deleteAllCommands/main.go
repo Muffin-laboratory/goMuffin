@@ -1,4 +1,4 @@
-package main
+package deleteallcommands
 
 import (
 	"flag"
@@ -8,29 +8,24 @@ import (
 	"os"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
 )
 
-func main() {
-	godotenv.Load()
+func DeleteAllCommands() {
 	var answer string
-	id := flag.String("id", "", "discordBot's token")
+	id := flag.String("id", "", "디스코드 봇의 토큰")
 
 	flag.Parse()
 
-	fmt.Printf("Do you want to delete all commands? [y/N]: ")
+	fmt.Printf("정말로 모든 명령어를 삭제하시겠어요? [y/N]: ")
 	fmt.Scanf("%s", &answer)
-	if strings.ToLower(answer) != "y" {
+	if strings.ToLower(answer) != "y" && strings.ToLower(answer) != "yes" {
 		os.Exit(1)
 	}
 
-	if os.Getenv("BOT_TOKEN") == "" {
-		panic(fmt.Errorf("You need a BOT_TOKEN environment."))
-	}
-
 	if *id == "" {
-		panic(fmt.Errorf("You need a --id flag value."))
+		panic(fmt.Errorf("--id 플래그의 값이 필요해요."))
 	}
 
 	c := http.Client{}
@@ -39,7 +34,7 @@ func main() {
 		panic(err)
 	}
 
-	req.Header.Add("Authorization", "Bot "+os.Getenv("BOT_TOKEN"))
+	req.Header.Add("Authorization", "Bot "+configs.Config.Bot.Token)
 
 	resp, err := c.Do(req)
 	if err != nil {

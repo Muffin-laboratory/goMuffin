@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -13,11 +15,25 @@ import (
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
+	dbmigrate "git.wh64.net/muffin/goMuffin/scripts/dbMigrate"
+	deleteallcommands "git.wh64.net/muffin/goMuffin/scripts/deleteAllCommands"
 	"github.com/bwmarrin/discordgo"
 )
 
 func main() {
 	config := configs.Config
+
+	if len(os.Args) > 1 {
+		switch strings.ToLower(os.Args[1]) {
+		case "dbmigrate":
+			dbmigrate.DBMigrate()
+		case "deleteallcommands":
+			deleteallcommands.DeleteAllCommands()
+		default:
+			panic(fmt.Errorf("[goMuffin] 명령어 인자에는 dbmigrate나 deleteallcommands만 올 수 있어요."))
+		}
+		return
+	}
 
 	dg, err := discordgo.New("Bot " + config.Bot.Token)
 	if err != nil {
