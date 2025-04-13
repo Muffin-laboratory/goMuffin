@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+
 	_ "github.com/go-sql-driver/mysql"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -21,6 +22,7 @@ var wg sync.WaitGroup
 func DBMigrate() {
 	mariaURL := os.Getenv("PREVIOUS_DATABASE_URL")
 	mongoURL := configs.Config.DatabaseURL
+	dbName := configs.Config.DBName
 
 	dbConnectionQuery := "?parseTime=true"
 
@@ -30,8 +32,7 @@ func DBMigrate() {
 	go func() {
 		defer wg.Done()
 
-		var text, persona string
-		var createdAt time.Time
+		newDataList := []any{}
 		mariaDB, err := sql.Open("mysql", mariaURL+dbConnectionQuery)
 		if err != nil {
 			panic(err)
@@ -54,6 +55,9 @@ func DBMigrate() {
 		i := 1
 
 		for rows.Next() {
+			var text, persona string
+			var createdAt time.Time
+
 			fmt.Printf("statement %d\n", i)
 			err = rows.Scan(&text, &persona, &createdAt)
 			if err != nil {
@@ -63,12 +67,17 @@ func DBMigrate() {
 			if text == "" {
 				text = "살ㄹ려주세요"
 			}
-			databases.Texts.InsertOne(context.TODO(), databases.InsertText{
-				Text:      text,
-				Persona:   persona,
-				CreatedAt: createdAt,
+
+			newDataList = append(newDataList, bson.M{
+				"text":       text,
+				"persona":    persona,
+				"created_at": createdAt,
 			})
 			i++
+		}
+		_, err = mongoDB.Database(dbName).Collection("text").InsertMany(context.TODO(), newDataList)
+		if err != nil {
+			panic(err)
 		}
 	}()
 
@@ -76,8 +85,7 @@ func DBMigrate() {
 	go func() {
 		defer wg.Done()
 
-		var text, persona string
-		var createdAt time.Time
+		newDataList := []any{}
 		mariaDB, err := sql.Open("mysql", mariaURL+dbConnectionQuery)
 		if err != nil {
 			panic(err)
@@ -100,6 +108,9 @@ func DBMigrate() {
 		i := 1
 
 		for rows.Next() {
+			var text, persona string
+			var createdAt time.Time
+
 			fmt.Printf("nsfw_content %d\n", i)
 			err = rows.Scan(&text, &persona, &createdAt)
 			if err != nil {
@@ -109,12 +120,18 @@ func DBMigrate() {
 			if text == "" {
 				text = "살ㄹ려주세요"
 			}
-			databases.Texts.InsertOne(context.TODO(), databases.InsertText{
-				Text:      text,
-				Persona:   persona,
-				CreatedAt: createdAt,
+
+			newDataList = append(newDataList, bson.M{
+				"text":       text,
+				"persona":    persona,
+				"created_at": createdAt,
 			})
 			i++
+		}
+
+		_, err = mongoDB.Database(dbName).Collection("text").InsertMany(context.TODO(), newDataList)
+		if err != nil {
+			panic(err)
 		}
 	}()
 
@@ -122,8 +139,7 @@ func DBMigrate() {
 	go func() {
 		defer wg.Done()
 
-		var command, result, userId string
-		var createdAt time.Time
+		newDataList := []any{}
 		mariaDB, err := sql.Open("mysql", mariaURL+dbConnectionQuery)
 		if err != nil {
 			panic(err)
@@ -146,22 +162,31 @@ func DBMigrate() {
 		i := 1
 
 		for rows.Next() {
+			var command, result, userId string
+			var createdAt time.Time
+
 			fmt.Printf("learn %d\n", i)
 			err = rows.Scan(&command, &result, &userId, &createdAt)
 			if err != nil {
 				panic(err)
 			}
 
-			databases.Learns.InsertOne(context.TODO(), databases.InsertLearn{
-				Command:   command,
-				Result:    result,
-				UserId:    userId,
-				CreatedAt: createdAt,
+			newDataList = append(newDataList, bson.M{
+				"command":    command,
+				"result":     result,
+				"user_id":    userId,
+				"created_at": createdAt,
 			})
 			i++
+		}
+
+		_, err = mongoDB.Database(dbName).Collection("learn").InsertMany(context.TODO(), newDataList)
+		if err != nil {
+			panic(err)
 		}
 	}()
 
 	// 모든 고루틴이 끝날 떄 까지 대기
 	wg.Wait()
+	fmt.Println("데이터 마이그레이션이 끝났어요.")
 }
