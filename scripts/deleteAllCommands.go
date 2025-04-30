@@ -25,7 +25,7 @@ func DeleteAllCommands() {
 	}
 
 	if *id == "" {
-		panic(fmt.Errorf("--id 플래그의 값이 필요해요."))
+		panic(fmt.Errorf("--id 플래그의 값이 필요해요"))
 	}
 
 	c := http.Client{}
