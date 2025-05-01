@@ -17,13 +17,13 @@ var LearnedDataListCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
 		Name:        "리스트",
-		Description: "당신이 가ㄹ르쳐준 단어를 나열해요.",
+		Description: "당신이 가ㄹ르쳐준 지식을 나열해요.",
 	},
 	Aliases: []string{"list", "목록", "지식목록"},
 	DetailedDescription: &DetailedDescription{
 		Usage: fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
 	},
-	Category: Chattings,
+	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
 		learnedDataListRun(ctx.Session, ctx.Msg)
 	},
@@ -32,8 +32,8 @@ var LearnedDataListCommand *Command = &Command{
 	},
 }
 
-func getDescriptions(datas *[]databases.Learn) (descriptions []string) {
-	for _, data := range *datas {
+func getDescriptions(data *[]databases.Learn) (descriptions []string) {
+	for _, data := range *data {
 		descriptions = append(descriptions, fmt.Sprintf("- %s: %s", data.Command, data.Result))
 	}
 	return
@@ -41,7 +41,8 @@ func getDescriptions(datas *[]databases.Learn) (descriptions []string) {
 
 func learnedDataListRun(s *discordgo.Session, m any) {
 	var userId, globalName, avatarUrl string
-	var datas []databases.Learn
+	var data []databases.Learn
+
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		userId = m.Author.ID
@@ -52,7 +53,7 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 
 		userId = m.Member.User.ID
 		globalName = m.Member.User.GlobalName
-		avatarUrl = m.User.AvatarURL("512")
+		avatarUrl = m.Member.User.AvatarURL("512")
 	}
 
 	cur, err := databases.Learns.Find(context.TODO(), bson.D{{Key: "user_id", Value: userId}})
@@ -95,11 +96,11 @@ func learnedDataListRun(s *discordgo.Session, m any) {
 
 	defer cur.Close(context.TODO())
 
-	cur.All(context.TODO(), &datas)
+	cur.All(context.TODO(), &data)
 
 	embed := &discordgo.MessageEmbed{
 		Title:       fmt.Sprintf("%s님이 알려주신 지식", globalName),
-		Description: utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(datas), strings.Join(getDescriptions(&datas), "\n"))),
+		Description: utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(data), strings.Join(getDescriptions(&data), "\n"))),
 		Color:       utils.EmbedDefault,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: avatarUrl,

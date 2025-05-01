@@ -59,8 +59,8 @@ type Component struct {
 }
 
 const (
-	Chattings Category = "채팅"
-	Generals  Category = "일반"
+	Chatting Category = "채팅"
+	General  Category = "일반"
 )
 
 var commandMutex sync.Mutex

@@ -29,19 +29,18 @@ var DeleteLearnedDataCommand *Command = &Command{
 		Usage:    fmt.Sprintf("%s삭제 (삭제할 단어)", configs.Config.Bot.Prefix),
 		Examples: []string{fmt.Sprintf("%s삭제 머핀", configs.Config.Bot.Prefix)},
 	},
-	Category: Chattings,
+	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
 		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		var args *[]string
-		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Inter, args)
+		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Inter, nil)
 	},
 }
 
 func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	var command, userId, description string
-	var datas []databases.Learn
+	var data []databases.Learn
 	var options []discordgo.SelectMenuOption
 
 	switch m := m.(type) {
@@ -94,9 +93,9 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		return
 	}
 
-	cur.All(context.TODO(), &datas)
+	cur.All(context.TODO(), &data)
 
-	if len(datas) < 1 {
+	if len(data) < 1 {
 		embed := &discordgo.MessageEmbed{
 			Title:       "❌ 오류",
 			Description: "해당 하는 지식ㅇ을 찾을 수 없어요.",
@@ -114,8 +113,8 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		return
 	}
 
-	for i := range len(datas) {
-		data := datas[i]
+	for i := range len(data) {
+		data := data[i]
 
 		options = append(options, discordgo.SelectMenuOption{
 			Label:       fmt.Sprintf("%d번 지식", i+1),

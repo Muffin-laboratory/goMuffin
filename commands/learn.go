@@ -55,13 +55,12 @@ var LearnCommand *Command = &Command{
 			fmt.Sprintf("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\"", configs.Config.Bot.Prefix),
 		},
 	},
-	Category: Chattings,
+	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
 		learnRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		var args *[]string
-		learnRun(ctx.Command, ctx.Session, ctx.Inter, args)
+		learnRun(ctx.Command, ctx.Session, ctx.Inter, nil)
 	},
 }
 

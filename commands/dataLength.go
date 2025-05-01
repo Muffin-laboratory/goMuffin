@@ -42,7 +42,7 @@ var DataLengthCommand *Command = &Command{
 	DetailedDescription: &DetailedDescription{
 		Usage: fmt.Sprintf("%s학습데이터량", configs.Config.Bot.Prefix),
 	},
-	Category: Generals,
+	Category: General,
 	MessageRun: func(ctx *MsgContext) {
 		dataLengthRun(ctx.Session, ctx.Msg)
 	},
@@ -51,11 +51,11 @@ var DataLengthCommand *Command = &Command{
 	},
 }
 
-func getLength(data dataType, coll *mongo.Collection, filter bson.D) {
+func getLength(dType dataType, coll *mongo.Collection, filter bson.D) {
 	defer dataLengthWg.Done()
 	var err error
 	var cur *mongo.Cursor
-	var datas []bson.M
+	var data []bson.M
 
 	cur, err = coll.Find(context.TODO(), filter)
 	if err != nil {
@@ -64,8 +64,8 @@ func getLength(data dataType, coll *mongo.Collection, filter bson.D) {
 
 	defer cur.Close(context.TODO())
 
-	cur.All(context.TODO(), &datas)
-	dataLengthCh <- chStruct{name: data, length: len(datas)}
+	cur.All(context.TODO(), &data)
+	dataLengthCh <- chStruct{name: dType, length: len(data)}
 }
 
 func dataLengthRun(s *discordgo.Session, m any) {
