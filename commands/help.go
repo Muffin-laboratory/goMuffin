@@ -28,13 +28,12 @@ var HelpCommand *Command = &Command{
 		Usage:    fmt.Sprintf("%s도움말 [명령어]", configs.Config.Bot.Prefix),
 		Examples: []string{fmt.Sprintf("%s도움말", configs.Config.Bot.Prefix), fmt.Sprintf("%s도움말 배워", configs.Config.Bot.Prefix)},
 	},
-	Category: Generals,
+	Category: General,
 	MessageRun: func(ctx *MsgContext) {
 		helpRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		var args *[]string
-		helpRun(ctx.Command, ctx.Session, ctx.Inter, args)
+		helpRun(ctx.Command, ctx.Session, ctx.Inter, nil)
 	},
 }
 
@@ -76,8 +75,8 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		embed.Description = utils.CodeBlock(
 			"md",
 			fmt.Sprintf("# 일반\n%s\n\n# 채팅\n%s",
-				strings.Join(getCommandsByCategory(Discommand, Generals), "\n"),
-				strings.Join(getCommandsByCategory(Discommand, Chattings), "\n")),
+				strings.Join(getCommandsByCategory(Discommand, General), "\n"),
+				strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
 		)
 
 		switch m := m.(type) {
@@ -122,7 +121,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	if command.DetailedDescription.Examples != nil {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:  "예시",
-			Value: utils.CodeBlock("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
+			Value: utils.CodeBlock("md", strings.Join(addPrefix(command.DetailedDescription.Examples), "\n")),
 		})
 	} else {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{

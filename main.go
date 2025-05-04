@@ -15,8 +15,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
-	dbmigrate "git.wh64.net/muffin/goMuffin/scripts/dbMigrate"
-	deleteallcommands "git.wh64.net/muffin/goMuffin/scripts/deleteAllCommands"
+	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -26,11 +25,11 @@ func main() {
 	if len(os.Args) > 1 {
 		switch strings.ToLower(os.Args[1]) {
 		case "dbmigrate":
-			dbmigrate.DBMigrate()
+			scripts.DBMigrate()
 		case "deleteallcommands":
-			deleteallcommands.DeleteAllCommands()
+			scripts.DeleteAllCommands()
 		default:
-			panic(fmt.Errorf("[goMuffin] 명령어 인자에는 dbmigrate나 deleteallcommands만 올 수 있어요."))
+			log.Fatalln(fmt.Errorf("[goMuffin] 명령어 인자에는 dbmigrate나 deleteallcommands만 올 수 있어요"))
 		}
 		return
 	}
@@ -54,6 +53,7 @@ func main() {
 	go dg.AddHandler(handler.InteractionCreate)
 
 	dg.Open()
+	defer dg.Close()
 
 	go func() {
 		for {
@@ -77,10 +77,7 @@ func main() {
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
 	}
 
-	defer func() {
-		dg.Close()
-		databases.Client.Disconnect(context.TODO())
-	}()
+	defer databases.Client.Disconnect(context.TODO())
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)
