@@ -121,7 +121,7 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 	if command.DetailedDescription.Examples != nil {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:  "예시",
-			Value: utils.CodeBlock("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
+			Value: utils.CodeBlock("md", strings.Join(addPrefix(command.DetailedDescription.Examples), "\n")),
 		})
 	} else {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
