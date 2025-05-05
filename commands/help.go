@@ -106,6 +106,13 @@ func helpRun(s *discordgo.Session, m any, args *[]string) {
 		},
 	}
 
+	if command.Name == LearnCommand.Name {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "대답에 쓸 수 있는 인자",
+			Value: learnArguments,
+		})
+	}
+
 	if command.Aliases != nil {
 		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
 			Name:  "별칭",

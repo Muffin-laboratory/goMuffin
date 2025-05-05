@@ -13,7 +13,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var arguments = utils.InlineCode("{user.name}") + "\n" +
+var learnArguments = utils.InlineCode("{user.name}") + "\n" +
 	utils.InlineCode("{user.mention}") + "\n" +
 	utils.InlineCode("{user.globalName}") + "\n" +
 	utils.InlineCode("{user.id}") + "\n" +
@@ -91,7 +91,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 					},
 					{
 						Name:   "사용 가능한 인자",
-						Value:  arguments,
+						Value:  learnArguments,
 						Inline: true,
 					},
 					{

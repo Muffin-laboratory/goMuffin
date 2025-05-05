@@ -63,7 +63,7 @@ func main() {
 	}()
 
 	for _, cmd := range commands.Discommand.Commands {
-		if cmd.Name == "도움말" {
+		if cmd.Name == commands.HelpCommand.Name {
 			// 극한의 성능 똥망 코드 탄생!
 			// 무려 똑같은 걸 반복해서 돌리는!
 			for _, a := range commands.Discommand.Commands {
