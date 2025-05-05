@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -17,19 +16,33 @@ import (
 	"git.wh64.net/muffin/goMuffin/handler"
 	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
+	"github.com/devproje/commando"
+	"github.com/devproje/commando/types"
 )
 
 func main() {
+	command := commando.NewCommando(os.Args[1:])
 	config := configs.Config
 
 	if len(os.Args) > 1 {
-		switch strings.ToLower(os.Args[1]) {
-		case "dbmigrate":
-			scripts.DBMigrate()
-		case "deleteallcommands":
-			scripts.DeleteAllCommands()
-		default:
-			log.Fatalln(fmt.Errorf("[goMuffin] 명령어 인자에는 dbmigrate나 deleteallcommands만 올 수 있어요"))
+		command.Root("db-migrate", "봇의 데이터를 MariaDB에서 MongoDB로 옮깁니다.", scripts.DBMigrate)
+		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
+			types.OptionData{
+				Name: "id",
+				Desc: "봇의 디스코드 아이디",
+				Type: types.STRING,
+			},
+			types.OptionData{
+				Name:  "isYes",
+				Short: []string{"y"},
+				Type:  types.BOOLEAN,
+			},
+		)
+
+		err := command.Execute()
+		if err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 		return
 	}
