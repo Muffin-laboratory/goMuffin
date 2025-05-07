@@ -106,7 +106,7 @@ func saveFileToTXT(path, name string, data []databases.Text) error {
 
 func ExportData(n *commando.Node) error {
 	var wg sync.WaitGroup
-	ch := make(chan error, 2)
+	ch := make(chan error, 3)
 
 	databases.Client.Disconnect(context.TODO()) // databases 패키지의 DB 연결은 필요 없음 (나중에 수정 예정)
 	fileType, err := option.ParseString(*n.MustGetOpt("type"), n)
@@ -135,7 +135,7 @@ func ExportData(n *commando.Node) error {
 		return err
 	}
 
-	wg.Add(2)
+	wg.Add(3)
 
 	// 머핀 데이터 추출
 	go func() {
@@ -236,6 +236,43 @@ func ExportData(n *commando.Node) error {
 		}
 
 		fmt.Println("nsfw 데이터 추출 완료")
+	}()
+
+	// 지식 데이터 추출
+	go func() {
+		defer wg.Done()
+
+		var data []databases.Learn
+
+		conn, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		defer conn.Disconnect(context.TODO())
+
+		cur, err := conn.Database(configs.Config.DBName).Collection("learn").Find(context.TODO(), bson.D{{}})
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		defer cur.Close(context.TODO())
+
+		err = cur.All(context.TODO(), &data)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		err = saveFileToJSON(path, "learn", data)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		fmt.Println("지식 데이터 추출 완료")
 	}()
 
 	wg.Wait()
