@@ -39,6 +39,24 @@ func main() {
 			},
 		)
 
+		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
+			types.OptionData{
+				Name: "type",
+				Desc: "파일형식을 지정합니다. (json, txt(txt는 머핀 데이터만 적용))",
+				Type: types.STRING,
+			},
+			types.OptionData{
+				Name: "export-path",
+				Desc: "데이터를 저장할 위치를 지정합니다.",
+				Type: types.STRING,
+			},
+			types.OptionData{
+				Name: "refined",
+				Desc: "머핀 데이터를 있는 그대로 추출할 지, 가려내서 추출할 지를 지정합니다.",
+				Type: types.BOOLEAN,
+			},
+		)
+
 		err := command.Execute()
 		if err != nil {
 			_, _ = fmt.Fprintln(os.Stderr, err)
