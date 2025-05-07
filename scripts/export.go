@@ -7,13 +7,17 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/devproje/commando"
 	"github.com/devproje/commando/option"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var date time.Time = time.Now()
@@ -65,12 +69,6 @@ func saveFileToJSON(path, name string, data any) error {
 		return err
 	}
 
-	path += getDate()
-	err = checkDir(path)
-	if err != nil {
-		return err
-	}
-
 	f, err := os.Create(fmt.Sprintf("%s/%s.json", path, name))
 	if err != nil {
 		return err
@@ -92,12 +90,6 @@ func saveFileToTXT(path, name string, data []databases.Text) error {
 		content += data.Text + "\n"
 	}
 
-	path += getDate()
-	err := checkDir(path)
-	if err != nil {
-		return err
-	}
-
 	f, err := os.Create(fmt.Sprintf("%s/%s.txt", path, name))
 	if err != nil {
 		return err
@@ -113,8 +105,10 @@ func saveFileToTXT(path, name string, data []databases.Text) error {
 }
 
 func ExportData(n *commando.Node) error {
-	ch := make(chan error)
-	defer databases.Client.Disconnect(context.TODO())
+	var wg sync.WaitGroup
+	ch := make(chan error, 2)
+
+	databases.Client.Disconnect(context.TODO()) // databases 패키지의 DB 연결은 필요 없음 (나중에 수정 예정)
 	fileType, err := option.ParseString(*n.MustGetOpt("type"), n)
 	if err != nil {
 		return err
@@ -134,24 +128,48 @@ func ExportData(n *commando.Node) error {
 		return err
 	}
 
-	texts := databases.Texts
-	// learns := databases.Learns
+	path += "/" + getDate()
+
+	err = checkDir(path)
+	if err != nil {
+		return err
+	}
+
+	wg.Add(2)
 
 	// 머핀 데이터 추출
 	go func() {
+		defer wg.Done()
+
 		var data []databases.Text
 
-		cur, err := texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+		conn, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
 		if err != nil {
 			ch <- err
+			return
 		}
 
-		cur.All(context.TODO(), &data)
+		defer conn.Disconnect(context.TODO())
+
+		cur, err := conn.Database(configs.Config.DBName).Collection("text").Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		defer cur.Close(context.TODO())
+
+		err = cur.All(context.TODO(), &data)
+		if err != nil {
+			ch <- err
+			return
+		}
 
 		if refined {
 			for i, text := range data {
 				if utils.EmojiRegexp.Match([]byte(text.Text)) {
 					data = append(data[:i], data[i+1:]...)
+					return
 				}
 
 				text.Text = strings.TrimPrefix(text.Text, "머핀아 ")
@@ -159,11 +177,72 @@ func ExportData(n *commando.Node) error {
 		}
 
 		if fileType == "json" {
-			ch <- saveFileToJSON(path, "muffin", data)
+			err = saveFileToJSON(path, "muffin", data)
+			if err != nil {
+				ch <- err
+				return
+			}
 		} else {
 			fmt.Println("NOTE: 파일 형식이 'txt'인 경우 머핀 데이터만 txt형식으로 저장되고, 나머지는 json으로 저장됩니다.")
-			ch <- saveFileToTXT(path, "muffin", data)
+			err = saveFileToTXT(path, "muffin", data)
+			if err != nil {
+				ch <- err
+				return
+			}
 		}
+
+		fmt.Println("머핀 데이터 추출 완료")
 	}()
-	return <-ch
+
+	// nsfw 데이터 추출
+	go func() {
+		defer wg.Done()
+
+		var data []databases.Text
+
+		conn, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		defer conn.Disconnect(context.TODO())
+
+		cur, err := conn.Database(configs.Config.DBName).Collection("text").Find(context.TODO(), bson.D{
+			{
+				Key: "persona",
+				Value: bson.M{
+					"$regex": "^user",
+				},
+			},
+		})
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		defer cur.Close(context.TODO())
+
+		err = cur.All(context.TODO(), &data)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		err = saveFileToJSON(path, "nsfw", data)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		fmt.Println("nsfw 데이터 추출 완료")
+	}()
+
+	wg.Wait()
+	close(ch)
+
+	for err = range ch {
+		fmt.Println(err)
+	}
+	return nil
 }
