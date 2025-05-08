@@ -22,6 +22,10 @@ import (
 
 var date time.Time = time.Now()
 
+type jsonlData struct {
+	Text string `json:"text"`
+}
+
 func getDate() string {
 	year := strconv.Itoa(date.Year())
 	month := strconv.Itoa(int(date.Month()))
@@ -104,6 +108,31 @@ func saveFileToTXT(path, name string, data []databases.Text) error {
 	return nil
 }
 
+func saveFileToJSONL(path, name string, data []jsonlData) error {
+	var content string
+
+	for _, data := range data {
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		content += string(bytes) + "\n"
+	}
+
+	f, err := os.Create(fmt.Sprintf("%s/%s.jsonl", path, name))
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	_, err = f.WriteString(content)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func ExportData(n *commando.Node) error {
 	var wg sync.WaitGroup
 	ch := make(chan error, 3)
@@ -114,8 +143,8 @@ func ExportData(n *commando.Node) error {
 		return err
 	}
 
-	if fileType != "txt" && fileType != "json" {
-		return fmt.Errorf("파일 형식은 txt또는 json이여야 해요")
+	if fileType != "txt" && fileType != "json" && fileType != "jsonl" {
+		return fmt.Errorf("파일 형식은 txt또는 json또는 jsonl이여야 해요")
 	}
 
 	refined, err := option.ParseBool(*n.MustGetOpt("refined"), n)
@@ -182,9 +211,24 @@ func ExportData(n *commando.Node) error {
 				ch <- err
 				return
 			}
-		} else {
-			fmt.Println("NOTE: 파일 형식이 'txt'인 경우 머핀 데이터만 txt형식으로 저장되고, 나머지는 json으로 저장됩니다.")
+		} else if fileType == "txt" {
+			fmt.Println("NOTE: 파일 형식이 'txt'인 경우 머핀 데이터만 txt형식으로 추출되고, 나머지는 json으로 추출됩니다.")
 			err = saveFileToTXT(path, "muffin", data)
+			if err != nil {
+				ch <- err
+				return
+			}
+		} else if fileType == "jsonl" {
+			var newData []jsonlData
+
+			fmt.Println("NOTE: 파일 형식이 'jsonl'인 경우 머핀 데이터만 jsonl형식으로 추출되고, 나머지는 json으로 추출됩니다.")
+			fmt.Println("NOTE: 파일 형식이 'jsonl'인 경우 일부데이터만 추출 됩니다.")
+
+			for _, data := range data {
+				newData = append(newData, jsonlData{data.Text})
+			}
+
+			err = saveFileToJSONL(path, "muffin", newData)
 			if err != nil {
 				ch <- err
 				return
