@@ -22,8 +22,14 @@ import (
 
 var date time.Time = time.Now()
 
-type jsonlData struct {
-	Text string `json:"text"`
+type textJSONLData struct {
+	Text    string `json:"text"`
+	Persona string `json:"persona,omitempty"`
+}
+
+type learnJSONLData struct {
+	Command string `json:"command"`
+	Result  string `json:"result"`
 }
 
 func getDate() string {
@@ -87,36 +93,26 @@ func saveFileToJSON(path, name string, data any) error {
 	return nil
 }
 
-func saveFileToTXT(path, name string, data []databases.Text) error {
+func saveFileToJSONL(path, name string, data any) error {
 	var content string
 
-	for _, data := range data {
-		content += data.Text + "\n"
-	}
-
-	f, err := os.Create(fmt.Sprintf("%s/%s.txt", path, name))
-	if err != nil {
-		return err
-	}
-
-	defer f.Close()
-
-	_, err = f.WriteString(content)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func saveFileToJSONL(path, name string, data []jsonlData) error {
-	var content string
-
-	for _, data := range data {
-		bytes, err := json.Marshal(data)
-		if err != nil {
-			return err
+	switch data := data.(type) {
+	case []textJSONLData:
+		for _, data := range data {
+			bytes, err := json.Marshal(data)
+			if err != nil {
+				return err
+			}
+			content += string(bytes) + "\n"
 		}
-		content += string(bytes) + "\n"
+	case []learnJSONLData:
+		for _, data := range data {
+			bytes, err := json.Marshal(data)
+			if err != nil {
+				return err
+			}
+			content += string(bytes) + "\n"
+		}
 	}
 
 	f, err := os.Create(fmt.Sprintf("%s/%s.jsonl", path, name))
@@ -143,7 +139,7 @@ func ExportData(n *commando.Node) error {
 		return err
 	}
 
-	if fileType != "txt" && fileType != "json" && fileType != "jsonl" {
+	if fileType != "json" && fileType != "jsonl" {
 		return fmt.Errorf("파일 형식은 txt또는 json또는 jsonl이여야 해요")
 	}
 
@@ -165,6 +161,10 @@ func ExportData(n *commando.Node) error {
 	}
 
 	wg.Add(3)
+
+	if fileType == "jsonl" {
+		fmt.Println("NOTE: 파일 형식이 'jsonl'인 경우 일부데이터만 추출 됩니다.")
+	}
 
 	// 머핀 데이터 추출
 	go func() {
@@ -211,21 +211,11 @@ func ExportData(n *commando.Node) error {
 				ch <- err
 				return
 			}
-		} else if fileType == "txt" {
-			fmt.Println("NOTE: 파일 형식이 'txt'인 경우 머핀 데이터만 txt형식으로 추출되고, 나머지는 json으로 추출됩니다.")
-			err = saveFileToTXT(path, "muffin", data)
-			if err != nil {
-				ch <- err
-				return
-			}
 		} else if fileType == "jsonl" {
-			var newData []jsonlData
-
-			fmt.Println("NOTE: 파일 형식이 'jsonl'인 경우 머핀 데이터만 jsonl형식으로 추출되고, 나머지는 json으로 추출됩니다.")
-			fmt.Println("NOTE: 파일 형식이 'jsonl'인 경우 일부데이터만 추출 됩니다.")
+			var newData []textJSONLData
 
 			for _, data := range data {
-				newData = append(newData, jsonlData{data.Text})
+				newData = append(newData, textJSONLData{data.Text, ""})
 			}
 
 			err = saveFileToJSONL(path, "muffin", newData)
@@ -273,10 +263,24 @@ func ExportData(n *commando.Node) error {
 			return
 		}
 
-		err = saveFileToJSON(path, "nsfw", data)
-		if err != nil {
-			ch <- err
-			return
+		if fileType == "json" {
+			err = saveFileToJSON(path, "nsfw", data)
+			if err != nil {
+				ch <- err
+				return
+			}
+		} else if fileType == "jsonl" {
+			var newData []textJSONLData
+
+			for _, data := range data {
+				newData = append(newData, textJSONLData{data.Text, data.Persona})
+			}
+
+			err = saveFileToJSONL(path, "nsfw", newData)
+			if err != nil {
+				ch <- err
+				return
+			}
 		}
 
 		fmt.Println("nsfw 데이터 추출 완료")
@@ -310,10 +314,24 @@ func ExportData(n *commando.Node) error {
 			return
 		}
 
-		err = saveFileToJSON(path, "learn", data)
-		if err != nil {
-			ch <- err
-			return
+		if fileType == "json" {
+			err = saveFileToJSON(path, "learn", data)
+			if err != nil {
+				ch <- err
+				return
+			}
+		} else if fileType == "jsonl" {
+			var newData []learnJSONLData
+
+			for _, data := range data {
+				newData = append(newData, learnJSONLData{data.Command, data.Result})
+			}
+
+			err = saveFileToJSONL(path, "learn", newData)
+			if err != nil {
+				ch <- err
+				return
+			}
 		}
 
 		fmt.Println("지식 데이터 추출 완료")
