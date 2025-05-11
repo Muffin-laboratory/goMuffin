@@ -65,11 +65,7 @@ func main() {
 		return
 	}
 
-	dg, err := discordgo.New("Bot " + config.Bot.Token)
-	if err != nil {
-		log.Println("[goMuffin] 봇의 세션을 만들수가 없어요.")
-		log.Fatalln(err)
-	}
+	dg, _ := discordgo.New("Bot " + config.Bot.Token)
 
 	go commands.Discommand.LoadCommand(commands.HelpCommand)
 	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
@@ -83,9 +79,15 @@ func main() {
 	go dg.AddHandler(handler.MessageCreate)
 	go dg.AddHandler(handler.InteractionCreate)
 
-	dg.Open()
+	err := dg.Open()
+	if err != nil {
+		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
+		log.Fatalln(err)
+	}
+
 	defer dg.Close()
 
+	// 봇의 상태메세지 변경
 	go func() {
 		for {
 			dg.UpdateCustomStatus("ㅅ살려주세요..!")
