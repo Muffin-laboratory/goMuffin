@@ -72,8 +72,8 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if command == "" {
 			s.ChannelTyping(m.ChannelID)
 
-			var datas []databases.Text
-			var learnDatas []databases.Learn
+			var data []databases.Text
+			var learnData []databases.Learn
 			var filter bson.D
 
 			ch := make(chan int)
@@ -103,21 +103,21 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 				defer cur.Close(context.TODO())
 
-				cur.All(context.TODO(), &datas)
+				cur.All(context.TODO(), &data)
 				ch <- 1
 			}()
 			go func() {
 				cur, err := databases.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: content}})
 				if err != nil {
 					if err == mongo.ErrNilDocument {
-						learnDatas = []databases.Learn{}
+						learnData = []databases.Learn{}
 					}
 					log.Fatalln(err)
 				}
 
 				defer cur.Close(context.TODO())
 
-				cur.All(context.TODO(), &learnDatas)
+				cur.All(context.TODO(), &learnData)
 				ch <- 1
 			}()
 
@@ -126,16 +126,34 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			close(ch)
 
-			if x > 2 && len(learnDatas) != 0 {
-				data := learnDatas[rand.Intn(len(learnDatas))]
+			if x > 2 && len(learnData) != 0 {
+				data := learnData[rand.Intn(len(learnData))]
 				user, _ := s.User(data.UserId)
 				result := resultParser(data.Result, s, m)
 
-				s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
+				// s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
+				s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+					Reference: m.Reference(),
+					Content:   fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))),
+					AllowedMentions: &discordgo.MessageAllowedMentions{
+						Roles: []string{},
+						Parse: []discordgo.AllowedMentionType{},
+						Users: []string{},
+					},
+				})
 				return
 			}
 
-			s.ChannelMessageSendReply(m.ChannelID, datas[rand.Intn(len(datas))].Text, m.Reference())
+			// s.ChannelMessageSendReply(m.ChannelID, data[rand.Intn(len(data))].Text, m.Reference())
+			s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+				Reference: m.Reference(),
+				Content:   data[rand.Intn(len(data))].Text,
+				AllowedMentions: &discordgo.MessageAllowedMentions{
+					Roles: []string{},
+					Parse: []discordgo.AllowedMentionType{},
+					Users: []string{},
+				},
+			})
 			return
 		}
 
