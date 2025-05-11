@@ -57,7 +57,7 @@ var LearnCommand *Command = &Command{
 	},
 	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
-		learnRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
+		learnRun(ctx.Command, ctx.Session, ctx.Msg, ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		learnRun(ctx.Command, ctx.Session, ctx.Inter, nil)

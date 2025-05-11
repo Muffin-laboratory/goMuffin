@@ -42,7 +42,7 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
-		learnedDataListRun(ctx.Session, ctx.Msg, &ctx.Args)
+		learnedDataListRun(ctx.Session, ctx.Msg, ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		learnedDataListRun(ctx.Session, ctx.Inter, nil)

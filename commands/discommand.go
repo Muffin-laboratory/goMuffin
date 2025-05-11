@@ -37,7 +37,7 @@ type DiscommandStruct struct {
 type MsgContext struct {
 	Session *discordgo.Session
 	Msg     *discordgo.MessageCreate
-	Args    []string
+	Args    *[]string
 	Command *Command
 }
 
@@ -94,7 +94,7 @@ func (d *DiscommandStruct) LoadComponent(c *Component) {
 
 func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	if command, ok := d.Commands[name]; ok {
-		command.MessageRun(&MsgContext{s, m, args, command})
+		command.MessageRun(&MsgContext{s, m, &args, command})
 	}
 }
 

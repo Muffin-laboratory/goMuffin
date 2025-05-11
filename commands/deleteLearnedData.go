@@ -31,7 +31,7 @@ var DeleteLearnedDataCommand *Command = &Command{
 	},
 	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
-		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
+		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Msg, ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Inter, nil)

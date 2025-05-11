@@ -30,7 +30,7 @@ var HelpCommand *Command = &Command{
 	},
 	Category: General,
 	MessageRun: func(ctx *MsgContext) {
-		helpRun(ctx.Session, ctx.Msg, &ctx.Args)
+		helpRun(ctx.Session, ctx.Msg, ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		helpRun(ctx.Session, ctx.Inter, nil)
