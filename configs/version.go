@@ -7,7 +7,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 )
 
-const MUFFIN_VERSION = "5.0.1-gopher_release.250505a"
+const MUFFIN_VERSION = "5.0.2-gopher_release.250511a"
 
 var updatedString string = utils.Decimals.FindAllStringSubmatch(MUFFIN_VERSION, -1)[3][0]
 
