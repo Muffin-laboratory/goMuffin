@@ -23,7 +23,7 @@ var wg sync.WaitGroup
 func DBMigrate(n *commando.Node) error {
 	mariaURL := os.Getenv("PREVIOUS_DATABASE_URL")
 	mongoURL := configs.Config.DatabaseURL
-	dbName := configs.Config.DBName
+	dbName := configs.Config.DatabaseName
 
 	dbConnectionQuery := "?parseTime=true"
 

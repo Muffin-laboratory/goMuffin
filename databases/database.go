@@ -32,7 +32,7 @@ func Connect() (*MuffinDatabase, error) {
 	}
 	return &MuffinDatabase{
 		Client: client,
-		Learns: client.Database(configs.Config.DBName).Collection("learn"),
-		Texts:  client.Database(configs.Config.DBName).Collection("text"),
+		Learns: client.Database(configs.Config.DatabaseName).Collection("learn"),
+		Texts:  client.Database(configs.Config.DatabaseName).Collection("text"),
 	}, nil
 }

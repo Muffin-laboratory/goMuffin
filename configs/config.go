@@ -20,24 +20,24 @@ type trainConfig struct {
 
 // MuffinConfig for Muffin bot
 type MuffinConfig struct {
-	Bot         botConfig
-	Train       trainConfig
-	DatabaseURL string
-	DBName      string
+	Bot          botConfig
+	Train        trainConfig
+	DatabaseURL  string
+	DatabaseName string
 }
 
-func loadConfig() *MuffinConfig {
-	godotenv.Load()
-	config := &MuffinConfig{Bot: botConfig{}, Train: trainConfig{}}
-	setConfig(config)
+var Config *MuffinConfig
 
-	return config
+func init() {
+	godotenv.Load()
+	Config = &MuffinConfig{Bot: botConfig{}, Train: trainConfig{}}
+	setConfig(Config)
 }
 
 func getRequiredValue(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		log.Fatalln(fmt.Sprintf("[goMuffin] .env 파일에서 필요한 %s값이 없어요.", key))
+		log.Fatalln(fmt.Sprintf("[goMuffin] .env 파일에서 필요한 '%s'값이 없어요.", key))
 	}
 	return value
 }
@@ -54,7 +54,5 @@ func setConfig(config *MuffinConfig) {
 	config.Train.UserID = getValue("TRAIN_USER_ID")
 
 	config.DatabaseURL = getRequiredValue("DATABASE_URL")
-	config.DBName = getRequiredValue("DATABASE_NAME")
+	config.DatabaseName = getRequiredValue("DATABASE_NAME")
 }
-
-var Config *MuffinConfig = loadConfig()
