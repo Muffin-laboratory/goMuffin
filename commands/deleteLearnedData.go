@@ -74,7 +74,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		userId = m.Member.User.ID
 	}
 
-	cur, err := databases.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
+	cur, err := databases.Database.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
 	if err != nil {
 		embed := &discordgo.MessageEmbed{
 			Title:       "❌ 오류",

@@ -3,9 +3,7 @@ package databases
 import (
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type InsertText struct {
@@ -20,5 +18,3 @@ type Text struct {
 	Persona   string        `bson:"persona" json:"persona"`
 	CreatedAt time.Time     `bson:"created_at" json:"created_at"`
 }
-
-var Texts *mongo.Collection = Client.Database(configs.Config.DBName).Collection("text")

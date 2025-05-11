@@ -173,7 +173,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		}
 	}
 
-	_, err := databases.Learns.InsertOne(context.TODO(), databases.InsertLearn{
+	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
 		Command:   command,
 		Result:    result,
 		UserId:    userId,

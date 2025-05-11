@@ -115,7 +115,7 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 		}
 	}
 
-	cur, err := databases.Learns.Find(context.TODO(), bson.D{{Key: "user_id", Value: userId}, filter})
+	cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "user_id", Value: userId}, filter})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			embed := &discordgo.MessageEmbed{

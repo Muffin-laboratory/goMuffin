@@ -10,14 +10,11 @@ import (
 	"sync"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/devproje/commando"
 	"github.com/devproje/commando/option"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
-	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var date time.Time = time.Now()
@@ -130,10 +127,11 @@ func saveFileToJSONL(path, name string, data any) error {
 }
 
 func ExportData(n *commando.Node) error {
+	defer databases.Database.Client.Disconnect(context.TODO())
+
 	var wg sync.WaitGroup
 	ch := make(chan error, 3)
 
-	databases.Client.Disconnect(context.TODO()) // databases 패키지의 DB 연결은 필요 없음 (나중에 수정 예정)
 	fileType, err := option.ParseString(*n.MustGetOpt("type"), n)
 	if err != nil {
 		return err
@@ -172,15 +170,7 @@ func ExportData(n *commando.Node) error {
 
 		var data []databases.Text
 
-		conn, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		defer conn.Disconnect(context.TODO())
-
-		cur, err := conn.Database(configs.Config.DBName).Collection("text").Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+		cur, err := databases.Database.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
 		if err != nil {
 			ch <- err
 			return
@@ -234,15 +224,7 @@ func ExportData(n *commando.Node) error {
 
 		var data []databases.Text
 
-		conn, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		defer conn.Disconnect(context.TODO())
-
-		cur, err := conn.Database(configs.Config.DBName).Collection("text").Find(context.TODO(), bson.D{
+		cur, err := databases.Database.Texts.Find(context.TODO(), bson.D{
 			{
 				Key: "persona",
 				Value: bson.M{
@@ -292,15 +274,7 @@ func ExportData(n *commando.Node) error {
 
 		var data []databases.Learn
 
-		conn, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		defer conn.Disconnect(context.TODO())
-
-		cur, err := conn.Database(configs.Config.DBName).Collection("learn").Find(context.TODO(), bson.D{{}})
+		cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{}})
 		if err != nil {
 			ch <- err
 			return

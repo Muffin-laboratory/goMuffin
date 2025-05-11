@@ -89,9 +89,9 @@ func dataLengthRun(s *discordgo.Session, m any) {
 	}
 
 	dataLengthWg.Add(5)
-	go getLength(text, databases.Texts, bson.D{{}})
-	go getLength(muffin, databases.Texts, bson.D{{Key: "persona", Value: "muffin"}})
-	go getLength(nsfw, databases.Texts, bson.D{
+	go getLength(text, databases.Database.Texts, bson.D{{}})
+	go getLength(muffin, databases.Database.Texts, bson.D{{Key: "persona", Value: "muffin"}})
+	go getLength(nsfw, databases.Database.Texts, bson.D{
 		{
 			Key: "persona",
 			Value: bson.M{
@@ -99,8 +99,8 @@ func dataLengthRun(s *discordgo.Session, m any) {
 			},
 		},
 	})
-	go getLength(learn, databases.Learns, bson.D{{}})
-	go getLength(userLearn, databases.Learns, bson.D{{Key: "user_id", Value: userId}})
+	go getLength(learn, databases.Database.Learns, bson.D{{}})
+	go getLength(userLearn, databases.Database.Learns, bson.D{{Key: "user_id", Value: userId}})
 
 	go func() {
 		dataLengthWg.Wait()

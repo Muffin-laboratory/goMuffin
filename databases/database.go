@@ -8,13 +8,31 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
-func connect() *mongo.Client {
-	client, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
+type MuffinDatabase struct {
+	Client *mongo.Client
+	Learns *mongo.Collection
+	Texts  *mongo.Collection
+}
+
+var Database *MuffinDatabase
+
+func init() {
+	var err error
+
+	Database, err = Connect()
 	if err != nil {
 		log.Fatalln(err)
 	}
-
-	return client
 }
 
-var Client *mongo.Client = connect()
+func Connect() (*MuffinDatabase, error) {
+	client, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
+	if err != nil {
+		return nil, err
+	}
+	return &MuffinDatabase{
+		Client: client,
+		Learns: client.Database(configs.Config.DBName).Collection("learn"),
+		Texts:  client.Database(configs.Config.DBName).Collection("text"),
+	}, nil
+}

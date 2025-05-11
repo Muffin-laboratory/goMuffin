@@ -60,7 +60,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command := commands.Discommand.Aliases[args[0]]
 
 		if m.Author.ID == config.Train.UserID {
-			if _, err := databases.Texts.InsertOne(context.TODO(), databases.InsertText{
+			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
 				Text:      content,
 				Persona:   "muffin",
 				CreatedAt: time.Now(),
@@ -83,7 +83,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if channel.NSFW {
 				filter = bson.D{{}}
 
-				if _, err := databases.Texts.InsertOne(context.TODO(), databases.InsertText{
+				if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
 					Text:      content,
 					Persona:   fmt.Sprintf("user:%s", m.Author.Username),
 					CreatedAt: time.Now(),
@@ -96,7 +96,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 			go func() {
-				cur, err := databases.Texts.Find(context.TODO(), filter)
+				cur, err := databases.Database.Texts.Find(context.TODO(), filter)
 				if err != nil {
 					log.Fatalln(err)
 				}
@@ -107,7 +107,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				ch <- 1
 			}()
 			go func() {
-				cur, err := databases.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: content}})
+				cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: content}})
 				if err != nil {
 					if err == mongo.ErrNilDocument {
 						learnData = []databases.Learn{}

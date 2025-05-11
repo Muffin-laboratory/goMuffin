@@ -108,7 +108,7 @@ func main() {
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
 	}
 
-	defer databases.Client.Disconnect(context.TODO())
+	defer databases.Database.Client.Disconnect(context.TODO())
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)
