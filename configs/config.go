@@ -90,7 +90,6 @@ func setConfig(config *MuffinConfig) {
 	if config.Database.URL == "" {
 		config.Database.URL = fmt.Sprintf("mongodb://%s:%s@%s:%d/?authSource=%s", config.Database.Username, config.Database.Password, config.Database.HostName, config.Database.Port, config.Database.AuthSource)
 	}
-	fmt.Println(config.Database.URL)
 
 	// Deprecated된 Value
 	config.DatabaseURL = config.Database.URL
