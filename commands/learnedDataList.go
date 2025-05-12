@@ -50,8 +50,21 @@ var LearnedDataListCommand *Command = &Command{
 }
 
 func getDescriptions(data *[]databases.Learn) (descriptions []string) {
+	MAX_LENGTH := 100
+
 	for _, data := range *data {
-		descriptions = append(descriptions, fmt.Sprintf("- %s: %s", data.Command, data.Result))
+		command := data.Command
+		result := data.Result
+
+		if runeCommand := []rune(command); len(runeCommand) >= MAX_LENGTH {
+			command = string(runeCommand)[:MAX_LENGTH] + "..."
+		}
+
+		if runeResult := []rune(result); len(runeResult) >= MAX_LENGTH {
+			result = string(runeResult[:MAX_LENGTH]) + "..."
+		}
+
+		descriptions = append(descriptions, fmt.Sprintf("- %s: %s", command, result))
 	}
 	return
 }
