@@ -179,12 +179,15 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 		},
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
-		})
-	}
+	// 실험용 데이터
+	utils.StartPaginationEmbed(s, m, embed, []string{"asdf", "fdsa"}, 10)
+
+	// switch m := m.(type) {
+	// case *discordgo.MessageCreate:
+	// 	s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
+	// case *utils.InteractionCreate:
+	// 	m.EditReply(&discordgo.WebhookEdit{
+	// 		Embeds: &[]*discordgo.MessageEmbed{embed},
+	// 	})
+	// }
 }
