@@ -15,7 +15,7 @@ type PaginationEmbed struct {
 	Total   int
 	id      string
 	s       *discordgo.Session
-	m       any
+	desc    string
 }
 
 var PaginationEmbeds = make(map[string]*PaginationEmbed)
@@ -48,8 +48,19 @@ func makeComponents(id string, current, total int) *[]discordgo.MessageComponent
 	}
 }
 
+func makeDesc(desc, item string) string {
+	var newDesc string
+
+	if desc == "" {
+		newDesc = item
+	} else {
+		newDesc = fmt.Sprintf(desc, item)
+	}
+	return newDesc
+}
+
 // StartPaginationEmbed starts new PaginationEmbed struct
-func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed, data []string, length int) {
+func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed, data []string, defaultDesc string) {
 	var userId string
 
 	switch m := m.(type) {
@@ -67,10 +78,10 @@ func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed
 		Total:   len(data),
 		id:      id,
 		s:       s,
-		m:       m,
+		desc:    defaultDesc,
 	}
 
-	p.Embed.Description = p.Data[0]
+	p.Embed.Description = makeDesc(p.desc, data[0])
 
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
@@ -102,17 +113,19 @@ func (p *PaginationEmbed) Prev(i *InteractionCreate) {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "❌ 오류",
-					Description: "해당 페이자가 처음ㅇ이에요.",
+					Description: "해당 페이지가 처음ㅇ이에요.",
 					Color:       EmbedFail,
 				},
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	p.Current -= 1
 
-	p.Embed.Description = p.Data[p.Current-1]
+	p.Embed.Description = makeDesc(p.desc, p.Data[p.Current-1])
+
 	i.Update(&discordgo.InteractionResponseData{
 		Embeds:     []*discordgo.MessageEmbed{p.Embed},
 		Components: *makeComponents(p.id, p.Current, p.Total),
@@ -125,17 +138,19 @@ func (p *PaginationEmbed) Next(i *InteractionCreate) {
 			Embeds: []*discordgo.MessageEmbed{
 				{
 					Title:       "❌ 오류",
-					Description: "해당 페이자가 마지막ㅇ이에요.",
+					Description: "해당 페이지가 마지막ㅇ이에요.",
 					Color:       EmbedFail,
 				},
 			},
+			Flags: discordgo.MessageFlagsEphemeral,
 		})
 		return
 	}
 
 	p.Current += 1
 
-	p.Embed.Description = p.Data[p.Current-1]
+	p.Embed.Description = makeDesc(p.desc, p.Data[p.Current-1])
+
 	i.Update(&discordgo.InteractionResponseData{
 		Embeds:     []*discordgo.MessageEmbed{p.Embed},
 		Components: *makeComponents(p.id, p.Current, p.Total),
