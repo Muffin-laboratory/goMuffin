@@ -119,7 +119,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		options = append(options, discordgo.SelectMenuOption{
 			Label:       fmt.Sprintf("%d번 지식", i+1),
 			Description: data.Result,
-			Value:       fmt.Sprintf("%s%s&No.%d", utils.DeleteLearnedData, data.Id.Hex(), i+1),
+			Value:       utils.MakeDeleteLearnedData(data.Id.Hex(), i+1),
 		})
 		description += fmt.Sprintf("%d. %s\n", i+1, data.Result)
 	}
@@ -135,7 +135,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 			Components: []discordgo.MessageComponent{
 				discordgo.SelectMenu{
 					MenuType:    discordgo.StringSelectMenu,
-					CustomID:    utils.DeleteLearnedDataUserId + userId,
+					CustomID:    utils.MakeDeleteLearnedDataUserId(userId),
 					Options:     options,
 					Placeholder: "ㅈ지울 응답을 선택해주세요.",
 				},
@@ -144,7 +144,7 @@ func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]strin
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
-					CustomID: utils.DeleteLearnedDataCancel + userId,
+					CustomID: utils.MakeDeleteLearnedDataCancel(userId),
 					Label:    "취소하기",
 					Style:    discordgo.DangerButton,
 					Disabled: false,

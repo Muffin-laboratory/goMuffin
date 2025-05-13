@@ -171,9 +171,9 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 	cur.All(context.TODO(), &data)
 
 	embed := &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s님이 알려주신 지식", globalName),
-		Description: utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(data), strings.Join(getDescriptions(&data), "\n"))),
-		Color:       utils.EmbedDefault,
+		Title: fmt.Sprintf("%s님이 알려주신 지식", globalName),
+		Color: utils.EmbedDefault,
+		// Description: utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(data), strings.Join(getDescriptions(&data), "\n"))),
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: avatarUrl,
 		},
