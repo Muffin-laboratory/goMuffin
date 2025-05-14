@@ -77,7 +77,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			var filter bson.D
 
 			ch := make(chan int)
-			x := rand.Intn(5)
+			x := rand.Intn(10)
 
 			channel, _ := s.Channel(m.ChannelID)
 			if channel.NSFW {
@@ -126,7 +126,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			close(ch)
 
-			if x > 2 && len(learnData) != 0 {
+			if x > 6 && len(learnData) != 0 {
 				data := learnData[rand.Intn(len(learnData))]
 				user, _ := s.User(data.UserId)
 				result := resultParser(data.Result, s, m)
