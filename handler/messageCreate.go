@@ -126,7 +126,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			close(ch)
 
-			if x > 6 && len(learnData) != 0 {
+			if x > 2 && len(learnData) != 0 {
 				data := learnData[rand.Intn(len(learnData))]
 				user, _ := s.User(data.UserId)
 				result := resultParser(data.Result, s, m)
