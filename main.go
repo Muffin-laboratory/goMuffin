@@ -75,6 +75,7 @@ func main() {
 	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
+	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
 
 	go dg.AddHandler(handler.MessageCreate)
 	go dg.AddHandler(handler.InteractionCreate)

@@ -51,6 +51,9 @@ var LearnedDataListCommand *Command = &Command{
 
 func getDescriptions(data *[]databases.Learn) (descriptions []string) {
 	MAX_LENGTH := 100
+	MAX_ITEM_LENGTH := 25
+
+	tempDesc := []string{}
 
 	for _, data := range *data {
 		command := data.Command
@@ -64,7 +67,22 @@ func getDescriptions(data *[]databases.Learn) (descriptions []string) {
 			result = string(runeResult[:MAX_LENGTH]) + "..."
 		}
 
-		descriptions = append(descriptions, fmt.Sprintf("- %s: %s", command, result))
+		tempDesc = append(tempDesc, fmt.Sprintf("- %s: %s\n", command, result))
+	}
+
+	var builder strings.Builder
+
+	for i, s := range tempDesc {
+		builder.WriteString(s)
+
+		if (i+1)%MAX_ITEM_LENGTH == 0 {
+			descriptions = append(descriptions, builder.String())
+			builder.Reset()
+		}
+	}
+
+	if builder.Len() > 0 {
+		descriptions = append(descriptions, builder.String())
 	}
 	return
 }
@@ -171,20 +189,12 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 	cur.All(context.TODO(), &data)
 
 	embed := &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s님이 알려주신 지식", globalName),
-		Description: utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n%s", len(data), strings.Join(getDescriptions(&data), "\n"))),
-		Color:       utils.EmbedDefault,
+		Title: fmt.Sprintf("%s님이 알려주신 지식", globalName),
+		Color: utils.EmbedDefault,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: avatarUrl,
 		},
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
-		})
-	}
+	utils.StartPaginationEmbed(s, m, embed, getDescriptions(&data), utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s"))
 }

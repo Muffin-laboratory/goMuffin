@@ -9,4 +9,5 @@ var (
 	EmojiRegexp          = regexp.MustCompile(`<a?:\w+:\d+>`)
 	LearnQueryCommand    = regexp.MustCompile(`^단어:`)
 	LearnQueryResult     = regexp.MustCompile(`^대답:`)
+	PaginationEmbedId    = regexp.MustCompile(`^(\d+)/(\d+)$`)
 )
