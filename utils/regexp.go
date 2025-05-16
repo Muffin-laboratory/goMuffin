@@ -3,11 +3,12 @@ package utils
 import "regexp"
 
 var (
-	FlexibleStringParser = regexp.MustCompile(`[^\s"'「」«»]+|"([^"]*)"|'([^']*)'|「([^」]*)」|«([^»]*)»`)
-	Decimals             = regexp.MustCompile(`\d+`)
-	ItemIdRegexp         = regexp.MustCompile(`No.\d+`)
-	EmojiRegexp          = regexp.MustCompile(`<a?:\w+:\d+>`)
-	LearnQueryCommand    = regexp.MustCompile(`^단어:`)
-	LearnQueryResult     = regexp.MustCompile(`^대답:`)
-	PaginationEmbedId    = regexp.MustCompile(`^(\d+)/(\d+)$`)
+	RegexpFlexibleString    = regexp.MustCompile(`[^\s"'「」«»]+|"([^"]*)"|'([^']*)'|「([^」]*)」|«([^»]*)»`)
+	RegexpDecimals          = regexp.MustCompile(`\d+`)
+	RegexpItemId            = regexp.MustCompile(`No.\d+`)
+	RegexpEmoji             = regexp.MustCompile(`<a?:\w+:\d+>`)
+	RegexpLearnQueryCommand = regexp.MustCompile(`단어:([^\n대답개수:]*)`)
+	RegexpLearnQueryResult  = regexp.MustCompile(`대답:([^\n단어개수:]*)`)
+	RegexpLearnQueryLength  = regexp.MustCompile(`개수:(\d+)`)
+	RegexpPaginationEmbedId = regexp.MustCompile(`^(\d+)/(\d+)$`)
 )

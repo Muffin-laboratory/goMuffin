@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -13,9 +14,9 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-const (
-	learnArgsCommand = "단어:"
-	learnArgsResult  = "대답:"
+var (
+	LIST_MIN_VALUE float64 = 10.0
+	LIST_MAX_VALUE float64 = 100.0
 )
 
 var LearnedDataListCommand *Command = &Command{
@@ -25,8 +26,23 @@ var LearnedDataListCommand *Command = &Command{
 		Description: "당신이 가ㄹ르쳐준 지식을 나열해요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
-				Name:        "쿼리",
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "단어",
 				Description: "해당 단어가 포함된 결과만 찾아요.",
+				Required:    false,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "대답",
+				Description: "해당 대답이 포함된 결과만 찾아요.",
+				Required:    false,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionInteger,
+				Name:        "개수",
+				Description: "한 페이지당 보여줄 지식의 데이터 양을 정해요.",
+				MinValue:    &LIST_MIN_VALUE,
+				MaxValue:    LIST_MAX_VALUE,
 				Required:    false,
 			},
 		},
@@ -49,9 +65,13 @@ var LearnedDataListCommand *Command = &Command{
 	},
 }
 
-func getDescriptions(data *[]databases.Learn) (descriptions []string) {
+func getDescriptions(data *[]databases.Learn, length int) (descriptions []string) {
+	var builder strings.Builder
 	MAX_LENGTH := 100
-	MAX_ITEM_LENGTH := 25
+
+	if length == 0 {
+		length = 25
+	}
 
 	tempDesc := []string{}
 
@@ -70,12 +90,10 @@ func getDescriptions(data *[]databases.Learn) (descriptions []string) {
 		tempDesc = append(tempDesc, fmt.Sprintf("- %s: %s\n", command, result))
 	}
 
-	var builder strings.Builder
-
 	for i, s := range tempDesc {
 		builder.WriteString(s)
 
-		if (i+1)%MAX_ITEM_LENGTH == 0 {
+		if (i+1)%length == 0 {
 			descriptions = append(descriptions, builder.String())
 			builder.Reset()
 		}
@@ -88,65 +106,84 @@ func getDescriptions(data *[]databases.Learn) (descriptions []string) {
 }
 
 func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
-	var userId, globalName, avatarUrl string
+	var globalName, avatarUrl string
 	var data []databases.Learn
-	var filter bson.E
+	var filter bson.D
+	var length int
 
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
-		userId = m.Author.ID
+		filter = bson.D{{Key: "user_id", Value: m.Author.ID}}
 		globalName = m.Author.GlobalName
 		avatarUrl = m.Author.AvatarURL("512")
 
 		query := strings.Join(*args, " ")
-		if strings.HasPrefix(query, learnArgsResult) {
-			query, _ = strings.CutPrefix(query, learnArgsResult)
-			filter = bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": query,
-				},
-			}
-		} else {
-			query, _ = strings.CutPrefix(query, learnArgsCommand)
-			filter = bson.E{
+
+		if match := utils.RegexpLearnQueryCommand.FindStringSubmatch(query); match != nil {
+			filter = append(filter, bson.E{
 				Key: "command",
 				Value: bson.M{
-					"$regex": query,
+					"$regex": match[1],
 				},
+			})
+		}
+
+		if match := utils.RegexpLearnQueryResult.FindStringSubmatch(query); match != nil {
+			fmt.Println(match[1])
+			filter = append(filter, bson.E{
+				Key: "result",
+				Value: bson.M{
+					"$regex": match[1],
+				},
+			})
+		}
+
+		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
+			fmt.Println(1)
+			var err error
+			length, err = strconv.Atoi(match[1])
+			fmt.Printf("err: %v\n", err)
+
+			if err != nil {
+				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
+					Title:       "❌ 오류",
+					Description: "개수의 값은 숫자여야해요.",
+					Color:       utils.EmbedFail,
+				}, m.Reference())
+				return
 			}
 		}
 	case *utils.InteractionCreate:
 		m.DeferReply(true)
 
-		userId = m.Member.User.ID
+		filter = bson.D{{Key: "user_id", Value: m.Member.User.ID}}
 		globalName = m.Member.User.GlobalName
 		avatarUrl = m.Member.User.AvatarURL("512")
 
-		if opt, ok := m.Options["쿼리"]; ok {
-			query := opt.StringValue()
+		if opt, ok := m.Options["단어"]; ok {
+			filter = append(filter, bson.E{
+				Key: "command",
+				Value: bson.M{
+					"$regex": opt.StringValue(),
+				},
+			})
+		}
 
-			if strings.HasPrefix(query, learnArgsResult) {
-				query, _ = strings.CutPrefix(query, learnArgsResult)
-				filter = bson.E{
-					Key: "result",
-					Value: bson.M{
-						"$regex": query,
-					},
-				}
-			} else {
-				query, _ = strings.CutPrefix(query, learnArgsCommand)
-				filter = bson.E{
-					Key: "command",
-					Value: bson.M{
-						"$regex": query,
-					},
-				}
-			}
+		if opt, ok := m.Options["대답"]; ok {
+			filter = append(filter, bson.E{
+				Key: "result",
+				Value: bson.M{
+					"$regex": opt.StringValue(),
+				},
+			})
+		}
+
+		if opt, ok := m.Options["개수"]; ok {
+			length = int(opt.IntValue())
 		}
 	}
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "user_id", Value: userId}, filter})
+	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			embed := &discordgo.MessageEmbed{
@@ -196,5 +233,5 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 		},
 	}
 
-	utils.StartPaginationEmbed(s, m, embed, getDescriptions(&data), utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s"))
+	utils.StartPaginationEmbed(s, m, embed, getDescriptions(&data, length), utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s"))
 }

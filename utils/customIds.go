@@ -31,8 +31,8 @@ func MakeDeleteLearnedDataCancel(id string) string {
 }
 
 func GetDeleteLearnedDataId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(ItemIdRegexp.ReplaceAllString(customId[len(DeleteLearnedData):], ""), "&", ""))
-	stringItemId := strings.ReplaceAll(ItemIdRegexp.FindAllString(customId, 1)[0], "No.", "")
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpItemId.ReplaceAllString(customId[len(DeleteLearnedData):], ""), "&", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "No.", "")
 	itemId, _ = strconv.Atoi(stringItemId)
 	return
 }
@@ -68,5 +68,5 @@ func GetPaginationEmbedId(customId string) string {
 }
 
 func GetPaginationEmbedUserId(id string) string {
-	return PaginationEmbedId.FindAllStringSubmatch(id, 1)[0][1]
+	return RegexpPaginationEmbedId.FindAllStringSubmatch(id, 1)[0][1]
 }

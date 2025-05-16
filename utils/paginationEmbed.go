@@ -21,7 +21,6 @@ type PaginationEmbed struct {
 var PaginationEmbeds = make(map[string]*PaginationEmbed)
 
 func makeComponents(id string, current, total int) *[]discordgo.MessageComponent {
-
 	return &[]discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
@@ -81,19 +80,24 @@ func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed
 		desc:    defaultDesc,
 	}
 
-	p.Embed.Description = makeDesc(p.desc, data[0])
+	if len(data) <= 0 {
+		p.Embed.Description = makeDesc(p.desc, "없음")
+		p.Total = 1
+	} else {
+		p.Embed.Description = makeDesc(p.desc, data[0])
+	}
 
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Reference:  m.Reference(),
 			Embeds:     []*discordgo.MessageEmbed{p.Embed},
-			Components: *makeComponents(id, 1, len(data)),
+			Components: *makeComponents(id, p.Current, p.Total),
 		})
 	case *InteractionCreate:
-		m.Reply(&discordgo.InteractionResponseData{
-			Embeds:     []*discordgo.MessageEmbed{p.Embed},
-			Components: *makeComponents(id, 1, len(data)),
+		m.EditReply(&discordgo.WebhookEdit{
+			Embeds:     &[]*discordgo.MessageEmbed{p.Embed},
+			Components: makeComponents(id, p.Current, p.Total),
 		})
 	}
 

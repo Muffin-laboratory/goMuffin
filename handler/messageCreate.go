@@ -18,7 +18,7 @@ import (
 )
 
 func argParser(content string) (args []string) {
-	for _, arg := range utils.FlexibleStringParser.FindAllStringSubmatch(content, -1) {
+	for _, arg := range utils.RegexpFlexibleString.FindAllStringSubmatch(content, -1) {
 		if arg[1] != "" {
 			args = append(args, arg[1])
 		} else {
@@ -131,7 +131,6 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				user, _ := s.User(data.UserId)
 				result := resultParser(data.Result, s, m)
 
-				// s.ChannelMessageSendReply(m.ChannelID, fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), m.Reference())
 				s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 					Reference: m.Reference(),
 					Content:   fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))),
@@ -144,7 +143,6 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 
-			// s.ChannelMessageSendReply(m.ChannelID, data[rand.Intn(len(data))].Text, m.Reference())
 			s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 				Reference: m.Reference(),
 				Content:   data[rand.Intn(len(data))].Text,
