@@ -29,7 +29,7 @@ var InformationCommand *Command = &Command{
 func informationRun(s *discordgo.Session, m any) {
 	owner, _ := s.User(configs.Config.Bot.OwnerId)
 	utils.NewMessageSender(m).
-		AddEmbed(&discordgo.MessageEmbed{
+		AddEmbeds(&discordgo.MessageEmbed{
 			Title: fmt.Sprintf("%s의 정보", s.State.User.Username),
 			Fields: []*discordgo.MessageEmbedField{
 				{

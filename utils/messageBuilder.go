@@ -20,23 +20,13 @@ func NewMessageSender(m any) *MessageSender {
 	return &MessageSender{m: m}
 }
 
-func (s *MessageSender) AddEmbed(embed *discordgo.MessageEmbed) *MessageSender {
-	s.Embeds = append(s.Embeds, embed)
+func (s *MessageSender) AddEmbeds(embeds ...*discordgo.MessageEmbed) *MessageSender {
+	s.Embeds = append(s.Embeds, embeds...)
 	return s
 }
 
-func (s *MessageSender) SetEmbeds(embeds []*discordgo.MessageEmbed) *MessageSender {
-	s.Embeds = embeds
-	return s
-}
-
-func (s *MessageSender) AddComponent(cmp discordgo.MessageComponent) *MessageSender {
-	s.Components = append(s.Components, cmp)
-	return s
-}
-
-func (s *MessageSender) SetComponents(components []discordgo.MessageComponent) *MessageSender {
-	s.Components = components
+func (s *MessageSender) AddComponents(components ...discordgo.MessageComponent) *MessageSender {
+	s.Components = append(s.Components, components...)
 	return s
 }
 

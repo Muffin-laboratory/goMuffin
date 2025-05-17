@@ -87,7 +87,7 @@ var LearnedDataListCommand *Command = &Command{
 
 			if err != nil {
 				utils.NewMessageSender(ctx.Msg).
-					AddEmbed(&discordgo.MessageEmbed{
+					AddEmbeds(&discordgo.MessageEmbed{
 						Title:       "❌ 오류",
 						Description: "개수의 값은 숫자여야해요.",
 						Color:       utils.EmbedFail,
@@ -99,7 +99,7 @@ var LearnedDataListCommand *Command = &Command{
 
 			if float64(length) < LIST_MIN_VALUE {
 				utils.NewMessageSender(ctx.Msg).
-					AddEmbed(&discordgo.MessageEmbed{
+					AddEmbeds(&discordgo.MessageEmbed{
 						Title:       "❌ 오류",
 						Description: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE)),
 						Color:       utils.EmbedFail,
@@ -111,7 +111,7 @@ var LearnedDataListCommand *Command = &Command{
 
 			if float64(length) > LIST_MAX_VALUE {
 				utils.NewMessageSender(ctx.Msg).
-					AddEmbed(&discordgo.MessageEmbed{
+					AddEmbeds(&discordgo.MessageEmbed{
 						Title:       "❌ 오류",
 						Description: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE)),
 						Color:       utils.EmbedFail,
@@ -202,7 +202,7 @@ func learnedDataListRun(s *discordgo.Session, m any, globalName, avatarUrl strin
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			utils.NewMessageSender(m).
-				AddEmbed(&discordgo.MessageEmbed{
+				AddEmbeds(&discordgo.MessageEmbed{
 					Title:       "❌ 오류",
 					Description: "당신은 지식ㅇ을 가르쳐준 적이 없어요!",
 					Color:       utils.EmbedFail,
@@ -215,7 +215,7 @@ func learnedDataListRun(s *discordgo.Session, m any, globalName, avatarUrl strin
 		fmt.Println(err)
 
 		utils.NewMessageSender(m).
-			AddEmbed(&discordgo.MessageEmbed{
+			AddEmbeds(&discordgo.MessageEmbed{
 				Title:       "❌ 오류",
 				Description: "데이터를 가져오는데 실패했어요.",
 				Color:       utils.EmbedFail,

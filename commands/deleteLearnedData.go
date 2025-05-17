@@ -34,7 +34,7 @@ var DeleteLearnedDataCommand *Command = &Command{
 		command := strings.Join(*ctx.Args, " ")
 		if command == "" {
 			utils.NewMessageSender(ctx.Msg).
-				AddEmbed(&discordgo.MessageEmbed{
+				AddEmbeds(&discordgo.MessageEmbed{
 					Title:       "❌ 오류",
 					Description: "올바르지 않ㅇ은 용법이에요.",
 					Fields: []*discordgo.MessageEmbedField{
@@ -75,7 +75,7 @@ func deleteLearnedDataRun(m any, command, userId string) {
 	cur, err := databases.Database.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
 	if err != nil {
 		utils.NewMessageSender(m).
-			AddEmbed(&discordgo.MessageEmbed{
+			AddEmbeds(&discordgo.MessageEmbed{
 				Title:       "❌ 오류",
 				Description: "데이터를 가져오는데 실패했어요.",
 				Color:       utils.EmbedFail,
@@ -89,7 +89,7 @@ func deleteLearnedDataRun(m any, command, userId string) {
 
 	if len(data) < 1 {
 		utils.NewMessageSender(m).
-			AddEmbed(&discordgo.MessageEmbed{
+			AddEmbeds(&discordgo.MessageEmbed{
 				Title:       "❌ 오류",
 				Description: "해당 하는 지식ㅇ을 찾을 수 없어요.",
 				Color:       utils.EmbedFail,
@@ -111,30 +111,32 @@ func deleteLearnedDataRun(m any, command, userId string) {
 	}
 
 	utils.NewMessageSender(m).
-		AddEmbed(&discordgo.MessageEmbed{
+		AddEmbeds(&discordgo.MessageEmbed{
 			Title:       fmt.Sprintf("%s 삭제", command),
 			Description: utils.CodeBlock("md", fmt.Sprintf("# %s에 대한 대답 중 하나를 선ㅌ택하여 삭제해주세요.\n%s", command, description)),
 			Color:       utils.EmbedDefault,
 		}).
-		AddComponent(discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.SelectMenu{
-					MenuType:    discordgo.StringSelectMenu,
-					CustomID:    utils.MakeDeleteLearnedDataUserId(userId),
-					Options:     options,
-					Placeholder: "ㅈ지울 응답을 선택해주세요.",
+		AddComponents(
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.SelectMenu{
+						MenuType:    discordgo.StringSelectMenu,
+						CustomID:    utils.MakeDeleteLearnedDataUserId(userId),
+						Options:     options,
+						Placeholder: "ㅈ지울 응답을 선택해주세요.",
+					},
 				},
 			},
-		}).
-		AddComponent(discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{
-					CustomID: utils.MakeDeleteLearnedDataCancel(userId),
-					Label:    "취소하기",
-					Style:    discordgo.DangerButton,
-					Disabled: false,
+			discordgo.ActionsRow{
+				Components: []discordgo.MessageComponent{
+					discordgo.Button{
+						CustomID: utils.MakeDeleteLearnedDataCancel(userId),
+						Label:    "취소하기",
+						Style:    discordgo.DangerButton,
+						Disabled: false,
+					},
 				},
 			},
-		}).
+		).
 		Send()
 }

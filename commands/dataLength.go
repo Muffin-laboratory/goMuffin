@@ -116,7 +116,7 @@ func dataLengthRun(m any, username, userId string) {
 	// 나중에 djs처럼 Embed 만들어 주는 함수 만들어야겠다
 	// 지금은 임시방편
 	utils.NewMessageSender(m).
-		AddEmbed(&discordgo.MessageEmbed{
+		AddEmbeds(&discordgo.MessageEmbed{
 			Title:       "저장된 데이터량",
 			Description: fmt.Sprintf("총합: %s개", utils.InlineCode(strconv.Itoa(sum))),
 			Color:       utils.EmbedDefault,

@@ -52,14 +52,14 @@ func (b *PaginationEmbedBuilder) Start() {
 	}
 }
 
-func makeComponents(id string, current, total int) *[]discordgo.MessageComponent {
+func makeComponents(id string, current, total int) []discordgo.MessageComponent {
 	disabled := false
 
 	if total == 1 {
 		disabled = true
 	}
 
-	return &[]discordgo.MessageComponent{
+	return []discordgo.MessageComponent{
 		discordgo.ActionsRow{
 			Components: []discordgo.MessageComponent{
 				discordgo.Button{
@@ -115,8 +115,8 @@ func startPaginationEmbed(m any, userId string, e *discordgo.MessageEmbed, data 
 	}
 
 	NewMessageSender(m).
-		AddEmbed(e).
-		SetComponents(*makeComponents(id, p.Current, p.Total)).
+		AddEmbeds(e).
+		AddComponents(makeComponents(id, p.Current, p.Total)...).
 		SetReply(true).
 		SetEphemeral(true).
 		Send()
@@ -152,7 +152,7 @@ func (p *PaginationEmbed) Prev(i *InteractionCreate) {
 
 	i.Update(&discordgo.InteractionResponseData{
 		Embeds:     []*discordgo.MessageEmbed{p.Embed},
-		Components: *makeComponents(p.id, p.Current, p.Total),
+		Components: makeComponents(p.id, p.Current, p.Total),
 	})
 }
 
@@ -177,7 +177,7 @@ func (p *PaginationEmbed) Next(i *InteractionCreate) {
 
 	i.Update(&discordgo.InteractionResponseData{
 		Embeds:     []*discordgo.MessageEmbed{p.Embed},
-		Components: *makeComponents(p.id, p.Current, p.Total),
+		Components: makeComponents(p.id, p.Current, p.Total),
 	})
 }
 
@@ -216,7 +216,7 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) {
 
 	i.Update(&discordgo.InteractionResponseData{
 		Embeds:     []*discordgo.MessageEmbed{p.Embed},
-		Components: *makeComponents(p.id, p.Current, p.Total),
+		Components: makeComponents(p.id, p.Current, p.Total),
 	})
 }
 

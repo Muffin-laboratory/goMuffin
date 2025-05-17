@@ -60,7 +60,7 @@ var LearnCommand *Command = &Command{
 	MessageRun: func(ctx *MsgContext) {
 		if len(*ctx.Args) < 2 {
 			utils.NewMessageSender(ctx.Msg).
-				AddEmbed(&discordgo.MessageEmbed{
+				AddEmbeds(&discordgo.MessageEmbed{
 					Title:       "❌ 오류",
 					Description: "올바르지 않ㅇ은 용법이에요.",
 					Fields: []*discordgo.MessageEmbedField{
@@ -132,7 +132,7 @@ func learnRun(m any, userId, command, result string) {
 	for _, ig := range ignores {
 		if strings.Contains(command, ig) {
 			utils.NewMessageSender(m).
-				AddEmbed(
+				AddEmbeds(
 					&discordgo.MessageEmbed{
 						Title:       "❌ 오류",
 						Description: "해ㄷ당 단어는 배우기 껄끄ㄹ럽네요.",
@@ -147,7 +147,7 @@ func learnRun(m any, userId, command, result string) {
 	for _, di := range disallows {
 		if strings.Contains(result, di) {
 			utils.NewMessageSender(m).
-				AddEmbed(
+				AddEmbeds(
 					&discordgo.MessageEmbed{
 						Title:       "❌ 오류",
 						Description: "해당 단ㅇ어의 대답으로 하기 좀 그렇ㄴ네요.",
@@ -169,7 +169,7 @@ func learnRun(m any, userId, command, result string) {
 		log.Println(err)
 
 		utils.NewMessageSender(m).
-			AddEmbed(&discordgo.MessageEmbed{
+			AddEmbeds(&discordgo.MessageEmbed{
 				Title:       "❌ 오류",
 				Description: "단어를 배우는데 오류가 생겼어요.",
 				Color:       utils.EmbedFail,
@@ -180,7 +180,7 @@ func learnRun(m any, userId, command, result string) {
 	}
 
 	utils.NewMessageSender(m).
-		AddEmbed(&discordgo.MessageEmbed{
+		AddEmbeds(&discordgo.MessageEmbed{
 			Title:       "✅ 성공",
 			Description: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
 			Color:       utils.EmbedSuccess,

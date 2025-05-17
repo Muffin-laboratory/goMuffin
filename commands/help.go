@@ -75,7 +75,7 @@ func helpRun(s *discordgo.Session, m any, commandName string) {
 				strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
 		)
 
-		utils.NewMessageSender(m).AddEmbed(embed).SetReply(true).Send()
+		utils.NewMessageSender(m).AddEmbeds(embed).SetReply(true).Send()
 		return
 	}
 
@@ -126,5 +126,5 @@ func helpRun(s *discordgo.Session, m any, commandName string) {
 		})
 	}
 
-	utils.NewMessageSender(m).AddEmbed(embed).SetReply(true).Send()
+	utils.NewMessageSender(m).AddEmbeds(embed).SetReply(true).Send()
 }
