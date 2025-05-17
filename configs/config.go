@@ -34,12 +34,6 @@ type MuffinConfig struct {
 	Bot      botConfig
 	Train    trainConfig
 	Database databaseConfig
-
-	// Deprecated: Use Database.URL
-	DatabaseURL string
-
-	// Deprecated: Use Database.Name
-	DatabaseName string
 }
 
 var Config *MuffinConfig
@@ -90,8 +84,4 @@ func setConfig(config *MuffinConfig) {
 	if config.Database.URL == "" {
 		config.Database.URL = fmt.Sprintf("mongodb://%s:%s@%s:%d/?authSource=%s", config.Database.Username, config.Database.Password, config.Database.HostName, config.Database.Port, config.Database.AuthSource)
 	}
-
-	// Deprecated된 Value
-	config.DatabaseURL = config.Database.URL
-	config.DatabaseName = config.Database.Name
 }

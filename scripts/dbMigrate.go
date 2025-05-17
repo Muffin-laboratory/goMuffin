@@ -22,8 +22,8 @@ var wg sync.WaitGroup
 // 이 스크립트는 MariaDB -> MongoDB로의 전환을 위해 만들었음.
 func DBMigrate(n *commando.Node) error {
 	mariaURL := os.Getenv("PREVIOUS_DATABASE_URL")
-	mongoURL := configs.Config.DatabaseURL
-	dbName := configs.Config.DatabaseName
+	mongoURL := configs.Config.Database.URL
+	dbName := configs.Config.Database.Name
 
 	dbConnectionQuery := "?parseTime=true"
 
