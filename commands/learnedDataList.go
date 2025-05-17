@@ -151,6 +151,24 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 				return
 			}
 		}
+
+		if float64(length) < LIST_MIN_VALUE {
+			s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
+				Title:       "❌ 오류",
+				Description: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE)),
+				Color:       utils.EmbedFail,
+			}, m.Reference())
+			return
+		}
+
+		if float64(length) > LIST_MAX_VALUE {
+			s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
+				Title:       "❌ 오류",
+				Description: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE)),
+				Color:       utils.EmbedFail,
+			}, m.Reference())
+			return
+		}
 	case *utils.InteractionCreate:
 		m.DeferReply(true)
 
