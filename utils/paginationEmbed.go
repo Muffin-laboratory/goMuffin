@@ -17,7 +17,40 @@ type PaginationEmbed struct {
 	desc    string
 }
 
+type PaginationEmbedBuilder struct {
+	Embed       *discordgo.MessageEmbed
+	Data        []string
+	DefaultDesc string
+	m           any
+}
+
 var PaginationEmbeds = make(map[string]*PaginationEmbed)
+
+func NewPaginationEmbedBuilder(m any, data []string) *PaginationEmbedBuilder {
+	return &PaginationEmbedBuilder{
+		m:    m,
+		Data: data,
+	}
+}
+
+func (b *PaginationEmbedBuilder) SetEmbed(embed *discordgo.MessageEmbed) *PaginationEmbedBuilder {
+	b.Embed = embed
+	return b
+}
+
+func (b *PaginationEmbedBuilder) SetDefaultDesc(desc string) *PaginationEmbedBuilder {
+	b.DefaultDesc = desc
+	return b
+}
+
+func (b *PaginationEmbedBuilder) Start() {
+	switch m := b.m.(type) {
+	case *MessageCreate:
+		startPaginationEmbed(m, m.Author.ID, b.Embed, b.Data, b.DefaultDesc)
+	case *InteractionCreate:
+		startPaginationEmbed(m, m.Member.User.ID, b.Embed, b.Data, b.DefaultDesc)
+	}
+}
 
 func makeComponents(id string, current, total int) *[]discordgo.MessageComponent {
 	disabled := false
@@ -63,18 +96,8 @@ func makeDesc(desc, item string) string {
 	return newDesc
 }
 
-// StartPaginationEmbed starts new PaginationEmbed struct
-func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed, data []string, defaultDesc string) {
-	var userId string
-
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		userId = m.Author.ID
-	case *InteractionCreate:
-		userId = m.Member.User.ID
-	}
-
-	id := fmt.Sprintf("%s/%d", userId, rand.Intn(12))
+func startPaginationEmbed(m any, userId string, e *discordgo.MessageEmbed, data []string, defaultDesc string) {
+	id := fmt.Sprintf("%s/%d", userId, rand.Intn(100))
 	p := &PaginationEmbed{
 		Embed:   e,
 		Data:    data,
@@ -91,19 +114,12 @@ func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed
 		p.Embed.Description = makeDesc(p.desc, data[0])
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Reference:  m.Reference(),
-			Embeds:     []*discordgo.MessageEmbed{p.Embed},
-			Components: *makeComponents(id, p.Current, p.Total),
-		})
-	case *InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds:     &[]*discordgo.MessageEmbed{p.Embed},
-			Components: makeComponents(id, p.Current, p.Total),
-		})
-	}
+	NewMessageSender(m).
+		AddEmbed(e).
+		SetComponents(*makeComponents(id, p.Current, p.Total)).
+		SetReply(true).
+		SetEphemeral(true).
+		Send()
 
 	PaginationEmbeds[id] = p
 }

@@ -30,10 +30,16 @@ var HelpCommand *Command = &Command{
 	},
 	Category: General,
 	MessageRun: func(ctx *MsgContext) {
-		helpRun(ctx.Session, ctx.Msg, ctx.Args)
+		helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		helpRun(ctx.Session, ctx.Inter, nil)
+		var command string
+
+		if opt, ok := ctx.Inter.Options["명령어"]; ok {
+			command = opt.StringValue()
+		}
+
+		helpRun(ctx.Inter.Session, ctx.Inter, command)
 	},
 }
 
@@ -47,8 +53,7 @@ func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
 	return commands
 }
 
-func helpRun(s *discordgo.Session, m any, args *[]string) {
-	var commandName string
+func helpRun(s *discordgo.Session, m any, commandName string) {
 	embed := &discordgo.MessageEmbed{
 		Color: utils.EmbedDefault,
 		Footer: &discordgo.MessageEmbedFooter{
@@ -59,16 +64,7 @@ func helpRun(s *discordgo.Session, m any, args *[]string) {
 		},
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		commandName = Discommand.Aliases[strings.Join(*args, " ")]
-	case *utils.InteractionCreate:
-		if opt, ok := m.Options["명령어"]; ok {
-			commandName = opt.StringValue()
-		} else {
-			commandName = ""
-		}
-	}
+	commandName = Discommand.Aliases[commandName]
 
 	if commandName == "" || Discommand.Commands[commandName] == nil {
 		embed.Title = fmt.Sprintf("%s의 도움말", s.State.User.Username)
@@ -79,14 +75,7 @@ func helpRun(s *discordgo.Session, m any, args *[]string) {
 				strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
 		)
 
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.Reply(&discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
-			})
-		}
+		utils.NewMessageSender(m).AddEmbed(embed).SetReply(true).Send()
 		return
 	}
 
@@ -137,12 +126,5 @@ func helpRun(s *discordgo.Session, m any, args *[]string) {
 		})
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.Reply(&discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-		})
-	}
+	utils.NewMessageSender(m).AddEmbed(embed).SetReply(true).Send()
 }

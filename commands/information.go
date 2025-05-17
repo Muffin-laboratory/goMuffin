@@ -19,53 +19,56 @@ var InformationCommand *Command = &Command{
 	},
 	Category: General,
 	MessageRun: func(ctx *MsgContext) {
-		informationRun(ctx.Session, ctx.Msg)
+		informationRun(ctx.Msg.Session, ctx.Msg)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		informationRun(ctx.Session, ctx.Inter)
+		informationRun(ctx.Inter.Session, ctx.Inter)
 	},
 }
 
 func informationRun(s *discordgo.Session, m any) {
 	owner, _ := s.User(configs.Config.Bot.OwnerId)
-	embed := &discordgo.MessageEmbed{
-		Title: fmt.Sprintf("%s의 정보", s.State.User.Username),
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:  "운영 체제",
-				Value: utils.InlineCode(fmt.Sprintf("%s %s", runtime.GOARCH, runtime.GOOS)),
+	utils.NewMessageSender(m).
+		AddEmbed(&discordgo.MessageEmbed{
+			Title: fmt.Sprintf("%s의 정보", s.State.User.Username),
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:  "운영 체제",
+					Value: utils.InlineCode(fmt.Sprintf("%s %s", runtime.GOARCH, runtime.GOOS)),
+				},
+				{
+					Name:  "제작자",
+					Value: utils.InlineCode(owner.Username),
+				},
+				{
+					Name:  "버전",
+					Value: utils.InlineCode(configs.MUFFIN_VERSION),
+				},
+				{
+					Name:   "최근에 업데이트된 날짜",
+					Value:  utils.Time(configs.UpdatedAt, utils.RelativeTime),
+					Inline: true,
+				},
+				{
+					Name:   "시작한 시각",
+					Value:  utils.Time(configs.StartedAt, utils.RelativeTime),
+					Inline: true,
+				},
 			},
-			{
-				Name:  "제작자",
-				Value: utils.InlineCode(owner.Username),
+			Color: utils.EmbedDefault,
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL: s.State.User.AvatarURL("512"),
 			},
-			{
-				Name:  "버전",
-				Value: utils.InlineCode(configs.MUFFIN_VERSION),
-			},
-			{
-				Name:   "최근에 업데이트된 날짜",
-				Value:  utils.Time(configs.UpdatedAt, utils.RelativeTime),
-				Inline: true,
-			},
-			{
-				Name:   "시작한 시각",
-				Value:  utils.Time(configs.StartedAt, utils.RelativeTime),
-				Inline: true,
-			},
-		},
-		Color: utils.EmbedDefault,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: s.State.User.AvatarURL("512"),
-		},
-	}
+		}).
+		SetReply(true).
+		Send()
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.Reply(&discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-		})
-	}
+	// switch m := m.(type) {
+	// case *discordgo.MessageCreate:
+	// 	s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
+	// case *utils.InteractionCreate:
+	// 	m.Reply(&discordgo.InteractionResponseData{
+	// 		Embeds: []*discordgo.MessageEmbed{embed},
+	// 	})
+	// }
 }

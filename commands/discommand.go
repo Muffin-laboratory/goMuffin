@@ -39,20 +39,17 @@ type DiscommandStruct struct {
 }
 
 type MsgContext struct {
-	Session *discordgo.Session
-	Msg     *discordgo.MessageCreate
+	Msg     *utils.MessageCreate
 	Args    *[]string
 	Command *Command
 }
 
 type ChatInputContext struct {
-	Session *discordgo.Session
 	Inter   *utils.InteractionCreate
 	Command *Command
 }
 
 type ComponentContext struct {
-	Session   *discordgo.Session
 	Inter     *utils.InteractionCreate
 	Component *Component
 }
@@ -118,13 +115,16 @@ func (d *DiscommandStruct) LoadModal(m *Modal) {
 
 func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	if command, ok := d.Commands[name]; ok {
-		command.MessageRun(&MsgContext{s, m, &args, command})
+		command.MessageRun(&MsgContext{&utils.MessageCreate{
+			MessageCreate: m,
+			Session:       s,
+		}, &args, command})
 	}
 }
 
 func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if command, ok := d.Commands[name]; ok {
-		command.ChatInputRun(&ChatInputContext{s, &utils.InteractionCreate{
+		command.ChatInputRun(&ChatInputContext{&utils.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,
 			Options:           utils.GetInteractionOptions(i),
@@ -134,7 +134,6 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *di
 
 func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	data := &ComponentContext{
-		Session: s,
 		Inter: &utils.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,

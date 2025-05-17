@@ -21,7 +21,9 @@ type InteractionCreate struct {
 	*discordgo.InteractionCreate
 	Session *discordgo.Session
 	// NOTE: It's only can ApplicationCommand
-	Options map[string]*discordgo.ApplicationCommandInteractionDataOption
+	Options  map[string]*discordgo.ApplicationCommandInteractionDataOption
+	Deferred bool
+	Replied  bool
 }
 
 // Reply to this interaction.
@@ -30,6 +32,8 @@ func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) {
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: data,
 	})
+
+	i.Replied = true
 }
 
 // GetInteractionOptions to this interaction.
@@ -55,6 +59,8 @@ func (i *InteractionCreate) DeferReply(ephemeral bool) {
 			Flags: flags,
 		},
 	})
+
+	i.Deferred = true
 }
 
 // DeferUpdate to this interaction.
@@ -62,11 +68,15 @@ func (i *InteractionCreate) DeferUpdate() {
 	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
 	})
+
+	i.Deferred = true
 }
 
 // EditReply to this interaction.
 func (i *InteractionCreate) EditReply(data *discordgo.WebhookEdit) {
 	i.Session.InteractionResponseEdit(i.Interaction, data)
+
+	i.Replied = true
 }
 
 // Update to this interaction.
@@ -75,6 +85,8 @@ func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) {
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: data,
 	})
+
+	i.Replied = true
 }
 
 func (i *InteractionCreate) ShowModal(data *ModalData) error {
@@ -115,5 +127,7 @@ func (i *InteractionCreate) ShowModal(data *ModalData) error {
 	}
 
 	defer resp.Body.Close()
+
+	i.Replied = true
 	return nil
 }

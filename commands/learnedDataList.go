@@ -58,10 +58,100 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
-		learnedDataListRun(ctx.Session, ctx.Msg, ctx.Args)
+		var length int
+
+		filter := bson.D{{Key: "user_id", Value: ctx.Msg.Author.ID}}
+		query := strings.Join(*ctx.Args, " ")
+
+		if match := utils.RegexpLearnQueryCommand.FindStringSubmatch(query); match != nil {
+			filter = append(filter, bson.E{
+				Key: "command",
+				Value: bson.M{
+					"$regex": match[1],
+				},
+			})
+		}
+
+		if match := utils.RegexpLearnQueryResult.FindStringSubmatch(query); match != nil {
+			filter = append(filter, bson.E{
+				Key: "result",
+				Value: bson.M{
+					"$regex": match[1],
+				},
+			})
+		}
+
+		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
+			var err error
+			length, err := strconv.Atoi(match[1])
+
+			if err != nil {
+				utils.NewMessageSender(ctx.Msg).
+					AddEmbed(&discordgo.MessageEmbed{
+						Title:       "❌ 오류",
+						Description: "개수의 값은 숫자여야해요.",
+						Color:       utils.EmbedFail,
+					}).
+					SetReply(true).
+					Send()
+				return
+			}
+
+			if float64(length) < LIST_MIN_VALUE {
+				utils.NewMessageSender(ctx.Msg).
+					AddEmbed(&discordgo.MessageEmbed{
+						Title:       "❌ 오류",
+						Description: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE)),
+						Color:       utils.EmbedFail,
+					}).
+					SetReply(true).
+					Send()
+				return
+			}
+
+			if float64(length) > LIST_MAX_VALUE {
+				utils.NewMessageSender(ctx.Msg).
+					AddEmbed(&discordgo.MessageEmbed{
+						Title:       "❌ 오류",
+						Description: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE)),
+						Color:       utils.EmbedFail,
+					}).
+					SetReply(true).
+					Send()
+				return
+			}
+		}
+		learnedDataListRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		learnedDataListRun(ctx.Session, ctx.Inter, nil)
+		ctx.Inter.DeferReply(true)
+
+		var length int
+
+		filter := bson.D{{Key: "user_id", Value: ctx.Inter.Member.User.ID}}
+
+		if opt, ok := ctx.Inter.Options["단어"]; ok {
+			filter = append(filter, bson.E{
+				Key: "command",
+				Value: bson.M{
+					"$regex": opt.StringValue(),
+				},
+			})
+		}
+
+		if opt, ok := ctx.Inter.Options["대답"]; ok {
+			filter = append(filter, bson.E{
+				Key: "result",
+				Value: bson.M{
+					"$regex": opt.StringValue(),
+				},
+			})
+		}
+
+		if opt, ok := ctx.Inter.Options["개수"]; ok {
+			length = int(opt.IntValue())
+		}
+		learnedDataListRun(ctx.Inter.Session, ctx.Inter, ctx.Inter.Member.User.GlobalName, ctx.Inter.Member.User.AvatarURL("512"), filter, length)
 	},
 }
 
@@ -105,134 +195,33 @@ func getDescriptions(data *[]databases.Learn, length int) (descriptions []string
 	return
 }
 
-func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
-	var globalName, avatarUrl string
+func learnedDataListRun(s *discordgo.Session, m any, globalName, avatarUrl string, filter bson.D, length int) {
 	var data []databases.Learn
-	var filter bson.D
-	var length int
-
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		filter = bson.D{{Key: "user_id", Value: m.Author.ID}}
-		globalName = m.Author.GlobalName
-		avatarUrl = m.Author.AvatarURL("512")
-
-		query := strings.Join(*args, " ")
-
-		if match := utils.RegexpLearnQueryCommand.FindStringSubmatch(query); match != nil {
-			filter = append(filter, bson.E{
-				Key: "command",
-				Value: bson.M{
-					"$regex": match[1],
-				},
-			})
-		}
-
-		if match := utils.RegexpLearnQueryResult.FindStringSubmatch(query); match != nil {
-			filter = append(filter, bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": match[1],
-				},
-			})
-		}
-
-		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
-			var err error
-			length, err = strconv.Atoi(match[1])
-
-			if err != nil {
-				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: "개수의 값은 숫자여야해요.",
-					Color:       utils.EmbedFail,
-				}, m.Reference())
-				return
-			}
-
-			if float64(length) < LIST_MIN_VALUE {
-				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE)),
-					Color:       utils.EmbedFail,
-				}, m.Reference())
-				return
-			}
-
-			if float64(length) > LIST_MAX_VALUE {
-				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE)),
-					Color:       utils.EmbedFail,
-				}, m.Reference())
-				return
-			}
-		}
-	case *utils.InteractionCreate:
-		m.DeferReply(true)
-
-		filter = bson.D{{Key: "user_id", Value: m.Member.User.ID}}
-		globalName = m.Member.User.GlobalName
-		avatarUrl = m.Member.User.AvatarURL("512")
-
-		if opt, ok := m.Options["단어"]; ok {
-			filter = append(filter, bson.E{
-				Key: "command",
-				Value: bson.M{
-					"$regex": opt.StringValue(),
-				},
-			})
-		}
-
-		if opt, ok := m.Options["대답"]; ok {
-			filter = append(filter, bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": opt.StringValue(),
-				},
-			})
-		}
-
-		if opt, ok := m.Options["개수"]; ok {
-			length = int(opt.IntValue())
-		}
-	}
 
 	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			embed := &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "당신은 지식ㅇ을 가르쳐준 적이 없어요!",
-				Color:       utils.EmbedFail,
-			}
-
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
+			utils.NewMessageSender(m).
+				AddEmbed(&discordgo.MessageEmbed{
+					Title:       "❌ 오류",
+					Description: "당신은 지식ㅇ을 가르쳐준 적이 없어요!",
+					Color:       utils.EmbedFail,
+				}).
+				SetReply(true).
+				Send()
 			return
 		}
 
 		fmt.Println(err)
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "데이터를 가져오는데 실패했어요.",
-			Color:       utils.EmbedFail,
-		}
 
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
+		utils.NewMessageSender(m).
+			AddEmbed(&discordgo.MessageEmbed{
+				Title:       "❌ 오류",
+				Description: "데이터를 가져오는데 실패했어요.",
+				Color:       utils.EmbedFail,
+			}).
+			SetReply(true).
+			Send()
 		return
 	}
 
@@ -240,13 +229,14 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 
 	cur.All(context.TODO(), &data)
 
-	embed := &discordgo.MessageEmbed{
-		Title: fmt.Sprintf("%s님이 알려주신 지식", globalName),
-		Color: utils.EmbedDefault,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: avatarUrl,
-		},
-	}
-
-	utils.StartPaginationEmbed(s, m, embed, getDescriptions(&data, length), utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s"))
+	utils.NewPaginationEmbedBuilder(m, getDescriptions(&data, length)).
+		SetEmbed(&discordgo.MessageEmbed{
+			Title: fmt.Sprintf("%s님이 알려주신 지식", globalName),
+			Color: utils.EmbedDefault,
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL: avatarUrl,
+			},
+		}).
+		SetDefaultDesc(utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s")).
+		Start()
 }

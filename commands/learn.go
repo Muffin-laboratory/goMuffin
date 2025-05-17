@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -57,10 +58,50 @@ var LearnCommand *Command = &Command{
 	},
 	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
-		learnRun(ctx.Command, ctx.Session, ctx.Msg, ctx.Args)
+		if len(*ctx.Args) < 2 {
+			utils.NewMessageSender(ctx.Msg).
+				AddEmbed(&discordgo.MessageEmbed{
+					Title:       "❌ 오류",
+					Description: "올바르지 않ㅇ은 용법이에요.",
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "사용법",
+							Value:  utils.InlineCode(ctx.Command.DetailedDescription.Usage),
+							Inline: true,
+						},
+						{
+							Name:   "사용 가능한 인자",
+							Value:  learnArguments,
+							Inline: true,
+						},
+						{
+							Name:  "예시",
+							Value: utils.CodeBlock("md", strings.Join(addPrefix(ctx.Command.DetailedDescription.Examples), "\n")),
+						},
+					},
+					Color: utils.EmbedFail,
+				}).
+				SetReply(true).
+				Send()
+			return
+		}
+
+		learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		learnRun(ctx.Command, ctx.Session, ctx.Inter, nil)
+		ctx.Inter.DeferReply(true)
+
+		var command, result string
+
+		if opt, ok := ctx.Inter.Options["단어"]; ok {
+			command = opt.StringValue()
+		}
+
+		if opt, ok := ctx.Inter.Options["대답"]; ok {
+			result = opt.StringValue()
+		}
+
+		learnRun(ctx.Inter, ctx.Inter.Member.User.ID, command, result)
 	},
 }
 
@@ -71,54 +112,8 @@ func addPrefix(arr []string) (newArr []string) {
 	return
 }
 
-func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
-	var userId, command, result string
-
+func learnRun(m any, userId, command, result string) {
 	igCommands := []string{}
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		userId = m.Author.ID
-
-		if len(*args) < 2 {
-			s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "올바르지 않ㅇ은 용법이에요.",
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:   "사용법",
-						Value:  utils.InlineCode(c.DetailedDescription.Usage),
-						Inline: true,
-					},
-					{
-						Name:   "사용 가능한 인자",
-						Value:  learnArguments,
-						Inline: true,
-					},
-					{
-						Name:  "예시",
-						Value: utils.CodeBlock("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
-					},
-				},
-				Color: utils.EmbedFail,
-			}, m.Reference())
-			return
-		}
-
-		command = strings.ReplaceAll((*args)[0], "_", " ")
-		result = strings.ReplaceAll((*args)[1], "_", " ")
-	case *utils.InteractionCreate:
-		m.DeferReply(true)
-
-		userId = m.Member.User.ID
-
-		if opt, ok := m.Options["단어"]; ok {
-			command = opt.StringValue()
-		}
-
-		if opt, ok := m.Options["대답"]; ok {
-			result = opt.StringValue()
-		}
-	}
 
 	for _, command := range Discommand.Commands {
 		igCommands = append(igCommands, command.Name)
@@ -136,40 +131,31 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 	for _, ig := range ignores {
 		if strings.Contains(command, ig) {
-			embed := &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "해ㄷ당 단어는 배우기 껄끄ㄹ럽네요.",
-				Color:       utils.EmbedFail,
-			}
-
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
+			utils.NewMessageSender(m).
+				AddEmbed(
+					&discordgo.MessageEmbed{
+						Title:       "❌ 오류",
+						Description: "해ㄷ당 단어는 배우기 껄끄ㄹ럽네요.",
+						Color:       utils.EmbedFail,
+					}).
+				SetReply(true).
+				Send()
 			return
 		}
 	}
 
 	for _, di := range disallows {
 		if strings.Contains(result, di) {
-			embed := &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "해당 단ㅇ어의 대답으로 하기 좀 그렇ㄴ네요.",
-				Color:       utils.EmbedFail,
-			}
-
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
+			utils.NewMessageSender(m).
+				AddEmbed(
+					&discordgo.MessageEmbed{
+						Title:       "❌ 오류",
+						Description: "해당 단ㅇ어의 대답으로 하기 좀 그렇ㄴ네요.",
+						Color:       utils.EmbedFail,
+					}).
+				SetReply(true).
+				Send()
+			return
 		}
 	}
 
@@ -180,36 +166,25 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
-		fmt.Println(err)
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "단어를 배우는데 오류가 생겼어요.",
-			Color:       utils.EmbedFail,
-		}
+		log.Println(err)
 
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
+		utils.NewMessageSender(m).
+			AddEmbed(&discordgo.MessageEmbed{
+				Title:       "❌ 오류",
+				Description: "단어를 배우는데 오류가 생겼어요.",
+				Color:       utils.EmbedFail,
+			}).
+			SetReply(true).
+			Send()
 		return
 	}
 
-	embed := &discordgo.MessageEmbed{
-		Title:       "✅ 성공",
-		Description: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
-		Color:       utils.EmbedSuccess,
-	}
-
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
-		})
-	}
+	utils.NewMessageSender(m).
+		AddEmbed(&discordgo.MessageEmbed{
+			Title:       "✅ 성공",
+			Description: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
+			Color:       utils.EmbedSuccess,
+		}).
+		SetReply(true).
+		Send()
 }
