@@ -81,6 +81,7 @@ func StartPaginationEmbed(s *discordgo.Session, m any, e *discordgo.MessageEmbed
 		Current: 1,
 		Total:   len(data),
 		id:      id,
+		desc:    defaultDesc,
 	}
 
 	if len(data) <= 0 {
