@@ -14,6 +14,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
+	"git.wh64.net/muffin/goMuffin/modals"
 	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
 	"github.com/devproje/commando"
@@ -76,6 +77,8 @@ func main() {
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
 	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
+
+	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
 
 	go dg.AddHandler(handler.MessageCreate)
 	go dg.AddHandler(handler.InteractionCreate)

@@ -11,5 +11,7 @@ func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		return
 	} else if i.Type == discordgo.InteractionMessageComponent {
 		commands.Discommand.ComponentRun(s, i)
+	} else if i.Type == discordgo.InteractionModalSubmit {
+		commands.Discommand.ModalRun(s, i)
 	}
 }

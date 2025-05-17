@@ -129,7 +129,6 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 		}
 
 		if match := utils.RegexpLearnQueryResult.FindStringSubmatch(query); match != nil {
-			fmt.Println(match[1])
 			filter = append(filter, bson.E{
 				Key: "result",
 				Value: bson.M{
@@ -139,7 +138,6 @@ func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
 		}
 
 		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
-			fmt.Println(1)
 			var err error
 			length, err = strconv.Atoi(match[1])
 			fmt.Printf("err: %v\n", err)

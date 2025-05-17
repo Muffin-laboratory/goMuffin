@@ -15,13 +15,12 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 		if i.MessageComponentData().ComponentType == discordgo.ButtonComponent {
 			customId := i.MessageComponentData().CustomID
 
-			if !strings.HasPrefix(customId, utils.PaginationEmbedPrev) && !strings.HasPrefix(customId, utils.PaginationEmbedNext) {
+			if !strings.HasPrefix(customId, utils.PaginationEmbedPrev) && !strings.HasPrefix(customId, utils.PaginationEmbedNext) && !strings.HasPrefix(customId, utils.PaginationEmbedPages) {
 				return false
 			}
 
 			id := utils.GetPaginationEmbedId(customId)
 			userId := utils.GetPaginationEmbedUserId(id)
-
 			if i.Member.User.ID != userId {
 				return false
 			}
@@ -41,8 +40,10 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 
 		if strings.HasPrefix(customId, utils.PaginationEmbedPrev) {
 			p.Prev(ctx.Inter)
-		} else {
+		} else if strings.HasPrefix(customId, utils.PaginationEmbedNext) {
 			p.Next(ctx.Inter)
+		} else {
+			p.ShowModal(ctx.Inter)
 		}
 	},
 }

@@ -13,9 +13,11 @@ const (
 	DeleteLearnedDataUserId = "#muffin/deleteLearnedData@"
 	DeleteLearnedDataCancel = "#muffin/deleteLearnedData/cancel@"
 
-	PaginationEmbedPrev  = "#muffin-pages/prev$"
-	PaginationEmbedPages = "#muffin-pages/pages$"
-	PaginationEmbedNext  = "#muffin-pages/next$"
+	PaginationEmbedPrev    = "#muffin-pages/prev$"
+	PaginationEmbedPages   = "#muffin-pages/pages$"
+	PaginationEmbedNext    = "#muffin-pages/next$"
+	PaginationEmbedModal   = "#muffin-pages/modal$"
+	PaginationEmbedSetPage = "#muffin-pages/modal/set$"
 )
 
 func MakeDeleteLearnedData(id string, number int) string {
@@ -49,21 +51,36 @@ func MakePaginationEmbedPrev(id string) string {
 	return fmt.Sprintf("%s%s", PaginationEmbedPrev, id)
 }
 
-func MakePaginationEmbedPages(id string, total, current int) string {
-	return fmt.Sprintf("%s%s/%d/%d", PaginationEmbedPages, id, total, current)
+func MakePaginationEmbedPages(id string) string {
+	return fmt.Sprintf("%s%s", PaginationEmbedPages, id)
 }
 
 func MakePaginationEmbedNext(id string) string {
 	return fmt.Sprintf("%s%s", PaginationEmbedNext, id)
 }
 
+func MakePaginationEmbedModal(id string) string {
+	return fmt.Sprintf("%s%s", PaginationEmbedModal, id)
+}
+
+func MakePaginationEmbedSetPage(id string) string {
+	return fmt.Sprintf("%s%s", PaginationEmbedSetPage, id)
+}
+
 func GetPaginationEmbedId(customId string) string {
-	if strings.HasPrefix(customId, PaginationEmbedPrev) {
+	switch {
+	case strings.HasPrefix(customId, PaginationEmbedPrev):
 		return customId[len(PaginationEmbedPrev):]
-	} else if strings.HasPrefix(customId, PaginationEmbedPages) {
+	case strings.HasPrefix(customId, PaginationEmbedPages):
 		return customId[len(PaginationEmbedPages):]
-	} else {
+	case strings.HasPrefix(customId, PaginationEmbedNext):
 		return customId[len(PaginationEmbedNext):]
+	case strings.HasPrefix(customId, PaginationEmbedModal):
+		return customId[len(PaginationEmbedModal):]
+	case strings.HasPrefix(customId, PaginationEmbedSetPage):
+		return customId[len(PaginationEmbedSetPage):]
+	default:
+		return customId
 	}
 }
 
