@@ -80,14 +80,15 @@ var (
 	modalMutex     sync.Mutex
 )
 
-func new() *DiscommandStruct {
-	discommand := DiscommandStruct{
+var Discommand *DiscommandStruct
+
+func init() {
+	Discommand = &DiscommandStruct{
 		Commands:   map[string]*Command{},
 		Aliases:    map[string]string{},
 		Components: []*Component{},
 		Modals:     []*Modal{},
 	}
-	return &discommand
 }
 
 func (d *DiscommandStruct) LoadCommand(c *Command) {
@@ -171,5 +172,3 @@ func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.Interacti
 		break
 	}
 }
-
-var Discommand *DiscommandStruct = new()
