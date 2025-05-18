@@ -8,12 +8,13 @@ type MessageCreate struct {
 }
 
 type MessageSender struct {
-	Embeds     []*discordgo.MessageEmbed
-	Content    string
-	Components []discordgo.MessageComponent
-	Ephemeral  bool
-	Reply      bool
-	m          any
+	Embeds          []*discordgo.MessageEmbed
+	Content         string
+	Components      []discordgo.MessageComponent
+	Ephemeral       bool
+	Reply           bool
+	AllowedMentions *discordgo.MessageAllowedMentions
+	m               any
 }
 
 func NewMessageSender(m any) *MessageSender {
@@ -45,6 +46,11 @@ func (s *MessageSender) SetReply(reply bool) *MessageSender {
 	return s
 }
 
+func (s *MessageSender) SetAllowedMentions(allowedMentions discordgo.MessageAllowedMentions) *MessageSender {
+	s.AllowedMentions = &allowedMentions
+	return s
+}
+
 func (s *MessageSender) Send() {
 	switch m := s.m.(type) {
 	case *MessageCreate:
@@ -55,10 +61,11 @@ func (s *MessageSender) Send() {
 		}
 
 		m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content:    s.Content,
-			Embeds:     s.Embeds,
-			Components: s.Components,
-			Reference:  reference,
+			Content:         s.Content,
+			Embeds:          s.Embeds,
+			Components:      s.Components,
+			AllowedMentions: s.AllowedMentions,
+			Reference:       reference,
 		})
 		return
 	case *InteractionCreate:
@@ -83,5 +90,6 @@ func (s *MessageSender) Send() {
 			Components: s.Components,
 			Flags:      flags,
 		})
+		return
 	}
 }

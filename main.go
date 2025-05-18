@@ -21,6 +21,20 @@ import (
 	"github.com/devproje/commando/types"
 )
 
+func init() {
+	go commands.Discommand.LoadCommand(commands.HelpCommand)
+	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
+	go commands.Discommand.LoadCommand(commands.LearnCommand)
+	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
+	go commands.Discommand.LoadCommand(commands.InformationCommand)
+	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
+
+	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
+	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
+
+	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
+}
+
 func main() {
 	command := commando.NewCommando(os.Args[1:])
 	config := configs.Config
@@ -67,18 +81,6 @@ func main() {
 	}
 
 	dg, _ := discordgo.New("Bot " + config.Bot.Token)
-
-	go commands.Discommand.LoadCommand(commands.HelpCommand)
-	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
-	go commands.Discommand.LoadCommand(commands.LearnCommand)
-	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
-	go commands.Discommand.LoadCommand(commands.InformationCommand)
-	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
-
-	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
-	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
-
-	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
 
 	go dg.AddHandler(handler.MessageCreate)
 	go dg.AddHandler(handler.InteractionCreate)

@@ -14,7 +14,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 func argParser(content string) (args []string) {
@@ -109,9 +108,6 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			go func() {
 				cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: content}})
 				if err != nil {
-					if err == mongo.ErrNilDocument {
-						learnData = []databases.Learn{}
-					}
 					log.Fatalln(err)
 				}
 
@@ -131,27 +127,27 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				user, _ := s.User(data.UserId)
 				result := resultParser(data.Result, s, m)
 
-				s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-					Reference: m.Reference(),
-					Content:   fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))),
-					AllowedMentions: &discordgo.MessageAllowedMentions{
+				utils.NewMessageSender(m).
+					SetContent(fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username)))).
+					SetAllowedMentions(discordgo.MessageAllowedMentions{
 						Roles: []string{},
 						Parse: []discordgo.AllowedMentionType{},
 						Users: []string{},
-					},
-				})
+					}).
+					SetReply(true).
+					Send()
 				return
 			}
 
-			s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-				Reference: m.Reference(),
-				Content:   data[rand.Intn(len(data))].Text,
-				AllowedMentions: &discordgo.MessageAllowedMentions{
+			utils.NewMessageSender(m).
+				SetContent(data[rand.Intn(len(data))].Text).
+				SetAllowedMentions(discordgo.MessageAllowedMentions{
 					Roles: []string{},
 					Parse: []discordgo.AllowedMentionType{},
 					Users: []string{},
-				},
-			})
+				}).
+				SetReply(true).
+				Send()
 			return
 		}
 
