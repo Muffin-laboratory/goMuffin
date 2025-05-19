@@ -29,6 +29,8 @@ func DBMigrate(n *commando.Node) error {
 
 	wg.Add(3)
 
+	fmt.Println("[경고] 해당 명령어는 다음 버전에서 사라져요.")
+
 	// statement -> text
 	go func() {
 		defer wg.Done()
