@@ -52,34 +52,32 @@ func (b *PaginationEmbedBuilder) Start() {
 	}
 }
 
-func makeComponents(id string, current, total int) []discordgo.MessageComponent {
+func makeComponents(id string, current, total int) *discordgo.ActionsRow {
 	disabled := false
 
 	if total == 1 {
 		disabled = true
 	}
 
-	return []discordgo.MessageComponent{
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{
-					Style:    discordgo.PrimaryButton,
-					Label:    "이전",
-					CustomID: MakePaginationEmbedPrev(id),
-					Disabled: disabled,
-				},
-				discordgo.Button{
-					Style:    discordgo.SecondaryButton,
-					Label:    fmt.Sprintf("(%d/%d)", current, total),
-					CustomID: MakePaginationEmbedPages(id),
-					Disabled: disabled,
-				},
-				discordgo.Button{
-					Style:    discordgo.PrimaryButton,
-					Label:    "다음",
-					CustomID: MakePaginationEmbedNext(id),
-					Disabled: disabled,
-				},
+	return &discordgo.ActionsRow{
+		Components: []discordgo.MessageComponent{
+			discordgo.Button{
+				Style:    discordgo.PrimaryButton,
+				Label:    "이전",
+				CustomID: MakePaginationEmbedPrev(id),
+				Disabled: disabled,
+			},
+			discordgo.Button{
+				Style:    discordgo.SecondaryButton,
+				Label:    fmt.Sprintf("(%d/%d)", current, total),
+				CustomID: MakePaginationEmbedPages(id),
+				Disabled: disabled,
+			},
+			discordgo.Button{
+				Style:    discordgo.PrimaryButton,
+				Label:    "다음",
+				CustomID: MakePaginationEmbedNext(id),
+				Disabled: disabled,
 			},
 		},
 	}
@@ -116,7 +114,7 @@ func startPaginationEmbed(m any, userId string, e *discordgo.MessageEmbed, data 
 
 	NewMessageSender(m).
 		AddEmbeds(e).
-		AddComponents(makeComponents(id, p.Current, p.Total)...).
+		AddComponents(makeComponents(id, p.Current, p.Total)).
 		SetReply(true).
 		SetEphemeral(true).
 		Send()
@@ -148,12 +146,7 @@ func (p *PaginationEmbed) Prev(i *InteractionCreate) {
 
 	p.Current -= 1
 
-	p.Embed.Description = makeDesc(p.desc, p.Data[p.Current-1])
-
-	i.Update(&discordgo.InteractionResponseData{
-		Embeds:     []*discordgo.MessageEmbed{p.Embed},
-		Components: makeComponents(p.id, p.Current, p.Total),
-	})
+	p.Set(i, p.Current)
 }
 
 func (p *PaginationEmbed) Next(i *InteractionCreate) {
@@ -173,12 +166,7 @@ func (p *PaginationEmbed) Next(i *InteractionCreate) {
 
 	p.Current += 1
 
-	p.Embed.Description = makeDesc(p.desc, p.Data[p.Current-1])
-
-	i.Update(&discordgo.InteractionResponseData{
-		Embeds:     []*discordgo.MessageEmbed{p.Embed},
-		Components: makeComponents(p.id, p.Current, p.Total),
-	})
+	p.Set(i, p.Current)
 }
 
 func (p *PaginationEmbed) Set(i *InteractionCreate, page int) {
@@ -216,7 +204,7 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) {
 
 	i.Update(&discordgo.InteractionResponseData{
 		Embeds:     []*discordgo.MessageEmbed{p.Embed},
-		Components: makeComponents(p.id, p.Current, p.Total),
+		Components: []discordgo.MessageComponent{makeComponents(p.id, p.Current, p.Total)},
 	})
 }
 
