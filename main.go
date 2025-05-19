@@ -40,7 +40,6 @@ func main() {
 	config := configs.Config
 
 	if len(os.Args) > 1 {
-		command.Root("db-migrate", "봇의 데이터를 MariaDB에서 MongoDB로 옮깁니다.", scripts.DBMigrate)
 		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
 			types.OptionData{
 				Name: "id",
