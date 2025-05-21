@@ -56,7 +56,7 @@ func main() {
 		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
 			types.OptionData{
 				Name: "type",
-				Desc: "파일형식을 지정합니다. (json, txt(txt는 머핀 데이터만 적용))",
+				Desc: "파일형식을 지정합니다. (json, jsonl, finetune)",
 				Type: types.STRING,
 			},
 			types.OptionData{

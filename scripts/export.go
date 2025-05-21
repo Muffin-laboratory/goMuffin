@@ -17,7 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var date time.Time = time.Now()
+type role string
 
 type textJSONLData struct {
 	Text    string `json:"text"`
@@ -28,6 +28,26 @@ type learnJSONLData struct {
 	Command string `json:"command"`
 	Result  string `json:"result"`
 }
+
+type fineTuneMessageData struct {
+	Role    role   `json:"role"`
+	Content string `json:"content"`
+}
+
+type fineTuneJSONLData struct {
+	Messages []fineTuneMessageData `json:"messages"`
+}
+
+var date time.Time = time.Now()
+
+var (
+	system    role = "system"
+	user      role = "user"
+	assistant role = "assistant"
+)
+
+const SYSTEM_PROMPT = "당신은 머핀AI입니다. 질문을 최대한 분석하지 말고, 간단히하며, 고급 개념은 대답할 수 없습니다. " +
+	"모르면 모른다고 말해도 괜찮습니다. 말투는 친근하되 존댓말을 사용하여야 합니다. 그리고 대답을 길게 하지 말아야 합니다. 그리고 약간 엉뚱한 면이 있어야 합니다."
 
 func getDate() string {
 	year := strconv.Itoa(date.Year())
@@ -90,26 +110,15 @@ func saveFileToJSON(path, name string, data any) error {
 	return nil
 }
 
-func saveFileToJSONL(path, name string, data any) error {
+func saveFileToJSONL[T any](path, name string, data []T) error {
 	var content string
 
-	switch data := data.(type) {
-	case []textJSONLData:
-		for _, data := range data {
-			bytes, err := json.Marshal(data)
-			if err != nil {
-				return err
-			}
-			content += string(bytes) + "\n"
+	for _, data := range data {
+		bytes, err := json.Marshal(data)
+		if err != nil {
+			return err
 		}
-	case []learnJSONLData:
-		for _, data := range data {
-			bytes, err := json.Marshal(data)
-			if err != nil {
-				return err
-			}
-			content += string(bytes) + "\n"
-		}
+		content += string(bytes) + "\n"
 	}
 
 	f, err := os.Create(fmt.Sprintf("%s/%s.jsonl", path, name))
@@ -137,8 +146,8 @@ func ExportData(n *commando.Node) error {
 		return err
 	}
 
-	if fileType != "json" && fileType != "jsonl" {
-		return fmt.Errorf("파일 형식은 txt또는 json또는 jsonl이여야 해요")
+	if fileType != "json" && fileType != "jsonl" && fileType != "finetune" {
+		return fmt.Errorf("파일 형식은 txt또는 json또는 jsonl, finetune이여야 해요")
 	}
 
 	refined, err := option.ParseBool(*n.MustGetOpt("refined"), n)
@@ -213,6 +222,33 @@ func ExportData(n *commando.Node) error {
 				ch <- err
 				return
 			}
+		} else if fileType == "finetune" {
+			var newData []fineTuneJSONLData
+
+			for _, data := range data {
+				newData = append(newData, fineTuneJSONLData{
+					[]fineTuneMessageData{
+						{
+							Role:    system,
+							Content: SYSTEM_PROMPT,
+						},
+						{
+							Role:    user,
+							Content: "",
+						},
+						{
+							Role:    assistant,
+							Content: data.Text,
+						},
+					},
+				})
+			}
+
+			err = saveFileToJSONL(path, "muffin-fine-tune", newData)
+			if err != nil {
+				ch <- err
+				return
+			}
 		}
 
 		fmt.Println("머핀 데이터 추출 완료")
@@ -221,6 +257,10 @@ func ExportData(n *commando.Node) error {
 	// nsfw 데이터 추출
 	go func() {
 		defer wg.Done()
+
+		if fileType == "finetune" {
+			return
+		}
 
 		var data []databases.Text
 
@@ -271,6 +311,10 @@ func ExportData(n *commando.Node) error {
 	// 지식 데이터 추출
 	go func() {
 		defer wg.Done()
+
+		if fileType == "finetune" {
+			return
+		}
 
 		var data []databases.Learn
 
