@@ -173,6 +173,23 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		}
 	}
 
+	if len([]rune(command)) > 100 {
+		embed := &discordgo.MessageEmbed{
+			Title:       "❌ 오류",
+			Description: "단어는 100글자를 못 넘ㅇ어가요.",
+			Color:       utils.EmbedFail,
+		}
+
+		switch m := m.(type) {
+		case *discordgo.MessageCreate:
+			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
+		case *utils.InteractionCreate:
+			m.EditReply(&discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{embed},
+			})
+		}
+	}
+
 	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
 		Command:   command,
 		Result:    result,
