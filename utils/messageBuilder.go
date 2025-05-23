@@ -1,6 +1,8 @@
 package utils
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
 type MessageCreate struct {
 	*discordgo.MessageCreate
@@ -13,6 +15,7 @@ type MessageSender struct {
 	Components      []discordgo.MessageComponent
 	Ephemeral       bool
 	Reply           bool
+	ComponentsV2    bool
 	AllowedMentions *discordgo.MessageAllowedMentions
 	m               any
 }
@@ -51,7 +54,18 @@ func (s *MessageSender) SetAllowedMentions(allowedMentions discordgo.MessageAllo
 	return s
 }
 
-func (s *MessageSender) Send() {
+func (s *MessageSender) SetComponentsV2(componentsV2 bool) *MessageSender {
+	s.ComponentsV2 = componentsV2
+	return s
+}
+
+func (s *MessageSender) Send() error {
+	var flags discordgo.MessageFlags
+
+	if s.ComponentsV2 {
+		flags = flags | discordgo.MessageFlagsIsComponentsV2
+	}
+
 	switch m := s.m.(type) {
 	case *MessageCreate:
 		var reference *discordgo.MessageReference = nil
@@ -60,19 +74,18 @@ func (s *MessageSender) Send() {
 			reference = m.Reference()
 		}
 
-		m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+		_, err := m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content:         s.Content,
 			Embeds:          s.Embeds,
 			Components:      s.Components,
 			AllowedMentions: s.AllowedMentions,
+			Flags:           flags,
 			Reference:       reference,
 		})
-		return
+		return err
 	case *InteractionCreate:
-		var flags discordgo.MessageFlags
-
 		if s.Ephemeral {
-			flags = discordgo.MessageFlagsEphemeral
+			flags = flags | discordgo.MessageFlagsEphemeral
 		}
 
 		if m.Replied || m.Deferred {
@@ -80,16 +93,18 @@ func (s *MessageSender) Send() {
 				Content:    &s.Content,
 				Embeds:     &s.Embeds,
 				Components: &s.Components,
+				Flags:      &flags,
 			})
-			return
+			return err
 		}
 
-		m.Reply(&discordgo.InteractionResponseData{
+		err := m.Reply(&discordgo.InteractionResponseData{
 			Content:    s.Content,
 			Embeds:     s.Embeds,
 			Components: s.Components,
 			Flags:      flags,
 		})
-		return
+		return err
 	}
+	return nil
 }

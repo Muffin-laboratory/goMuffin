@@ -121,7 +121,7 @@ var LearnedDataListCommand *Command = &Command{
 				return
 			}
 		}
-		learnedDataListRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
+		learnedDataListRun(ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
@@ -153,7 +153,7 @@ var LearnedDataListCommand *Command = &Command{
 		if opt, ok := ctx.Inter.Options["개수"]; ok {
 			length = int(opt.IntValue())
 		}
-		learnedDataListRun(ctx.Inter.Session, ctx.Inter, ctx.Inter.Member.User.GlobalName, ctx.Inter.Member.User.AvatarURL("512"), filter, length)
+		learnedDataListRun(ctx.Inter, ctx.Inter.Member.User.GlobalName, ctx.Inter.Member.User.AvatarURL("512"), filter, length)
 	},
 }
 
@@ -197,7 +197,36 @@ func getDescriptions(data *[]databases.Learn, length int) (descriptions []string
 	return
 }
 
-func learnedDataListRun(s *discordgo.Session, m any, globalName, avatarUrl string, filter bson.D, length int) {
+func getSections(accessory *discordgo.Thumbnail, defaultDesc string, data *[]databases.Learn, length int) []discordgo.MessageComponent {
+	var sections []discordgo.MessageComponent
+
+	descriptions := getDescriptions(data, length)
+
+	if len(descriptions) <= 0 {
+		sections = append(sections, discordgo.Section{
+			Accessory: accessory,
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: utils.MakeDesc(defaultDesc, "없음"),
+				},
+			},
+		})
+	}
+
+	for _, desc := range descriptions {
+		sections = append(sections, discordgo.Section{
+			Accessory: accessory,
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: utils.MakeDesc(defaultDesc, desc),
+				},
+			},
+		})
+	}
+	return sections
+}
+
+func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) {
 	var data []databases.Learn
 
 	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
@@ -231,14 +260,14 @@ func learnedDataListRun(s *discordgo.Session, m any, globalName, avatarUrl strin
 
 	cur.All(context.TODO(), &data)
 
-	utils.NewPaginationEmbedBuilder(m, getDescriptions(&data, length)).
-		SetEmbed(&discordgo.MessageEmbed{
-			Title: fmt.Sprintf("%s님이 알려주신 지식", globalName),
-			Color: utils.EmbedDefault,
-			Thumbnail: &discordgo.MessageEmbedThumbnail{
-				URL: avatarUrl,
-			},
-		}).
-		SetDefaultDesc(utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s")).
+	sections := getSections(&discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: avatarUrl,
+		},
+	}, fmt.Sprintf("### %s님이 알려주신 지식\n%s", globalName, utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s")), &data, length)
+
+	utils.NewPaginationEmbedBuilder(m).
+		SetContainer(discordgo.Container{}).
+		AddComponents(sections...).
 		Start()
 }

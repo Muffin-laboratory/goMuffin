@@ -1,12 +1,6 @@
 package utils
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -36,13 +30,17 @@ type InteractionCreate struct {
 }
 
 // Reply to this interaction.
-func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) {
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: data,
 	})
+	if err != nil {
+		return err
+	}
 
 	i.Replied = true
+	return nil
 }
 
 // GetInteractionOptions to this interaction.
@@ -70,12 +68,16 @@ func (i *InteractionCreate) DeferReply(data *discordgo.InteractionResponseData) 
 }
 
 // DeferUpdate to this interaction.
-func (i *InteractionCreate) DeferUpdate() {
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func (i *InteractionCreate) DeferUpdate() error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
 	})
+	if err != nil {
+		return err
+	}
 
 	i.Deferred = true
+	return err
 }
 
 // EditReply to this interaction.
@@ -89,13 +91,17 @@ func (i *InteractionCreate) EditReply(data *InteractionEdit) error {
 }
 
 // Update to this interaction.
-func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) {
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: data,
 	})
+	if err != nil {
+		return err
+	}
 
 	i.Replied = true
+	return err
 }
 
 func (i *InteractionCreate) ShowModal(data *ModalData) error {
