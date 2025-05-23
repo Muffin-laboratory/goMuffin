@@ -97,37 +97,8 @@ func (i *InteractionCreate) ShowModal(data *ModalData) error {
 
 	reqData.Type = discordgo.InteractionResponseModal
 	reqData.Data = *data
-	bin, err := json.Marshal(reqData)
-	if err != nil {
-		return err
-	}
 
-	buf := bytes.NewBuffer(bin)
-
-	req, err := http.NewRequest("POST", discordgo.EndpointInteractionResponse(i.ID, i.Token), buf)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Authorization", i.Session.Identify.Token)
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := i.Session.Client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	respBin, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("%s", string(respBin))
-	}
-
-	defer resp.Body.Close()
-
-	i.Replied = true
-	return nil
+	endpoint := discordgo.EndpointInteractionResponse(i.ID, i.Token)
+	_, err := i.Session.RequestWithBucketID("POST", endpoint, reqData, endpoint)
+	return err
 }
