@@ -55,7 +55,9 @@ var DeleteLearnedDataCommand *Command = &Command{
 		deleteLearnedDataRun(ctx.Msg, strings.Join(*ctx.Args, " "), ctx.Msg.Author.ID)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(true)
+		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
 
 		var command string
 

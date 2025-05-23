@@ -89,7 +89,9 @@ var LearnCommand *Command = &Command{
 		learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(true)
+		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
 
 		var command, result string
 

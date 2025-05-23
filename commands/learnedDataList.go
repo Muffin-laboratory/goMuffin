@@ -124,7 +124,9 @@ var LearnedDataListCommand *Command = &Command{
 		learnedDataListRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(true)
+		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
 
 		var length int
 

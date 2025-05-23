@@ -47,7 +47,9 @@ var DataLengthCommand *Command = &Command{
 		dataLengthRun(ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(true)
+		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
 		dataLengthRun(ctx.Inter, ctx.Inter.Member.User.Username, ctx.Inter.Member.User.ID)
 	},
 }

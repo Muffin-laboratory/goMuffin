@@ -56,20 +56,17 @@ func GetInteractionOptions(i *discordgo.InteractionCreate) map[string]*discordgo
 }
 
 // DeferReply to this interaction.
-func (i *InteractionCreate) DeferReply(ephemeral bool) {
-	var flags discordgo.MessageFlags
-	if ephemeral {
-		flags = discordgo.MessageFlagsEphemeral
+func (i *InteractionCreate) DeferReply(data *discordgo.InteractionResponseData) error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+		Data: data,
+	})
+	if err != nil {
+		return err
 	}
 
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Flags: flags,
-		},
-	})
-
 	i.Deferred = true
+	return err
 }
 
 // DeferUpdate to this interaction.
