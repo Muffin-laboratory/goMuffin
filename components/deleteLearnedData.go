@@ -70,7 +70,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 
 		databases.Database.Learns.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
 
-		i.EditReply(&discordgo.WebhookEdit{
+		i.EditReply(&utils.InteractionEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
 				{
 					Title:       "✅ 삭제 완료",

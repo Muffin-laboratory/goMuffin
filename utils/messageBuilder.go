@@ -76,7 +76,7 @@ func (s *MessageSender) Send() {
 		}
 
 		if m.Replied || m.Deferred {
-			m.EditReply(&discordgo.WebhookEdit{
+			err := m.EditReply(&InteractionEdit{
 				Content:    &s.Content,
 				Embeds:     &s.Embeds,
 				Components: &s.Components,

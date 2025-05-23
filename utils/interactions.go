@@ -16,6 +16,15 @@ type ModalData struct {
 	Components []discordgo.MessageComponent `json:"components"`
 }
 
+type InteractionEdit struct {
+	Content         *string                           `json:"content,omitempty"`
+	Components      *[]discordgo.MessageComponent     `json:"components,omitempty"`
+	Embeds          *[]*discordgo.MessageEmbed        `json:"embeds,omitempty"`
+	Flags           *discordgo.MessageFlags           `json:"flags,omitempty"`
+	Attachments     *[]*discordgo.MessageAttachment   `json:"attachments,omitempty"`
+	AllowedMentions *discordgo.MessageAllowedMentions `json:"allowed_mentions,omitempty"`
+}
+
 // InteractionCreate custom data of discordgo.InteractionCreate
 type InteractionCreate struct {
 	*discordgo.InteractionCreate
@@ -73,10 +82,13 @@ func (i *InteractionCreate) DeferUpdate() {
 }
 
 // EditReply to this interaction.
-func (i *InteractionCreate) EditReply(data *discordgo.WebhookEdit) {
-	i.Session.InteractionResponseEdit(i.Interaction, data)
+func (i *InteractionCreate) EditReply(data *InteractionEdit) error {
+	endpoint := discordgo.EndpointWebhookMessage(i.AppID, i.Token, "@original")
+
+	_, err := i.Session.RequestWithBucketID("PATCH", endpoint, *data, discordgo.EndpointWebhookToken("", ""))
 
 	i.Replied = true
+	return err
 }
 
 // Update to this interaction.
