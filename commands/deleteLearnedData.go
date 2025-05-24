@@ -44,7 +44,7 @@ var DeleteLearnedDataCommand *Command = &Command{
 						},
 						{
 							Name:  "예시",
-							Value: utils.CodeBlock("md", strings.Join(addPrefix(ctx.Command.DetailedDescription.Examples), "\n")),
+							Value: utils.CodeBlock("md", strings.Join(utils.AddPrefix("- ", ctx.Command.DetailedDescription.Examples), "\n")),
 						},
 					},
 					Color: utils.EmbedFail,

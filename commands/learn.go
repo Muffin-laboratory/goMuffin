@@ -76,7 +76,7 @@ var LearnCommand *Command = &Command{
 						},
 						{
 							Name:  "예시",
-							Value: utils.CodeBlock("md", strings.Join(addPrefix(ctx.Command.DetailedDescription.Examples), "\n")),
+							Value: utils.CodeBlock("md", strings.Join(utils.AddPrefix("- ", ctx.Command.DetailedDescription.Examples), "\n")),
 						},
 					},
 					Color: utils.EmbedFail,
@@ -105,13 +105,6 @@ var LearnCommand *Command = &Command{
 
 		learnRun(ctx.Inter, ctx.Inter.Member.User.ID, command, result)
 	},
-}
-
-func addPrefix(arr []string) (newArr []string) {
-	for _, item := range arr {
-		newArr = append(newArr, fmt.Sprintf("- %s", item))
-	}
-	return
 }
 
 func learnRun(m any, userId, command, result string) {
