@@ -14,47 +14,20 @@ import (
 
 var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
-		var userId string
 		i := ctx.Inter
 		customId := i.MessageComponentData().CustomID
 
-		if i.MessageComponentData().ComponentType == discordgo.ButtonComponent {
-			if !strings.HasPrefix(customId, utils.DeleteLearnedDataCancel) {
-				return false
-			}
-
-			userId = utils.GetDeleteLearnedDataUserId(customId)
-			if i.Member.User.ID == userId {
-				i.Update(&discordgo.InteractionResponseData{
-					Embeds: []*discordgo.MessageEmbed{
-						{
-							Title:       "❌ 취소",
-							Description: "지식 삭제 작업ㅇ을 취소했어요.",
-							Color:       utils.EmbedFail,
-						},
-					},
-				})
-				return false
-			}
-		} else {
-			if !strings.HasPrefix(customId, utils.DeleteLearnedDataUserId) {
-				return false
-			}
-
-			userId = utils.GetDeleteLearnedDataUserId(customId)
+		if !strings.HasPrefix(customId, utils.DeleteLearnedData) {
+			return false
 		}
 
+		userId := utils.GetDeleteLearnedDataUserId(customId)
 		if i.Member.User.ID != userId {
 			i.Reply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "❌ 오류",
-						Description: "당신은 해당 권한이 없ㅇ어요.",
-						Color:       utils.EmbedFail,
-					},
+				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
+				Components: []discordgo.MessageComponent{
+					utils.GetErrorContainer(discordgo.TextDisplay{Content: "당신은 해당 권한이 없ㅇ어요."}),
 				},
-				Components: []discordgo.MessageComponent{},
 			},
 			)
 			return false
@@ -66,19 +39,17 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 
 		i.DeferUpdate()
 
-		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().Values[0])
+		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
+		fmt.Println(id, itemId)
 
 		databases.Database.Learns.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
 
+		flags := discordgo.MessageFlagsIsComponentsV2
 		i.EditReply(&utils.InteractionEdit{
-			Embeds: &[]*discordgo.MessageEmbed{
-				{
-					Title:       "✅ 삭제 완료",
-					Description: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemId),
-					Color:       utils.EmbedSuccess,
-				},
+			Flags: &flags,
+			Components: &[]discordgo.MessageComponent{
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemId)}),
 			},
-			Components: &[]discordgo.MessageComponent{},
 		})
 	},
 }

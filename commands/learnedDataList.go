@@ -197,33 +197,41 @@ func getDescriptions(data *[]databases.Learn, length int) (descriptions []string
 	return
 }
 
-func getSections(accessory *discordgo.Thumbnail, defaultDesc string, data *[]databases.Learn, length int) []discordgo.MessageComponent {
-	var sections []discordgo.MessageComponent
+func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, data *[]databases.Learn, length int) []*discordgo.Container {
+	var containers []*discordgo.Container
 
 	descriptions := getDescriptions(data, length)
 
 	if len(descriptions) <= 0 {
-		sections = append(sections, discordgo.Section{
-			Accessory: accessory,
+		containers = append(containers, &discordgo.Container{
 			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{
-					Content: utils.MakeDesc(defaultDesc, "없음"),
+				discordgo.Section{
+					Accessory: accessory,
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: utils.MakeDesc(defaultDesc, "없음"),
+						},
+					},
 				},
 			},
 		})
 	}
 
 	for _, desc := range descriptions {
-		sections = append(sections, discordgo.Section{
-			Accessory: accessory,
+		containers = append(containers, &discordgo.Container{
 			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{
-					Content: utils.MakeDesc(defaultDesc, desc),
+				discordgo.Section{
+					Accessory: accessory,
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: utils.MakeDesc(defaultDesc, desc),
+						},
+					},
 				},
 			},
 		})
 	}
-	return sections
+	return containers
 }
 
 func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) {
@@ -260,14 +268,13 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 
 	cur.All(context.TODO(), &data)
 
-	sections := getSections(&discordgo.Thumbnail{
+	containers := getContainers(&discordgo.Thumbnail{
 		Media: discordgo.UnfurledMediaItem{
 			URL: avatarUrl,
 		},
 	}, fmt.Sprintf("### %s님이 알려주신 지식\n%s", globalName, utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s")), &data, length)
 
-	utils.NewPaginationEmbedBuilder(m).
-		SetContainer(discordgo.Container{}).
-		AddComponents(sections...).
+	utils.PaginationEmbedBuilder(m).
+		AddContainers(containers...).
 		Start()
 }

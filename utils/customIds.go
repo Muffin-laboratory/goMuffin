@@ -9,9 +9,7 @@ import (
 )
 
 const (
-	DeleteLearnedData       = "#muffin/deleteLearnedData@"
-	DeleteLearnedDataUserId = "#muffin/deleteLearnedData@"
-	DeleteLearnedDataCancel = "#muffin/deleteLearnedData/cancel@"
+	DeleteLearnedData = "#muffin/deleteLearnedData@"
 
 	PaginationEmbedPrev    = "#muffin-pages/prev$"
 	PaginationEmbedPages   = "#muffin-pages/pages$"
@@ -20,31 +18,19 @@ const (
 	PaginationEmbedSetPage = "#muffin-pages/modal/set$"
 )
 
-func MakeDeleteLearnedData(id string, number int) string {
-	return fmt.Sprintf("%s%s&No.%d", DeleteLearnedData, id, number)
-}
-
-func MakeDeleteLearnedDataUserId(userId string) string {
-	return fmt.Sprintf("%s%s", DeleteLearnedDataUserId, userId)
-}
-
-func MakeDeleteLearnedDataCancel(id string) string {
-	return fmt.Sprintf("%s%s", DeleteLearnedDataCancel, id)
+func MakeDeleteLearnedData(id string, number int, userId string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userId)
 }
 
 func GetDeleteLearnedDataId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpItemId.ReplaceAllString(customId[len(DeleteLearnedData):], ""), "&", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "No.", "")
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpDLDId.FindAllString(customId, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpDLDItemId.FindAllString(customId, 1)[0], "no=", "")
 	itemId, _ = strconv.Atoi(stringItemId)
 	return
 }
 
 func GetDeleteLearnedDataUserId(customId string) string {
-	if strings.HasPrefix(customId, DeleteLearnedDataCancel) {
-		return customId[len(DeleteLearnedDataCancel):]
-	} else {
-		return customId[len(DeleteLearnedDataUserId):]
-	}
+	return strings.ReplaceAll(RegexpDLDUserId.FindAllString(customId, 1)[0], "user_id=", "")
 }
 
 func MakePaginationEmbedPrev(id string) string {

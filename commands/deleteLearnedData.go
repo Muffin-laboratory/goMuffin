@@ -34,21 +34,18 @@ var DeleteLearnedDataCommand *Command = &Command{
 		command := strings.Join(*ctx.Args, " ")
 		if command == "" {
 			utils.NewMessageSender(ctx.Msg).
-				AddEmbeds(&discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: "올바르지 않ㅇ은 용법이에요.",
-					Fields: []*discordgo.MessageEmbedField{
-						{
-							Name:  "사용법",
-							Value: utils.InlineCode(ctx.Command.DetailedDescription.Usage),
-						},
-						{
-							Name:  "예시",
-							Value: utils.CodeBlock("md", strings.Join(utils.AddPrefix("- ", ctx.Command.DetailedDescription.Examples), "\n")),
-						},
+				AddComponents(utils.GetErrorContainer(
+					discordgo.TextDisplay{
+						Content: "올바르지 않ㅇ은 용법이에요.",
 					},
-					Color: utils.EmbedFail,
-				}).
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
+					},
+				)).
+				SetComponentsV2(true).
 				SetReply(true).
 				Send()
 		}
@@ -70,18 +67,15 @@ var DeleteLearnedDataCommand *Command = &Command{
 }
 
 func deleteLearnedDataRun(m any, command, userId string) {
-	var description string
 	var data []databases.Learn
-	var options []discordgo.SelectMenuOption
+	var sections []discordgo.Section
+	var containers []*discordgo.Container
 
 	cur, err := databases.Database.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
 	if err != nil {
 		utils.NewMessageSender(m).
-			AddEmbeds(&discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "데이터를 가져오는데 실패했어요.",
-				Color:       utils.EmbedFail,
-			}).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "데이터를 가져오는데 실패했어요."})).
+			SetComponentsV2(true).
 			SetReply(true).
 			Send()
 		return
@@ -91,54 +85,46 @@ func deleteLearnedDataRun(m any, command, userId string) {
 
 	if len(data) < 1 {
 		utils.NewMessageSender(m).
-			AddEmbeds(&discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "해당 하는 지식ㅇ을 찾을 수 없어요.",
-				Color:       utils.EmbedFail,
-			}).
+			AddComponents(discordgo.TextDisplay{Content: "해당 하는 지식ㅇ을 찾을 수 없어요."}).
+			SetComponentsV2(true).
 			SetReply(true).
 			Send()
 		return
 	}
 
-	for i := range len(data) {
-		data := data[i]
-
-		options = append(options, discordgo.SelectMenuOption{
-			Label:       fmt.Sprintf("%d번 지식", i+1),
-			Description: data.Result,
-			Value:       utils.MakeDeleteLearnedData(data.Id.Hex(), i+1),
+	for i, data := range data {
+		sections = append(sections, discordgo.Section{
+			Accessory: discordgo.Button{
+				Label:    "삭제",
+				Style:    discordgo.DangerButton,
+				CustomID: utils.MakeDeleteLearnedData(data.Id.Hex(), i+1, userId),
+			},
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("%d. %s\n", i+1, data.Result),
+				},
+			},
 		})
-		description += fmt.Sprintf("%d. %s\n", i+1, data.Result)
 	}
 
-	utils.NewMessageSender(m).
-		AddEmbeds(&discordgo.MessageEmbed{
-			Title:       fmt.Sprintf("%s 삭제", command),
-			Description: utils.CodeBlock("md", fmt.Sprintf("# %s에 대한 대답 중 하나를 선ㅌ택하여 삭제해주세요.\n%s", command, description)),
-			Color:       utils.EmbedDefault,
-		}).
-		AddComponents(
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.SelectMenu{
-						MenuType:    discordgo.StringSelectMenu,
-						CustomID:    utils.MakeDeleteLearnedDataUserId(userId),
-						Options:     options,
-						Placeholder: "ㅈ지울 응답을 선택해주세요.",
-					},
-				},
-			},
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.Button{
-						CustomID: utils.MakeDeleteLearnedDataCancel(userId),
-						Label:    "취소하기",
-						Style:    discordgo.DangerButton,
-						Disabled: false,
-					},
-				},
-			},
-		).
-		Send()
+	textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s 삭제", command)}
+	container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+
+	for i, section := range sections {
+		container.Components = append(container.Components, section, discordgo.Separator{})
+
+		if (i+1)%10 == 0 {
+			containers = append(containers, container)
+			container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+			continue
+		}
+	}
+
+	if len(container.Components) > 1 {
+		containers = append(containers, container)
+	}
+
+	utils.PaginationEmbedBuilder(m).
+		AddContainers(containers...).
+		Start()
 }
