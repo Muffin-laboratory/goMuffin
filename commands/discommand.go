@@ -7,9 +7,12 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type modalRun func(ctx *ModalContext)
 type messageRun func(ctx *MsgContext)
 type chatInputRun func(ctx *ChatInputContext)
 type componentRun func(ctx *ComponentContext)
+
+type modalParse func(ctx *ModalContext) bool
 type componentParse func(ctx *ComponentContext) bool
 
 type Category string
@@ -32,12 +35,13 @@ type DiscommandStruct struct {
 	Commands   map[string]*Command
 	Components []*Component
 	Aliases    map[string]string
+	Modals     []*Modal
 }
 
 type MsgContext struct {
 	Session *discordgo.Session
 	Msg     *discordgo.MessageCreate
-	Args    []string
+	Args    *[]string
 	Command *Command
 }
 
@@ -53,9 +57,19 @@ type ComponentContext struct {
 	Component *Component
 }
 
+type ModalContext struct {
+	Inter *utils.InteractionCreate
+	Modal *Modal
+}
+
 type Component struct {
 	Parse componentParse
 	Run   componentRun
+}
+
+type Modal struct {
+	Parse modalParse
+	Run   modalRun
 }
 
 const (
@@ -63,14 +77,18 @@ const (
 	General  Category = "일반"
 )
 
-var commandMutex sync.Mutex
-var componentMutex sync.Mutex
+var (
+	commandMutex   sync.Mutex
+	componentMutex sync.Mutex
+	modalMutex     sync.Mutex
+)
 
 func new() *DiscommandStruct {
 	discommand := DiscommandStruct{
 		Commands:   map[string]*Command{},
 		Aliases:    map[string]string{},
 		Components: []*Component{},
+		Modals:     []*Modal{},
 	}
 	return &discommand
 }
@@ -92,9 +110,15 @@ func (d *DiscommandStruct) LoadComponent(c *Component) {
 	d.Components = append(d.Components, c)
 }
 
+func (d *DiscommandStruct) LoadModal(m *Modal) {
+	defer modalMutex.Unlock()
+	modalMutex.Lock()
+	d.Modals = append(d.Modals, m)
+}
+
 func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	if command, ok := d.Commands[name]; ok {
-		command.MessageRun(&MsgContext{s, m, args, command})
+		command.MessageRun(&MsgContext{s, m, &args, command})
 	}
 }
 
@@ -109,18 +133,42 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *di
 }
 
 func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	for _, c := range d.Components {
-		if (!c.Parse(&ComponentContext{s, &utils.InteractionCreate{
+	data := &ComponentContext{
+		Session: s,
+		Inter: &utils.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,
-		}, c})) {
+		},
+	}
+
+	for _, c := range d.Components {
+		data.Component = c
+
+		if !c.Parse(data) {
 			continue
 		}
 
-		c.Run(&ComponentContext{s, &utils.InteractionCreate{
+		c.Run(data)
+		break
+	}
+}
+
+func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	data := &ModalContext{
+		Inter: &utils.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,
-		}, c})
+		},
+	}
+
+	for _, m := range d.Modals {
+		data.Modal = m
+
+		if !m.Parse(data) {
+			continue
+		}
+
+		m.Run(data)
 		break
 	}
 }

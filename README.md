@@ -12,8 +12,10 @@
 
 ## 실행
 
+- 아래의 모든 명령어는 make를 사용합니다.
+
 ```sh
-go run main.go
+make run
 ```
 
 ### 빌드
@@ -21,7 +23,7 @@ go run main.go
 1. 빌드
 
 ```sh
-go build -o ./build/goMuffin git.wh64.net/muffin/goMuffin # 윈도우면 ./build/goMuffin을 .\build\goMuffin.exe으로 변경
+make #또는 make build
 ```
 
 2. 실행

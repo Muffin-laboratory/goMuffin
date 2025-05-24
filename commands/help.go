@@ -30,10 +30,10 @@ var HelpCommand *Command = &Command{
 	},
 	Category: General,
 	MessageRun: func(ctx *MsgContext) {
-		helpRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
+		helpRun(ctx.Session, ctx.Msg, ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
-		helpRun(ctx.Command, ctx.Session, ctx.Inter, nil)
+		helpRun(ctx.Session, ctx.Inter, nil)
 	},
 }
 
@@ -47,7 +47,7 @@ func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
 	return commands
 }
 
-func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
+func helpRun(s *discordgo.Session, m any, args *[]string) {
 	var commandName string
 	embed := &discordgo.MessageEmbed{
 		Color: utils.EmbedDefault,
@@ -104,6 +104,13 @@ func helpRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 			Value:  utils.InlineCode(command.DetailedDescription.Usage),
 			Inline: true,
 		},
+	}
+
+	if command.Name == LearnCommand.Name {
+		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
+			Name:  "대답에 쓸 수 있는 인자",
+			Value: learnArguments,
+		})
 	}
 
 	if command.Aliases != nil {

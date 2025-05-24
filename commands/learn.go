@@ -13,7 +13,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var arguments = utils.InlineCode("{user.name}") + "\n" +
+var learnArguments = utils.InlineCode("{user.name}") + "\n" +
 	utils.InlineCode("{user.mention}") + "\n" +
 	utils.InlineCode("{user.globalName}") + "\n" +
 	utils.InlineCode("{user.id}") + "\n" +
@@ -57,7 +57,7 @@ var LearnCommand *Command = &Command{
 	},
 	Category: Chatting,
 	MessageRun: func(ctx *MsgContext) {
-		learnRun(ctx.Command, ctx.Session, ctx.Msg, &ctx.Args)
+		learnRun(ctx.Command, ctx.Session, ctx.Msg, ctx.Args)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		learnRun(ctx.Command, ctx.Session, ctx.Inter, nil)
@@ -91,7 +91,7 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 					},
 					{
 						Name:   "사용 가능한 인자",
-						Value:  arguments,
+						Value:  learnArguments,
 						Inline: true,
 					},
 					{
@@ -173,7 +173,24 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 		}
 	}
 
-	_, err := databases.Learns.InsertOne(context.TODO(), databases.InsertLearn{
+	if len([]rune(command)) > 100 {
+		embed := &discordgo.MessageEmbed{
+			Title:       "❌ 오류",
+			Description: "단어는 100글자를 못 넘ㅇ어가요.",
+			Color:       utils.EmbedFail,
+		}
+
+		switch m := m.(type) {
+		case *discordgo.MessageCreate:
+			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
+		case *utils.InteractionCreate:
+			m.EditReply(&discordgo.WebhookEdit{
+				Embeds: &[]*discordgo.MessageEmbed{embed},
+			})
+		}
+	}
+
+	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
 		Command:   command,
 		Result:    result,
 		UserId:    userId,

@@ -6,3 +6,19 @@ services:
       - "./.env"
     volumes:
       - "/etc/localtime:/etc/localtime"
+    depends_on:
+      - database
+    environment:
+      - "DATABASE_HOSTNAME=database"
+  database:
+    container_name: "goMuffin_database"
+    image: "mongo:7.0.17"
+    ports:
+      - "${DATABASE_PORT}:27017"
+    volumes:
+      - "./data:/data/db"
+      - "/etc/localtime:/etc/localtime"
+    environment:
+      - "MONGO_INITDB_ROOT_USERNAME=${DATABASE_USERNAME}"
+      - "MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD}"
+ 

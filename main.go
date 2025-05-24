@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -15,30 +14,59 @@ import (
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
+	"git.wh64.net/muffin/goMuffin/modals"
 	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
+	"github.com/devproje/commando"
+	"github.com/devproje/commando/types"
 )
 
 func main() {
+	command := commando.NewCommando(os.Args[1:])
 	config := configs.Config
 
 	if len(os.Args) > 1 {
-		switch strings.ToLower(os.Args[1]) {
-		case "dbmigrate":
-			scripts.DBMigrate()
-		case "deleteallcommands":
-			scripts.DeleteAllCommands()
-		default:
-			log.Fatalln(fmt.Errorf("[goMuffin] 명령어 인자에는 dbmigrate나 deleteallcommands만 올 수 있어요"))
+		command.Root("db-migrate", "봇의 데이터를 MariaDB에서 MongoDB로 옮깁니다.", scripts.DBMigrate)
+		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
+			types.OptionData{
+				Name: "id",
+				Desc: "봇의 디스코드 아이디",
+				Type: types.STRING,
+			},
+			types.OptionData{
+				Name:  "isYes",
+				Short: []string{"y"},
+				Type:  types.BOOLEAN,
+			},
+		)
+
+		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
+			types.OptionData{
+				Name: "type",
+				Desc: "파일형식을 지정합니다. (json, txt(txt는 머핀 데이터만 적용))",
+				Type: types.STRING,
+			},
+			types.OptionData{
+				Name: "export-path",
+				Desc: "데이터를 저장할 위치를 지정합니다.",
+				Type: types.STRING,
+			},
+			types.OptionData{
+				Name: "refined",
+				Desc: "머핀 데이터를 있는 그대로 추출할 지, 가려내서 추출할 지를 지정합니다.",
+				Type: types.BOOLEAN,
+			},
+		)
+
+		err := command.Execute()
+		if err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 		return
 	}
 
-	dg, err := discordgo.New("Bot " + config.Bot.Token)
-	if err != nil {
-		log.Println("[goMuffin] 봇의 세션을 만들수가 없어요.")
-		log.Fatalln(err)
-	}
+	dg, _ := discordgo.New("Bot " + config.Bot.Token)
 
 	go commands.Discommand.LoadCommand(commands.HelpCommand)
 	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
@@ -48,13 +76,22 @@ func main() {
 	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
+	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
+
+	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
 
 	go dg.AddHandler(handler.MessageCreate)
 	go dg.AddHandler(handler.InteractionCreate)
 
-	dg.Open()
+	err := dg.Open()
+	if err != nil {
+		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
+		log.Fatalln(err)
+	}
+
 	defer dg.Close()
 
+	// 봇의 상태메세지 변경
 	go func() {
 		for {
 			dg.UpdateCustomStatus("ㅅ살려주세요..!")
@@ -63,7 +100,7 @@ func main() {
 	}()
 
 	for _, cmd := range commands.Discommand.Commands {
-		if cmd.Name == "도움말" {
+		if cmd.Name == commands.HelpCommand.Name {
 			// 극한의 성능 똥망 코드 탄생!
 			// 무려 똑같은 걸 반복해서 돌리는!
 			for _, a := range commands.Discommand.Commands {
@@ -77,7 +114,7 @@ func main() {
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
 	}
 
-	defer databases.Client.Disconnect(context.TODO())
+	defer databases.Database.Client.Disconnect(context.TODO())
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)

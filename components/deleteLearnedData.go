@@ -23,7 +23,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 				return false
 			}
 
-			userId = customId[len(utils.DeleteLearnedDataCancel):]
+			userId = utils.GetDeleteLearnedDataUserId(customId)
 			if i.Member.User.ID == userId {
 				i.Update(&discordgo.InteractionResponseData{
 					Embeds: []*discordgo.MessageEmbed{
@@ -41,7 +41,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 				return false
 			}
 
-			userId = customId[len(utils.DeleteLearnedDataUserId):]
+			userId = utils.GetDeleteLearnedDataUserId(customId)
 		}
 
 		if i.Member.User.ID != userId {
@@ -66,16 +66,15 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 
 		i.DeferUpdate()
 
-		id, _ := bson.ObjectIDFromHex(strings.ReplaceAll(utils.ItemIdRegexp.ReplaceAllString(i.MessageComponentData().Values[0][len(utils.DeleteLearnedData):], ""), "&", ""))
-		itemId := strings.ReplaceAll(utils.ItemIdRegexp.FindAllString(i.MessageComponentData().Values[0], 1)[0], "No.", "")
+		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().Values[0])
 
-		databases.Learns.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
+		databases.Database.Learns.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
 
 		i.EditReply(&discordgo.WebhookEdit{
 			Embeds: &[]*discordgo.MessageEmbed{
 				{
 					Title:       "✅ 삭제 완료",
-					Description: fmt.Sprintf("%s번을 삭ㅈ제했어요.", itemId),
+					Description: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemId),
 					Color:       utils.EmbedSuccess,
 				},
 			},

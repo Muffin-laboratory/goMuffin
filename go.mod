@@ -5,6 +5,7 @@ go 1.24.1
 require (
 	github.com/LoperLee/golang-hangul-toolkit v1.1.0
 	github.com/bwmarrin/discordgo v0.28.1
+	github.com/devproje/commando v0.1.0-alpha.1
 	github.com/go-sql-driver/mysql v1.9.2
 	github.com/joho/godotenv v1.5.1
 	go.mongodb.org/mongo-driver/v2 v2.1.0

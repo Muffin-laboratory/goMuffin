@@ -125,3 +125,6 @@ $RECYCLE.BIN/
 # Config files
 *.env
 !.env.example
+
+export/
+data/

@@ -1,6 +1,20 @@
 package utils
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+
+	"github.com/bwmarrin/discordgo"
+)
+
+type ModalData struct {
+	CustomId   string                       `json:"custom_id"`
+	Title      string                       `json:"title"`
+	Components []discordgo.MessageComponent `json:"components"`
+}
 
 // InteractionCreate custom data of discordgo.InteractionCreate
 type InteractionCreate struct {
@@ -61,4 +75,45 @@ func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) {
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: data,
 	})
+}
+
+func (i *InteractionCreate) ShowModal(data *ModalData) error {
+	var reqData struct {
+		Type discordgo.InteractionResponseType `json:"type"`
+		Data ModalData                         `json:"data"`
+	}
+
+	reqData.Type = discordgo.InteractionResponseModal
+	reqData.Data = *data
+	bin, err := json.Marshal(reqData)
+	if err != nil {
+		return err
+	}
+
+	buf := bytes.NewBuffer(bin)
+
+	req, err := http.NewRequest("POST", discordgo.EndpointInteractionResponse(i.ID, i.Token), buf)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add("Authorization", i.Session.Identify.Token)
+	req.Header.Add("Content-Type", "application/json")
+
+	resp, err := i.Session.Client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	respBin, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("%s", string(respBin))
+	}
+
+	defer resp.Body.Close()
+	return nil
 }

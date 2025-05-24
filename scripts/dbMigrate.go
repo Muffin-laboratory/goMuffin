@@ -10,6 +10,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/configs"
 
+	"github.com/devproje/commando"
 	_ "github.com/go-sql-driver/mysql"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
@@ -19,14 +20,16 @@ import (
 var wg sync.WaitGroup
 
 // 이 스크립트는 MariaDB -> MongoDB로의 전환을 위해 만들었음.
-func DBMigrate() {
+func DBMigrate(n *commando.Node) error {
 	mariaURL := os.Getenv("PREVIOUS_DATABASE_URL")
 	mongoURL := configs.Config.DatabaseURL
-	dbName := configs.Config.DBName
+	dbName := configs.Config.DatabaseName
 
 	dbConnectionQuery := "?parseTime=true"
 
 	wg.Add(3)
+
+	fmt.Println("[경고] 해당 명령어는 다음 버전에서 사라져요.")
 
 	// statement -> text
 	go func() {
@@ -189,4 +192,5 @@ func DBMigrate() {
 	// 모든 고루틴이 끝날 떄 까지 대기
 	wg.Wait()
 	fmt.Println("데이터 마이그레이션이 끝났어요.")
+	return nil
 }
