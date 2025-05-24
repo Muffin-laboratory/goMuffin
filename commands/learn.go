@@ -14,17 +14,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var learnArguments = utils.InlineCode("{user.name}") + "\n" +
-	utils.InlineCode("{user.mention}") + "\n" +
-	utils.InlineCode("{user.globalName}") + "\n" +
-	utils.InlineCode("{user.id}") + "\n" +
-	utils.InlineCode("{user.createdAt}") + "\n" +
-	utils.InlineCode("{user.joinedAt}") + "\n" +
-	utils.InlineCode("{muffin.version}") + "\n" +
-	utils.InlineCode("{muffin.updatedAt}") + "\n" +
-	utils.InlineCode("{muffin.statedAt}") + "\n" +
-	utils.InlineCode("{muffin.name}") + "\n" +
-	utils.InlineCode("{muffin.id}")
+var learnArguments = "> " + utils.InlineCode("{user.name}") + "\n" +
+	"> " + utils.InlineCode("{user.mention}") + "\n" +
+	"> " + utils.InlineCode("{user.globalName}") + "\n" +
+	"> " + utils.InlineCode("{user.id}") + "\n" +
+	"> " + utils.InlineCode("{user.createdAt}") + "\n" +
+	"> " + utils.InlineCode("{user.joinedAt}") + "\n" +
+	"> " + utils.InlineCode("{muffin.version}") + "\n" +
+	"> " + utils.InlineCode("{muffin.updatedAt}") + "\n" +
+	"> " + utils.InlineCode("{muffin.statedAt}") + "\n" +
+	"> " + utils.InlineCode("{muffin.name}") + "\n" +
+	"> " + utils.InlineCode("{muffin.id}")
 
 var LearnCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
