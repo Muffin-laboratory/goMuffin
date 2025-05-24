@@ -44,13 +44,14 @@ var DataLengthCommand *Command = &Command{
 	},
 	Category: General,
 	MessageRun: func(ctx *MsgContext) {
-		dataLengthRun(ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
+		dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},
 	ChatInputRun: func(ctx *ChatInputContext) {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
-		dataLengthRun(ctx.Inter, ctx.Inter.Member.User.Username, ctx.Inter.Member.User.ID)
+
+		dataLengthRun(ctx.Inter.Session, ctx.Inter, ctx.Inter.Member.User.Username, ctx.Inter.Member.User.ID)
 	},
 }
 
@@ -71,7 +72,7 @@ func getLength(ch chan chStruct, dType dataType, coll *mongo.Collection, filter 
 	ch <- chStruct{name: dType, length: len(data)}
 }
 
-func dataLengthRun(m any, username, userId string) {
+func dataLengthRun(s *discordgo.Session, m any, username, userId string) {
 	ch := make(chan chStruct)
 	var textLength,
 		muffinLength,
@@ -115,40 +116,39 @@ func dataLengthRun(m any, username, userId string) {
 
 	sum := textLength + learnLength
 
-	// 나중에 djs처럼 Embed 만들어 주는 함수 만들어야겠다
-	// 지금은 임시방편
 	utils.NewMessageSender(m).
-		AddEmbeds(&discordgo.MessageEmbed{
-			Title:       "저장된 데이터량",
-			Description: fmt.Sprintf("총합: %s개", utils.InlineCode(strconv.Itoa(sum))),
-			Color:       utils.EmbedDefault,
-			Fields: []*discordgo.MessageEmbedField{
-				{
-					Name:   "총 채팅 데이터량",
-					Value:  utils.InlineCode(strconv.Itoa(textLength)) + "개",
-					Inline: true,
+		AddComponents(discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.Section{
+					Accessory: discordgo.Thumbnail{
+						Media: discordgo.UnfurledMediaItem{
+							URL: s.State.User.AvatarURL("512"),
+						},
+					},
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("### 저장된 데이터량\n총합: %s", utils.InlineCode(strconv.Itoa(sum)+"개")),
+						},
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("- **총 채팅 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(textLength))+"개"),
+						},
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("- **머핀 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(muffinLength))+"개"),
+						},
+					},
 				},
-				{
-					Name:   "총 지식 데이터량",
-					Value:  utils.InlineCode(strconv.Itoa(learnLength)) + "개",
-					Inline: true,
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("- **nsfw 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(nsfwLength))+"개"),
 				},
-				{
-					Name:  "머핀 데이터량",
-					Value: utils.InlineCode(strconv.Itoa(muffinLength)) + "개",
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("- **총 지식 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(learnLength))+"개"),
 				},
-				{
-					Name:   "nsfw 데이터량",
-					Value:  utils.InlineCode(strconv.Itoa(nsfwLength)) + "개",
-					Inline: true,
-				},
-				{
-					Name:   fmt.Sprintf("%s님이 가르쳐준 데이터량", username),
-					Value:  utils.InlineCode(strconv.Itoa(userLearnLength)) + "개",
-					Inline: true,
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("- **%s님이 가르쳐준 데이터량**\n> %s", username, utils.InlineCode(strconv.Itoa(userLearnLength))+"개"),
 				},
 			},
 		}).
+		SetComponentsV2(true).
 		SetReply(true).
 		Send()
 }
