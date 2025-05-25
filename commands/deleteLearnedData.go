@@ -85,7 +85,7 @@ func deleteLearnedDataRun(m any, command, userId string) {
 
 	if len(data) < 1 {
 		utils.NewMessageSender(m).
-			AddComponents(discordgo.TextDisplay{Content: "해당 하는 지식ㅇ을 찾을 수 없어요."}).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 하는 지식ㅇ을 찾을 수 없어요."})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
