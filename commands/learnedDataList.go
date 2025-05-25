@@ -82,28 +82,12 @@ var LearnedDataListCommand *Command = &Command{
 		}
 
 		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
-			var err error
-			length, err := strconv.Atoi(match[1])
-
-			if err != nil {
-				utils.NewMessageSender(ctx.Msg).
-					AddEmbeds(&discordgo.MessageEmbed{
-						Title:       "❌ 오류",
-						Description: "개수의 값은 숫자여야해요.",
-						Color:       utils.EmbedFail,
-					}).
-					SetReply(true).
-					Send()
-				return
-			}
+			length, _ = strconv.Atoi(match[1])
 
 			if float64(length) < LIST_MIN_VALUE {
 				utils.NewMessageSender(ctx.Msg).
-					AddEmbeds(&discordgo.MessageEmbed{
-						Title:       "❌ 오류",
-						Description: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE)),
-						Color:       utils.EmbedFail,
-					}).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE))})).
+					SetComponentsV2(true).
 					SetReply(true).
 					Send()
 				return
@@ -111,11 +95,8 @@ var LearnedDataListCommand *Command = &Command{
 
 			if float64(length) > LIST_MAX_VALUE {
 				utils.NewMessageSender(ctx.Msg).
-					AddEmbeds(&discordgo.MessageEmbed{
-						Title:       "❌ 오류",
-						Description: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE)),
-						Color:       utils.EmbedFail,
-					}).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE))})).
+					SetComponentsV2(true).
 					SetReply(true).
 					Send()
 				return
@@ -241,11 +222,8 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			utils.NewMessageSender(m).
-				AddEmbeds(&discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: "당신은 지식ㅇ을 가르쳐준 적이 없어요!",
-					Color:       utils.EmbedFail,
-				}).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "당신은 지식ㅇ을 가르쳐준 적이 없어요!"})).
+				SetComponentsV2(true).
 				SetReply(true).
 				Send()
 			return
@@ -254,11 +232,8 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 		fmt.Println(err)
 
 		utils.NewMessageSender(m).
-			AddEmbeds(&discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "데이터를 가져오는데 실패했어요.",
-				Color:       utils.EmbedFail,
-			}).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "데이터를 가져오는데 실패했어요."})).
+			SetComponentsV2(true).
 			SetReply(true).
 			Send()
 		return
