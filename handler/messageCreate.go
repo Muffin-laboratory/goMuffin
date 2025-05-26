@@ -2,7 +2,6 @@ package handler
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -26,25 +25,6 @@ func argParser(content string) (args []string) {
 	return
 }
 
-func resultParser(content string, s *discordgo.Session, m *discordgo.MessageCreate) string {
-	result := content
-	userCreatedAt, _ := discordgo.SnowflakeTimestamp(m.Author.ID)
-
-	result = strings.ReplaceAll(result, "{user.name}", m.Author.Username)
-	result = strings.ReplaceAll(result, "{user.mention}", m.Author.Mention())
-	result = strings.ReplaceAll(result, "{user.globalName}", m.Author.GlobalName)
-	result = strings.ReplaceAll(result, "{user.id}", m.Author.ID)
-	result = strings.ReplaceAll(result, "{user.createdAt}", utils.Time(&userCreatedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(&m.Member.JoinedAt, utils.RelativeTime))
-
-	result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
-	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.Time(configs.StartedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{muffin.name}", s.State.User.Username)
-	result = strings.ReplaceAll(result, "{muffin.id}", s.State.User.ID)
-	return result
-}
-
 // MessageCreate is handlers of messageCreate event
 func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	config := configs.Config
@@ -61,11 +41,13 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.ChannelTyping(m.ChannelID)
 
 			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(content), s, m)
-			err := utils.NewMessageSender(m).
+			utils.NewMessageSender(&utils.MessageCreate{
+				MessageCreate: m,
+				Session:       s,
+			}).
 				SetContent(result).
 				SetReply(true).
 				Send()
-			fmt.Println(err)
 			return
 		}
 
