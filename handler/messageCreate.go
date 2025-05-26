@@ -57,16 +57,6 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		args := argParser(content)
 		command := commands.Discommand.Aliases[args[0]]
 
-		if m.Author.ID == config.Train.UserID {
-			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
-				Text:      content,
-				Persona:   "muffin",
-				CreatedAt: time.Now(),
-			}); err != nil {
-				log.Fatalln(err)
-			}
-		}
-
 		if command == "" {
 			s.ChannelTyping(m.ChannelID)
 
@@ -82,6 +72,15 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		commands.Discommand.MessageRun(command, s, m, args[1:])
 		return
 	} else {
+		if m.Author.ID == config.Train.UserID {
+			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
+				Text:      m.Content,
+				Persona:   "muffin",
+				CreatedAt: time.Now(),
+			}); err != nil {
+				log.Fatalln(err)
+			}
+		}
 		return
 	}
 }

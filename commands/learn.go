@@ -140,6 +140,14 @@ func learnRun(m any, userId, command, result string) {
 		}
 	}
 
+	if len([]rune(command)) > 100 {
+		utils.NewMessageSender(m).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "단어는 100글자를 못 넘ㅇ어가요."})).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
+	}
+
 	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
 		Command:   command,
 		Result:    result,
