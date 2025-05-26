@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -82,6 +84,7 @@ func (s *MessageSender) Send() error {
 			Flags:           flags,
 			Reference:       reference,
 		})
+		fmt.Println(err)
 		return err
 	case *InteractionCreate:
 		if s.Ephemeral {

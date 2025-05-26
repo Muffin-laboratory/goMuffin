@@ -1,0 +1,92 @@
+package chatbot
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"math/rand"
+
+	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/utils"
+	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
+)
+
+type Chatbot struct {
+	Mode ChatbotMode
+	s    *discordgo.Session
+}
+
+var ChatBot *Chatbot
+
+func New(s *discordgo.Session) {
+	ChatBot = &Chatbot{
+		Mode: ChatbotDefault,
+		s:    s,
+	}
+}
+
+func (c *Chatbot) SetMode(mode ChatbotMode) *Chatbot {
+	c.Mode = mode
+	return c
+}
+
+func getDefaultResponse(s *discordgo.Session, question string) string {
+	var data []databases.Text
+	var learnData []databases.Learn
+	var result string
+
+	ch := make(chan int)
+	x := rand.Intn(10)
+
+	// 머핀 데이터
+	go func() {
+		cur, err := databases.Database.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		defer cur.Close(context.TODO())
+
+		cur.All(context.TODO(), &data)
+		ch <- 1
+	}()
+
+	// 지식 데이터
+	go func() {
+		cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		defer cur.Close(context.TODO())
+
+		cur.All(context.TODO(), &learnData)
+		ch <- 1
+	}()
+
+	for range 2 {
+		<-ch
+	}
+	close(ch)
+
+	if x > 2 && len(learnData) != 0 {
+		data := learnData[rand.Intn(len(learnData))]
+		user, _ := s.User(data.UserId)
+
+		result =
+			fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username)))
+	} else {
+		result = data[rand.Intn(len(data))].Text
+	}
+	return result
+}
+
+func (c *Chatbot) GetResponse(question string) string {
+	switch c.Mode {
+	case ChatbotDefault:
+		return getDefaultResponse(c.s, question)
+	default:
+		return ""
+	}
+}

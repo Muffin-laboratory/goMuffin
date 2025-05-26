@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/components"
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -79,6 +81,10 @@ func main() {
 		return
 	}
 
+	isAI := flag.Bool("ai", false, "시작할 때 AI모드로 설정합니다.")
+
+	flag.Parse()
+
 	dg, _ := discordgo.New("Bot " + config.Bot.Token)
 
 	go dg.AddHandler(handler.MessageCreate)
@@ -88,6 +94,12 @@ func main() {
 	if err != nil {
 		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
 		log.Fatalln(err)
+	}
+
+	chatbot.New(dg)
+
+	if *isAI {
+		chatbot.ChatBot.SetMode(chatbot.ChatbotAI)
 	}
 
 	defer dg.Close()

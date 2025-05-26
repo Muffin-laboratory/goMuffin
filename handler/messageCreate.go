@@ -4,16 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"strings"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func argParser(content string) (args []string) {
@@ -71,83 +70,12 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if command == "" {
 			s.ChannelTyping(m.ChannelID)
 
-			var data []databases.Text
-			var learnData []databases.Learn
-			var filter bson.D
-
-			ch := make(chan int)
-			x := rand.Intn(10)
-
-			channel, _ := s.Channel(m.ChannelID)
-			if channel.NSFW {
-				filter = bson.D{{}}
-
-				if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
-					Text:      content,
-					Persona:   fmt.Sprintf("user:%s", m.Author.Username),
-					CreatedAt: time.Now(),
-				}); err != nil {
-					log.Fatalln(err)
-				}
-
-			} else {
-				filter = bson.D{{Key: "persona", Value: "muffin"}}
-			}
-
-			go func() {
-				cur, err := databases.Database.Texts.Find(context.TODO(), filter)
-				if err != nil {
-					log.Fatalln(err)
-				}
-
-				defer cur.Close(context.TODO())
-
-				cur.All(context.TODO(), &data)
-				ch <- 1
-			}()
-			go func() {
-				cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: content}})
-				if err != nil {
-					log.Fatalln(err)
-				}
-
-				defer cur.Close(context.TODO())
-
-				cur.All(context.TODO(), &learnData)
-				ch <- 1
-			}()
-
-			for range 2 {
-				<-ch
-			}
-			close(ch)
-
-			if x > 2 && len(learnData) != 0 {
-				data := learnData[rand.Intn(len(learnData))]
-				user, _ := s.User(data.UserId)
-				result := resultParser(data.Result, s, m)
-
-				utils.NewMessageSender(m).
-					SetContent(fmt.Sprintf("%s\n%s", result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username)))).
-					SetAllowedMentions(discordgo.MessageAllowedMentions{
-						Roles: []string{},
-						Parse: []discordgo.AllowedMentionType{},
-						Users: []string{},
-					}).
-					SetReply(true).
-					Send()
-				return
-			}
-
-			utils.NewMessageSender(m).
-				SetContent(data[rand.Intn(len(data))].Text).
-				SetAllowedMentions(discordgo.MessageAllowedMentions{
-					Roles: []string{},
-					Parse: []discordgo.AllowedMentionType{},
-					Users: []string{},
-				}).
+			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(content), s, m)
+			err := utils.NewMessageSender(m).
+				SetContent(result).
 				SetReply(true).
 				Send()
+			fmt.Println(err)
 			return
 		}
 
