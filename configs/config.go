@@ -70,7 +70,7 @@ func setConfig(config *MuffinConfig) {
 	config.Database.AuthSource = getValue("DATABASE_AUTH_SOURCE")
 	config.Database.Name = getRequiredValue("DATABASE_NAME")
 	port, err := strconv.Atoi(getValue("DATABASE_PORT"))
-	if err != nil {
+	if getValue("DATABASE_PORT") != "" && err != nil {
 		log.Println("[goMuffin] 'DATABASE_PORT'값을 int로 파싱할 수 없어요.")
 		log.Fatalln(err)
 	}
