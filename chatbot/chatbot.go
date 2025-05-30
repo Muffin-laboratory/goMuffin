@@ -5,24 +5,47 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"google.golang.org/genai"
 )
 
 type Chatbot struct {
-	Mode ChatbotMode
-	s    *discordgo.Session
+	Mode   ChatbotMode
+	config *genai.GenerateContentConfig
+	Gemini *genai.Client
+	s      *discordgo.Session
 }
 
 var ChatBot *Chatbot
 
 func New(s *discordgo.Session) {
+	gemini, err := genai.NewClient(context.TODO(), &genai.ClientConfig{
+		APIKey:  configs.Config.Chatbot.Gemini.Token,
+		Backend: genai.BackendGeminiAPI,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	ChatBot = &Chatbot{
-		Mode: ChatbotDefault,
-		s:    s,
+		Mode:   ChatbotDefault,
+		Gemini: gemini,
+		s:      s,
+	}
+
+	bin, err := os.ReadFile(configs.Config.Chatbot.Gemini.PromptPath)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	ChatBot.config = &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromText(string(bin), genai.RoleUser),
 	}
 }
 
@@ -80,6 +103,15 @@ func getDefaultResponse(s *discordgo.Session, question string) string {
 		result = data[rand.Intn(len(data))].Text
 	}
 	return result
+}
+
+func getAIResponse(question string) string {
+	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, genai.Text(question), ChatBot.config)
+	if err != nil {
+		ChatBot.Mode = ChatbotDefault
+		return "AI에 문제가 생겼ㅇ어요."
+	}
+	return result.Text()
 }
 
 func (c *Chatbot) GetResponse(question string) string {

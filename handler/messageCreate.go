@@ -54,7 +54,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		commands.Discommand.MessageRun(command, s, m, args[1:])
 		return
 	} else {
-		if m.Author.ID == config.Train.UserID {
+		if m.Author.ID == config.Chatbot.Train.UserId {
 			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
 				Text:      m.Content,
 				Persona:   "muffin",
