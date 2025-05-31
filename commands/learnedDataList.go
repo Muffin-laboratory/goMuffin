@@ -28,19 +28,13 @@ var LearnedDataListCommand *Command = &Command{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "단어",
-				Description: "해당 단어가 포함된 결과만 찾아요.",
-				Required:    false,
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "대답",
-				Description: "해당 대답이 포함된 결과만 찾아요.",
+				Description: "해당 단어에 대한 결과를 찾아요.",
 				Required:    false,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "개수",
-				Description: "한 페이지당 보여줄 지식의 데이터 양을 정해요.",
+				Description: "한 페이지당 보여줄 지식 데이터 양을 정해요.",
 				MinValue:    &LIST_MIN_VALUE,
 				MaxValue:    LIST_MAX_VALUE,
 				Required:    false,
@@ -51,9 +45,9 @@ var LearnedDataListCommand *Command = &Command{
 	DetailedDescription: &DetailedDescription{
 		Usage: fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
 		Examples: []string{
-			fmt.Sprintf("%s리스트 ㅁㄴㅇㄹ", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
 			fmt.Sprintf("%s리스트 단어:안녕", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 대답:머핀", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s리스트 개수:10", configs.Config.Bot.Prefix),
 		},
 	},
 	Category: Chatting,
@@ -65,19 +59,8 @@ var LearnedDataListCommand *Command = &Command{
 
 		if match := utils.RegexpLearnQueryCommand.FindStringSubmatch(query); match != nil {
 			filter = append(filter, bson.E{
-				Key: "command",
-				Value: bson.M{
-					"$regex": match[1],
-				},
-			})
-		}
-
-		if match := utils.RegexpLearnQueryResult.FindStringSubmatch(query); match != nil {
-			filter = append(filter, bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": match[1],
-				},
+				Key:   "command",
+				Value: match[1],
 			})
 		}
 
@@ -115,19 +98,8 @@ var LearnedDataListCommand *Command = &Command{
 
 		if opt, ok := ctx.Inter.Options["단어"]; ok {
 			filter = append(filter, bson.E{
-				Key: "command",
-				Value: bson.M{
-					"$regex": opt.StringValue(),
-				},
-			})
-		}
-
-		if opt, ok := ctx.Inter.Options["대답"]; ok {
-			filter = append(filter, bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": opt.StringValue(),
-				},
+				Key:   "command",
+				Value: opt.StringValue(),
 			})
 		}
 
@@ -138,38 +110,21 @@ var LearnedDataListCommand *Command = &Command{
 	},
 }
 
-func getDescriptions(data *[]databases.Learn, length int) (descriptions []string) {
+func getDescriptions(items []string, length int) (descriptions []string) {
 	var builder strings.Builder
-	MAX_LENGTH := 100
 
 	if length == 0 {
 		length = 25
 	}
 
-	tempDesc := []string{}
-
-	for _, data := range *data {
-		command := data.Command
-		result := data.Result
-
-		if runeCommand := []rune(command); len(runeCommand) >= MAX_LENGTH {
-			command = string(runeCommand)[:MAX_LENGTH] + "..."
-		}
-
-		if runeResult := []rune(result); len(runeResult) >= MAX_LENGTH {
-			result = string(runeResult[:MAX_LENGTH]) + "..."
-		}
-
-		tempDesc = append(tempDesc, fmt.Sprintf("- %s: %s\n", command, result))
-	}
-
-	for i, s := range tempDesc {
-		builder.WriteString(s)
+	for i, item := range items {
+		builder.WriteString(fmt.Sprintf("%s\n", item))
 
 		if (i+1)%length == 0 {
 			descriptions = append(descriptions, builder.String())
 			builder.Reset()
 		}
+		i += 1
 	}
 
 	if builder.Len() > 0 {
@@ -178,10 +133,10 @@ func getDescriptions(data *[]databases.Learn, length int) (descriptions []string
 	return
 }
 
-func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, data *[]databases.Learn, length int) []*discordgo.Container {
+func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, items []string, length int) []*discordgo.Container {
 	var containers []*discordgo.Container
 
-	descriptions := getDescriptions(data, length)
+	descriptions := getDescriptions(items, length)
 
 	if len(descriptions) <= 0 {
 		containers = append(containers, &discordgo.Container{
@@ -218,6 +173,9 @@ func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, data *[]d
 func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) {
 	var data []databases.Learn
 
+	itemsMap := map[string]string{}
+	items := []string{}
+
 	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -243,11 +201,42 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 
 	cur.All(context.TODO(), &data)
 
+	if len(filter) > 1 {
+		command := filter[1].Value.(string)
+
+		for _, data := range data {
+			items = append(items, fmt.Sprintf("> %s", data.Result))
+		}
+
+		containers := getContainers(&discordgo.Thumbnail{
+			Media: discordgo.UnfurledMediaItem{
+				URL: avatarUrl,
+			},
+		}, fmt.Sprintf("### %s님이 알려주신 지식\n- **%s**\n", globalName, command)+"%s", items, length)
+
+		utils.PaginationEmbedBuilder(m).
+			AddContainers(containers...).
+			Start()
+		return
+	}
+
+	for _, data := range data {
+		if _, ok := itemsMap[data.Command]; ok {
+			continue
+		}
+
+		itemsMap[data.Command] = fmt.Sprintf("- `%s`", data.Command)
+	}
+
+	for _, v := range itemsMap {
+		items = append(items, v)
+	}
+
 	containers := getContainers(&discordgo.Thumbnail{
 		Media: discordgo.UnfurledMediaItem{
 			URL: avatarUrl,
 		},
-	}, fmt.Sprintf("### %s님이 알려주신 지식\n%s", globalName, utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s")), &data, length)
+	}, fmt.Sprintf("### %s님이 알려주신 지식\n총 %d개에요.\n", globalName, len(items))+"%s", items, length)
 
 	utils.PaginationEmbedBuilder(m).
 		AddContainers(containers...).
