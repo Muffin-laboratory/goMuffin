@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -17,10 +16,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
 	"git.wh64.net/muffin/goMuffin/modals"
-	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
-	"github.com/devproje/commando"
-	"github.com/devproje/commando/types"
 )
 
 func init() {
@@ -38,48 +34,48 @@ func init() {
 }
 
 func main() {
-	command := commando.NewCommando(os.Args[1:])
+	// command := commando.NewCommando(os.Args[1:])
 	config := configs.Config
 
-	if len(os.Args) > 1 {
-		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
-			types.OptionData{
-				Name: "id",
-				Desc: "봇의 디스코드 아이디",
-				Type: types.STRING,
-			},
-			types.OptionData{
-				Name:  "isYes",
-				Short: []string{"y"},
-				Type:  types.BOOLEAN,
-			},
-		)
+	// if len(os.Args) > 1 {
+	// 	command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
+	// 		types.OptionData{
+	// 			Name: "id",
+	// 			Desc: "봇의 디스코드 아이디",
+	// 			Type: types.STRING,
+	// 		},
+	// 		types.OptionData{
+	// 			Name:  "isYes",
+	// 			Short: []string{"y"},
+	// 			Type:  types.BOOLEAN,
+	// 		},
+	// 	)
 
-		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
-			types.OptionData{
-				Name: "type",
-				Desc: "파일형식을 지정합니다. (json, jsonl, finetune)",
-				Type: types.STRING,
-			},
-			types.OptionData{
-				Name: "export-path",
-				Desc: "데이터를 저장할 위치를 지정합니다.",
-				Type: types.STRING,
-			},
-			types.OptionData{
-				Name: "refined",
-				Desc: "머핀 데이터를 있는 그대로 추출할 지, 가려내서 추출할 지를 지정합니다.",
-				Type: types.BOOLEAN,
-			},
-		)
+	// 	command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
+	// 		types.OptionData{
+	// 			Name: "type",
+	// 			Desc: "파일형식을 지정합니다. (json, jsonl, finetune)",
+	// 			Type: types.STRING,
+	// 		},
+	// 		types.OptionData{
+	// 			Name: "export-path",
+	// 			Desc: "데이터를 저장할 위치를 지정합니다.",
+	// 			Type: types.STRING,
+	// 		},
+	// 		types.OptionData{
+	// 			Name: "refined",
+	// 			Desc: "머핀 데이터를 있는 그대로 추출할 지, 가려내서 추출할 지를 지정합니다.",
+	// 			Type: types.BOOLEAN,
+	// 		},
+	// 	)
 
-		err := command.Execute()
-		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		return
-	}
+	// 	err := command.Execute()
+	// 	if err != nil {
+	// 		_, _ = fmt.Fprintln(os.Stderr, err)
+	// 		os.Exit(1)
+	// 	}
+	// 	return
+	// }
 
 	isAI := flag.Bool("ai", false, "시작할 때 AI모드로 설정합니다.")
 

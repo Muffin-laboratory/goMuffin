@@ -54,6 +54,18 @@ func (c *Chatbot) SetMode(mode ChatbotMode) *Chatbot {
 	return c
 }
 
+func (c *Chatbot) ReloadPrompt() error {
+	bin, err := os.ReadFile(configs.Config.Chatbot.Gemini.PromptPath)
+	if err != nil {
+		return err
+	}
+
+	ChatBot.config = &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromText(string(bin), genai.RoleUser),
+	}
+	return nil
+}
+
 func getDefaultResponse(s *discordgo.Session, question string) string {
 	var data []databases.Text
 	var learnData []databases.Learn
@@ -109,6 +121,7 @@ func getAIResponse(question string) string {
 	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, genai.Text(question), ChatBot.config)
 	if err != nil {
 		ChatBot.Mode = ChatbotDefault
+		fmt.Println(err)
 		return "AI에 문제가 생겼ㅇ어요."
 	}
 	return result.Text()
@@ -119,6 +132,6 @@ func (c *Chatbot) GetResponse(question string) string {
 	case ChatbotDefault:
 		return getDefaultResponse(c.s, question)
 	default:
-		return ""
+		return getAIResponse(question)
 	}
 }
