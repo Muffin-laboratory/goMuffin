@@ -138,21 +138,40 @@ func getDefaultResponse(s *discordgo.Session, question string) string {
 	return result
 }
 
-func getAIResponse(question string) string {
-	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, genai.Text(question), ChatBot.config)
+func getAIResponse(userId, question string) string {
+	contents, err := GetMemory(userId)
 	if err != nil {
 		ChatBot.Mode = ChatbotMuffin
-		fmt.Println(err)
+		log.Fatalln(err)
 		return "AI에 문제가 생겼ㅇ어요."
 	}
-	return result.Text()
+
+	contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
+	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, contents, ChatBot.config)
+	if err != nil {
+		ChatBot.Mode = ChatbotMuffin
+		log.Fatalln(err)
+		return "AI에 문제가 생겼ㅇ어요."
+	}
+
+	resultText := result.Text()
+	err = SaveMemory(&databases.InsertMemory{
+		UserId:  userId,
+		Content: question,
+		Answer:  resultText,
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	return resultText
 }
 
-func (c *Chatbot) GetResponse(question string) string {
+func (c *Chatbot) GetResponse(userId, question string) string {
 	switch c.Mode {
 	case ChatbotMuffin:
 		return getDefaultResponse(c.s, question)
 	default:
-		return getAIResponse(question)
+		return getAIResponse(userId, question)
 	}
 }

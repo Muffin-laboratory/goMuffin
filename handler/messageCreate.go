@@ -40,7 +40,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if command == "" {
 			s.ChannelTyping(m.ChannelID)
 
-			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(content), s, m)
+			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(m.Author.ID, content), s, m)
 			utils.NewMessageSender(&utils.MessageCreate{
 				MessageCreate: m,
 				Session:       s,
