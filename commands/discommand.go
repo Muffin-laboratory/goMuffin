@@ -24,11 +24,12 @@ type DetailedDescription struct {
 
 type Command struct {
 	*discordgo.ApplicationCommand
-	Aliases             []string
-	DetailedDescription *DetailedDescription
-	Category            Category
-	MessageRun          messageRun
-	ChatInputRun        chatInputRun
+	Aliases                    []string
+	DetailedDescription        *DetailedDescription
+	Category                   Category
+	RegisterApplicationCommand bool
+	MessageRun                 messageRun
+	ChatInputRun               chatInputRun
 }
 
 type DiscommandStruct struct {
@@ -70,8 +71,9 @@ type Modal struct {
 }
 
 const (
-	Chatting Category = "채팅"
-	General  Category = "일반"
+	Chatting      Category = "채팅"
+	General       Category = "일반"
+	DeveloperOnly Category = "개발자 전용"
 )
 
 var (

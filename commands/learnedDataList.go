@@ -56,7 +56,8 @@ var LearnedDataListCommand *Command = &Command{
 			fmt.Sprintf("%s리스트 대답:머핀", configs.Config.Bot.Prefix),
 		},
 	},
-	Category: Chatting,
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
 	MessageRun: func(ctx *MsgContext) {
 		var length int
 

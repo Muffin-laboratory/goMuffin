@@ -26,6 +26,7 @@ func init() {
 	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
 	go commands.Discommand.LoadCommand(commands.InformationCommand)
 	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
+	go commands.Discommand.LoadCommand(commands.ReloadPromptCommand)
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
 	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
@@ -118,6 +119,10 @@ func main() {
 					Value: a.Name,
 				})
 			}
+		}
+
+		if !cmd.RegisterApplicationCommand {
+			continue
 		}
 
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)

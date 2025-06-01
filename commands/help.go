@@ -28,7 +28,8 @@ var HelpCommand *Command = &Command{
 		Usage:    fmt.Sprintf("%s도움말 [명령어]", configs.Config.Bot.Prefix),
 		Examples: []string{fmt.Sprintf("%s도움말", configs.Config.Bot.Prefix), fmt.Sprintf("%s도움말 배워", configs.Config.Bot.Prefix)},
 	},
-	Category: General,
+	Category:                   General,
+	RegisterApplicationCommand: true,
 	MessageRun: func(ctx *MsgContext) {
 		helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
 	},

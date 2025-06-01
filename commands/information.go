@@ -16,7 +16,8 @@ var InformationCommand *Command = &Command{
 	DetailedDescription: &DetailedDescription{
 		Usage: fmt.Sprintf("%s정보", configs.Config.Bot.Prefix),
 	},
-	Category: General,
+	Category:                   General,
+	RegisterApplicationCommand: true,
 	MessageRun: func(ctx *MsgContext) {
 		informationRun(ctx.Msg.Session, ctx.Msg)
 	},
