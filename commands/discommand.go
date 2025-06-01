@@ -3,6 +3,7 @@ package commands
 import (
 	"sync"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -118,6 +119,15 @@ func (d *DiscommandStruct) LoadModal(m *Modal) {
 
 func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	if command, ok := d.Commands[name]; ok {
+		if command.Category == DeveloperOnly && m.Author.ID != configs.Config.Bot.OwnerId {
+			utils.NewMessageSender(&utils.MessageCreate{MessageCreate: m, Session: s}).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return
+		}
+
 		command.MessageRun(&MsgContext{&utils.MessageCreate{
 			MessageCreate: m,
 			Session:       s,

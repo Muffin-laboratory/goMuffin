@@ -4,5 +4,5 @@ type ChatbotMode int
 
 const (
 	ChatbotAI ChatbotMode = iota
-	ChatbotDefault
+	ChatbotMuffin
 )

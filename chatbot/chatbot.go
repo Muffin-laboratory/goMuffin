@@ -34,7 +34,7 @@ func New(s *discordgo.Session) {
 	}
 
 	ChatBot = &Chatbot{
-		Mode:   ChatbotDefault,
+		Mode:   ChatbotAI,
 		Gemini: gemini,
 		s:      s,
 	}
@@ -52,6 +52,27 @@ func New(s *discordgo.Session) {
 func (c *Chatbot) SetMode(mode ChatbotMode) *Chatbot {
 	c.Mode = mode
 	return c
+}
+
+func (c *Chatbot) SwitchMode() *Chatbot {
+	switch c.Mode {
+	case ChatbotAI:
+		c.SetMode(ChatbotMuffin)
+	case ChatbotMuffin:
+		c.SetMode(ChatbotAI)
+	}
+	return c
+}
+
+func (c *Chatbot) ModeString() string {
+	switch c.Mode {
+	case ChatbotAI:
+		return "AI모드"
+	case ChatbotMuffin:
+		return "머핀 모드"
+	default:
+		return "알 수 없음"
+	}
 }
 
 func (c *Chatbot) ReloadPrompt() error {
@@ -120,7 +141,7 @@ func getDefaultResponse(s *discordgo.Session, question string) string {
 func getAIResponse(question string) string {
 	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, genai.Text(question), ChatBot.config)
 	if err != nil {
-		ChatBot.Mode = ChatbotDefault
+		ChatBot.Mode = ChatbotMuffin
 		fmt.Println(err)
 		return "AI에 문제가 생겼ㅇ어요."
 	}
@@ -129,7 +150,7 @@ func getAIResponse(question string) string {
 
 func (c *Chatbot) GetResponse(question string) string {
 	switch c.Mode {
-	case ChatbotDefault:
+	case ChatbotMuffin:
 		return getDefaultResponse(c.s, question)
 	default:
 		return getAIResponse(question)
