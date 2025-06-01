@@ -1,9 +1,11 @@
 package commands
 
 import (
+	"fmt"
 	"log"
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -12,6 +14,9 @@ var ReloadPromptCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "프롬프트재설정",
 		Description: "프롬프트를 다시 불러와요.",
+	},
+	DetailedDescription: &DetailedDescription{
+		Usage: fmt.Sprintf("%s프롬프트재설정", configs.Config.Bot.Prefix),
 	},
 	Category:                   DeveloperOnly,
 	RegisterApplicationCommand: false,
