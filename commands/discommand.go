@@ -29,6 +29,7 @@ type Command struct {
 	DetailedDescription        *DetailedDescription
 	Category                   Category
 	RegisterApplicationCommand bool
+	RegisterMessageCommand     bool
 	MessageRun                 messageRun
 	ChatInputRun               chatInputRun
 }
@@ -128,6 +129,10 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *disc
 			return
 		}
 
+		if !command.RegisterMessageCommand {
+			return
+		}
+
 		command.MessageRun(&MsgContext{&utils.MessageCreate{
 			MessageCreate: m,
 			Session:       s,
@@ -136,7 +141,7 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *disc
 }
 
 func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if command, ok := d.Commands[name]; ok {
+	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
 		command.ChatInputRun(&ChatInputContext{&utils.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,

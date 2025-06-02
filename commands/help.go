@@ -30,6 +30,7 @@ var HelpCommand *Command = &Command{
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
 	},

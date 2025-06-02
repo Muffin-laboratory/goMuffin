@@ -43,6 +43,7 @@ var DataLengthCommand *Command = &Command{
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
+	RegisterMessageCommand: true,
 	MessageRun: func(ctx *MsgContext) {
 		dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},

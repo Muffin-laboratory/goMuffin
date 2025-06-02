@@ -19,6 +19,7 @@ var SwitchModeCommand *Command = &Command{
 	},
 	Category:                   DeveloperOnly,
 	RegisterApplicationCommand: false,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		chatbot.ChatBot.SwitchMode()
 

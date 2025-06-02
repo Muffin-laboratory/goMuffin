@@ -2,22 +2,38 @@ package chatbot
 
 import (
 	"strings"
+	"time"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-func ParseResult(content string, s *discordgo.Session, m *discordgo.MessageCreate) string {
+func ParseResult(content string, s *discordgo.Session, m any) string {
 	result := content
-	userCreatedAt, _ := discordgo.SnowflakeTimestamp(m.Author.ID)
 
-	result = strings.ReplaceAll(result, "{user.name}", m.Author.Username)
-	result = strings.ReplaceAll(result, "{user.mention}", m.Author.Mention())
-	result = strings.ReplaceAll(result, "{user.globalName}", m.Author.GlobalName)
-	result = strings.ReplaceAll(result, "{user.id}", m.Author.ID)
+	var user *discordgo.User
+	var joinedAt *time.Time
+
+	switch m := m.(type) {
+	case *discordgo.MessageCreate:
+	case *utils.MessageCreate:
+		user = m.Author
+		joinedAt = &m.Member.JoinedAt
+	case *discordgo.IntegrationCreate:
+	case *utils.InteractionCreate:
+		user = m.Member.User
+		joinedAt = &m.Member.JoinedAt
+	}
+
+	userCreatedAt, _ := discordgo.SnowflakeTimestamp(user.ID)
+
+	result = strings.ReplaceAll(result, "{user.name}", user.Username)
+	result = strings.ReplaceAll(result, "{user.mention}", user.Mention())
+	result = strings.ReplaceAll(result, "{user.globalName}", user.GlobalName)
+	result = strings.ReplaceAll(result, "{user.id}", user.ID)
 	result = strings.ReplaceAll(result, "{user.createdAt}", utils.Time(&userCreatedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(&m.Member.JoinedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(joinedAt, utils.RelativeTime))
 
 	result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
 	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt, utils.RelativeTime))

@@ -18,6 +18,7 @@ var InformationCommand *Command = &Command{
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		informationRun(ctx.Msg.Session, ctx.Msg)
 	},

@@ -37,10 +37,10 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		args := argParser(content)
 		command := commands.Discommand.Aliases[args[0]]
 
-		if command == "" {
+		if command == "" || command == "대화" {
 			s.ChannelTyping(m.ChannelID)
 
-			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(m.Author.ID, content), s, m)
+			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(m.Author.ID, strings.TrimPrefix(content, "대화 ")), s, m)
 			utils.NewMessageSender(&utils.MessageCreate{
 				MessageCreate: m,
 				Session:       s,

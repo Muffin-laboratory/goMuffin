@@ -58,6 +58,7 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		var length int
 

@@ -31,6 +31,7 @@ var DeleteLearnedDataCommand *Command = &Command{
 	},
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		command := strings.Join(*ctx.Args, " ")
 		if command == "" {

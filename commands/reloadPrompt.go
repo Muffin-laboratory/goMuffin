@@ -20,6 +20,7 @@ var ReloadPromptCommand *Command = &Command{
 	},
 	Category:                   DeveloperOnly,
 	RegisterApplicationCommand: false,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		err := chatbot.ChatBot.ReloadPrompt()
 		if err != nil {
