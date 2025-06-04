@@ -17,10 +17,8 @@ func ParseResult(content string, s *discordgo.Session, m any) string {
 
 	switch m := m.(type) {
 	case *discordgo.MessageCreate:
-	case *utils.MessageCreate:
 		user = m.Author
 		joinedAt = &m.Member.JoinedAt
-	case *discordgo.IntegrationCreate:
 	case *utils.InteractionCreate:
 		user = m.Member.User
 		joinedAt = &m.Member.JoinedAt
