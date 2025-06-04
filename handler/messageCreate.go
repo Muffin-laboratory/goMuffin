@@ -40,7 +40,20 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if command == "" || command == "대화" {
 			s.ChannelTyping(m.ChannelID)
 
-			result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(m.Author.ID, strings.TrimPrefix(content, "대화 ")), s, m)
+			str, err := chatbot.ChatBot.GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))
+			if err != nil {
+				log.Println(err)
+				utils.NewMessageSender(&utils.MessageCreate{
+					MessageCreate: m,
+					Session:       s,
+				}).
+					SetContent(str).
+					SetReply(true).
+					Send()
+				return
+			}
+
+			result := chatbot.ParseResult(str, s, m)
 			utils.NewMessageSender(&utils.MessageCreate{
 				MessageCreate: m,
 				Session:       s,

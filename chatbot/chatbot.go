@@ -3,9 +3,8 @@ package chatbot
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
-	"os"
+	"sync"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -16,21 +15,21 @@ import (
 )
 
 type Chatbot struct {
-	Mode   ChatbotMode
-	config *genai.GenerateContentConfig
-	Gemini *genai.Client
-	s      *discordgo.Session
+	Mode         ChatbotMode
+	Gemini       *genai.Client
+	systemPrompt string
+	s            *discordgo.Session
 }
 
 var ChatBot *Chatbot
 
-func New(s *discordgo.Session) {
+func New(s *discordgo.Session) error {
 	gemini, err := genai.NewClient(context.TODO(), &genai.ClientConfig{
 		APIKey:  configs.Config.Chatbot.Gemini.Token,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
 	ChatBot = &Chatbot{
@@ -39,14 +38,13 @@ func New(s *discordgo.Session) {
 		s:      s,
 	}
 
-	bin, err := os.ReadFile(configs.Config.Chatbot.Gemini.PromptPath)
+	prompt, err := loadPrompt()
 	if err != nil {
-		log.Fatalln(err)
+		return err
 	}
 
-	ChatBot.config = &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(string(bin), genai.RoleUser),
-	}
+	ChatBot.systemPrompt = prompt
+	return nil
 }
 
 func (c *Chatbot) SetMode(mode ChatbotMode) *Chatbot {
@@ -76,55 +74,66 @@ func (c *Chatbot) ModeString() string {
 }
 
 func (c *Chatbot) ReloadPrompt() error {
-	bin, err := os.ReadFile(configs.Config.Chatbot.Gemini.PromptPath)
+	prompt, err := loadPrompt()
 	if err != nil {
 		return err
 	}
 
-	ChatBot.config = &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(string(bin), genai.RoleUser),
-	}
+	c.systemPrompt = prompt
 	return nil
 }
 
-func getDefaultResponse(s *discordgo.Session, question string) string {
+func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	var data []databases.Text
 	var learnData []databases.Learn
 	var result string
+	var wg sync.WaitGroup
 
-	ch := make(chan int)
+	ch1 := make(chan error)
+	ch2 := make(chan error)
 	x := rand.Intn(10)
+
+	wg.Add(2)
 
 	// 머핀 데이터
 	go func() {
 		cur, err := databases.Database.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
 		if err != nil {
-			log.Fatalln(err)
+			ch1 <- err
 		}
 
 		defer cur.Close(context.TODO())
 
 		cur.All(context.TODO(), &data)
-		ch <- 1
+		ch1 <- nil
+		wg.Done()
 	}()
 
 	// 지식 데이터
 	go func() {
 		cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
 		if err != nil {
-			log.Fatalln(err)
+			ch2 <- err
 		}
 
 		defer cur.Close(context.TODO())
 
 		cur.All(context.TODO(), &learnData)
-		ch <- 1
+		ch2 <- nil
+		wg.Done()
 	}()
 
-	for range 2 {
-		<-ch
+	wg.Wait()
+	select {
+	case err := <-ch1:
+		if err != nil {
+			return "에러 발생", fmt.Errorf("muffin data error\n%s", err.Error())
+		}
+	case err := <-ch2:
+		if err != nil {
+			return "에러 발생", fmt.Errorf("learn data error\n%s", err.Error())
+		}
 	}
-	close(ch)
 
 	if x > 2 && len(learnData) != 0 {
 		data := learnData[rand.Intn(len(learnData))]
@@ -135,43 +144,43 @@ func getDefaultResponse(s *discordgo.Session, question string) string {
 	} else {
 		result = data[rand.Intn(len(data))].Text
 	}
-	return result
+	return result, nil
 }
 
-func getAIResponse(userId, question string) string {
-	contents, err := GetMemory(userId)
+func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, error) {
+	contents, err := GetMemory(user.ID)
 	if err != nil {
 		ChatBot.Mode = ChatbotMuffin
-		log.Fatalln(err)
-		return "AI에 문제가 생겼ㅇ어요."
+		return "AI에 문제가 생겼ㅇ어요.", err
 	}
 
 	contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
-	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, contents, ChatBot.config)
+	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
+		SystemInstruction: genai.NewContentFromText(makePrompt(c.systemPrompt, user), genai.RoleUser),
+	})
 	if err != nil {
 		ChatBot.Mode = ChatbotMuffin
-		log.Fatalln(err)
-		return "AI에 문제가 생겼ㅇ어요."
+		return "AI에 문제가 생겼ㅇ어요.", err
 	}
 
 	resultText := result.Text()
 	err = SaveMemory(&databases.InsertMemory{
-		UserId:  userId,
+		UserId:  user.ID,
 		Content: question,
 		Answer:  resultText,
 	})
 	if err != nil {
-		log.Fatalln(err)
+		return "", err
 	}
 
-	return resultText
+	return resultText, nil
 }
 
-func (c *Chatbot) GetResponse(userId, question string) string {
+func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, error) {
 	switch c.Mode {
 	case ChatbotMuffin:
-		return getDefaultResponse(c.s, question)
+		return getMuffinResponse(c.s, question)
 	default:
-		return getAIResponse(userId, question)
+		return getAIResponse(c, user, question)
 	}
 }

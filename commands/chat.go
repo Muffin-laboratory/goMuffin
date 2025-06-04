@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"log"
+
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -30,7 +32,16 @@ var ChatCommand *Command = &Command{
 		i := ctx.Inter
 		i.DeferReply(&discordgo.InteractionResponseData{})
 
-		result := chatbot.ParseResult(chatbot.ChatBot.GetResponse(i.Member.User.ID, i.Options["내용"].StringValue()), ctx.Inter.Session, i)
+		str, err := chatbot.ChatBot.GetResponse(i.Member.User, i.Options["내용"].StringValue())
+		if err != nil {
+			log.Println(err)
+			i.EditReply(&utils.InteractionEdit{
+				Content: &str,
+			})
+			return
+		}
+
+		result := chatbot.ParseResult(str, ctx.Inter.Session, i)
 		i.EditReply(&utils.InteractionEdit{
 			Content: &result,
 		})
