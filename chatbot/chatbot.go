@@ -3,6 +3,7 @@ package chatbot
 import (
 	"context"
 	"fmt"
+	"log"
 	"math/rand"
 	"sync"
 
@@ -172,6 +173,8 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 	if err != nil {
 		return "", err
 	}
+
+	log.Printf("%s TOKEN: %d", user.ID, result.UsageMetadata.PromptTokenCount)
 
 	return resultText, nil
 }

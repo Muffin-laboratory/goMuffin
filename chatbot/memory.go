@@ -16,7 +16,6 @@ func SaveMemory(data *databases.InsertMemory) error {
 func GetMemory(userId string) ([]*genai.Content, error) {
 	var data []databases.Memory
 
-	MAX_LENGTH := 50
 	memory := []*genai.Content{}
 
 	cur, err := databases.Database.Memory.Find(context.TODO(), bson.D{{Key: "user_id", Value: userId}})
@@ -25,10 +24,6 @@ func GetMemory(userId string) ([]*genai.Content, error) {
 	}
 
 	cur.All(context.TODO(), &data)
-
-	if len(data) > MAX_LENGTH {
-		data = data[MAX_LENGTH:]
-	}
 
 	for _, data := range data {
 		memory = append(memory,
