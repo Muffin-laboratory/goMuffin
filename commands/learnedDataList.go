@@ -50,7 +50,9 @@ var LearnedDataListCommand *Command = &Command{
 			fmt.Sprintf("%s리스트 개수:10", configs.Config.Bot.Prefix),
 		},
 	},
-	Category: Chatting,
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		var length int
 

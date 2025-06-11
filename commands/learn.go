@@ -56,7 +56,9 @@ var LearnCommand *Command = &Command{
 			fmt.Sprintf("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\"", configs.Config.Bot.Prefix),
 		},
 	},
-	Category: Chatting,
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		if len(*ctx.Args) < 2 {
 			utils.NewMessageSender(ctx.Msg).
@@ -138,6 +140,14 @@ func learnRun(m any, userId, command, result string) {
 				Send()
 			return
 		}
+	}
+
+	if len([]rune(command)) > 100 {
+		utils.NewMessageSender(m).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "단어는 100글자를 못 넘ㅇ어가요."})).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
 	}
 
 	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{

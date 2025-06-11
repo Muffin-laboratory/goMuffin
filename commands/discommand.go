@@ -3,6 +3,7 @@ package commands
 import (
 	"sync"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -24,11 +25,13 @@ type DetailedDescription struct {
 
 type Command struct {
 	*discordgo.ApplicationCommand
-	Aliases             []string
-	DetailedDescription *DetailedDescription
-	Category            Category
-	MessageRun          messageRun
-	ChatInputRun        chatInputRun
+	Aliases                    []string
+	DetailedDescription        *DetailedDescription
+	Category                   Category
+	RegisterApplicationCommand bool
+	RegisterMessageCommand     bool
+	MessageRun                 messageRun
+	ChatInputRun               chatInputRun
 }
 
 type DiscommandStruct struct {
@@ -70,8 +73,9 @@ type Modal struct {
 }
 
 const (
-	Chatting Category = "채팅"
-	General  Category = "일반"
+	Chatting      Category = "채팅"
+	General       Category = "일반"
+	DeveloperOnly Category = "개발자 전용"
 )
 
 var (
@@ -116,6 +120,19 @@ func (d *DiscommandStruct) LoadModal(m *Modal) {
 
 func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
 	if command, ok := d.Commands[name]; ok {
+		if command.Category == DeveloperOnly && m.Author.ID != configs.Config.Bot.OwnerId {
+			utils.NewMessageSender(&utils.MessageCreate{MessageCreate: m, Session: s}).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return
+		}
+
+		if !command.RegisterMessageCommand {
+			return
+		}
+
 		command.MessageRun(&MsgContext{&utils.MessageCreate{
 			MessageCreate: m,
 			Session:       s,
@@ -124,7 +141,7 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *disc
 }
 
 func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if command, ok := d.Commands[name]; ok {
+	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
 		command.ChatInputRun(&ChatInputContext{&utils.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,

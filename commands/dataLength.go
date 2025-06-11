@@ -29,7 +29,6 @@ const (
 	userLearn
 )
 
-// var dataLengthCh chan chStruct = make(chan chStruct)
 var dataLengthWg sync.WaitGroup
 
 var DataLengthCommand *Command = &Command{
@@ -42,7 +41,9 @@ var DataLengthCommand *Command = &Command{
 	DetailedDescription: &DetailedDescription{
 		Usage: fmt.Sprintf("%s학습데이터량", configs.Config.Bot.Prefix),
 	},
-	Category: General,
+	Category:                   General,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand: true,
 	MessageRun: func(ctx *MsgContext) {
 		dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},

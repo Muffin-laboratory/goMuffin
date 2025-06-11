@@ -29,7 +29,9 @@ var DeleteLearnedDataCommand *Command = &Command{
 		Usage:    fmt.Sprintf("%s삭제 (삭제할 단어)", configs.Config.Bot.Prefix),
 		Examples: []string{fmt.Sprintf("%s삭제 머핀", configs.Config.Bot.Prefix)},
 	},
-	Category: Chatting,
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
 	MessageRun: func(ctx *MsgContext) {
 		command := strings.Join(*ctx.Args, " ")
 		if command == "" {

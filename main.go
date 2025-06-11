@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/components"
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -28,6 +29,9 @@ func init() {
 	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
 	go commands.Discommand.LoadCommand(commands.InformationCommand)
 	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
+	go commands.Discommand.LoadCommand(commands.ReloadPromptCommand)
+	go commands.Discommand.LoadCommand(commands.SwitchModeCommand)
+	go commands.Discommand.LoadCommand(commands.ChatCommand)
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
 	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
@@ -56,7 +60,7 @@ func main() {
 		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
 			types.OptionData{
 				Name: "type",
-				Desc: "파일형식을 지정합니다. (json, txt(txt는 머핀 데이터만 적용))",
+				Desc: "파일형식을 지정합니다. (json, jsonl, finetune)",
 				Type: types.STRING,
 			},
 			types.OptionData{
@@ -90,6 +94,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	chatbot.New(dg)
+
 	defer dg.Close()
 
 	// 봇의 상태메세지 변경
@@ -110,6 +116,10 @@ func main() {
 					Value: a.Name,
 				})
 			}
+		}
+
+		if !cmd.RegisterApplicationCommand {
+			continue
 		}
 
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
