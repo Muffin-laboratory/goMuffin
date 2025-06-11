@@ -53,6 +53,17 @@ func GetInteractionOptions(i *discordgo.InteractionCreate) map[string]*discordgo
 	return optsMap
 }
 
+func GetInteractionUser(i *discordgo.InteractionCreate) *discordgo.User {
+	if i.Member != nil {
+		return i.Member.User
+	}
+
+	if i.User != nil {
+		return i.User
+	}
+	return nil
+}
+
 // DeferReply to this interaction.
 func (i *InteractionCreate) DeferReply(data *discordgo.InteractionResponseData) error {
 	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{

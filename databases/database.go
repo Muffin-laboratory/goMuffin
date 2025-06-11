@@ -13,6 +13,7 @@ type MuffinDatabase struct {
 	Learns *mongo.Collection
 	Texts  *mongo.Collection
 	Memory *mongo.Collection
+	Users  *mongo.Collection
 }
 
 var Database *MuffinDatabase
@@ -36,5 +37,6 @@ func Connect() (*MuffinDatabase, error) {
 		Learns: client.Database(configs.Config.Database.Name).Collection("learn"),
 		Texts:  client.Database(configs.Config.Database.Name).Collection("text"),
 		Memory: client.Database(configs.Config.Database.Name).Collection("memory"),
+		Users:  client.Database(configs.Config.Database.Name).Collection("user"),
 	}, nil
 }

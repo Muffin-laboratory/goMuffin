@@ -1,6 +1,10 @@
 package utils
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"fmt"
+
+	"github.com/bwmarrin/discordgo"
+)
 
 const (
 	EmbedDefault int = 0xaddb87
@@ -32,4 +36,10 @@ func GetSuccessContainer(components ...discordgo.MessageComponent) *discordgo.Co
 
 	c.Components = append(c.Components, components...)
 	return c
+}
+
+func GetUserIsNotRegisteredErrContainer(prefix string) *discordgo.Container {
+	return GetErrorContainer(discordgo.TextDisplay{
+		Content: fmt.Sprintf("해당 기능은 등록된 사용자만 쓸 수 있어요. `%s가입`으로 가입해주새요.", prefix),
+	})
 }

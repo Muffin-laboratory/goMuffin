@@ -63,7 +63,7 @@ func (s *MessageSender) Send() error {
 	var flags discordgo.MessageFlags
 
 	if s.ComponentsV2 {
-		flags = flags | discordgo.MessageFlagsIsComponentsV2
+		flags |= discordgo.MessageFlagsIsComponentsV2
 	}
 
 	switch m := s.m.(type) {
@@ -85,7 +85,7 @@ func (s *MessageSender) Send() error {
 		return err
 	case *InteractionCreate:
 		if s.Ephemeral {
-			flags = flags | discordgo.MessageFlagsEphemeral
+			flags |= discordgo.MessageFlagsEphemeral
 		}
 
 		if m.Replied || m.Deferred {

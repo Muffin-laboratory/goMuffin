@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"git.wh64.net/muffin/goMuffin/configs"
+	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -17,6 +18,7 @@ type modalParse func(ctx *ModalContext) bool
 type componentParse func(ctx *ComponentContext) bool
 
 type Category string
+type CommandFlags uint8
 
 type DetailedDescription struct {
 	Usage    string
@@ -30,6 +32,7 @@ type Command struct {
 	Category                   Category
 	RegisterApplicationCommand bool
 	RegisterMessageCommand     bool
+	Flags                      CommandFlags
 	MessageRun                 messageRun
 	ChatInputRun               chatInputRun
 }
@@ -78,6 +81,11 @@ const (
 	DeveloperOnly Category = "개발자 전용"
 )
 
+const (
+	CommandFlagsIsDeveloper CommandFlags = 1 << iota
+	CommandFlagsIsRegistered
+)
+
 var (
 	commandMutex   sync.Mutex
 	componentMutex sync.Mutex
@@ -118,10 +126,15 @@ func (d *DiscommandStruct) LoadModal(m *Modal) {
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	if command, ok := d.Commands[name]; ok {
-		if command.Category == DeveloperOnly && m.Author.ID != configs.Config.Bot.OwnerId {
-			utils.NewMessageSender(&utils.MessageCreate{MessageCreate: m, Session: s}).
+func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) {
+	m := &utils.MessageCreate{
+		MessageCreate: msg,
+		Session:       s,
+	}
+
+	if command, ok := d.Commands[name]; ok && command.RegisterMessageCommand {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.Config.Bot.OwnerId {
+			utils.NewMessageSender(m).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
 				SetComponentsV2(true).
 				SetReply(true).
@@ -129,24 +142,48 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *disc
 			return
 		}
 
-		if !command.RegisterMessageCommand {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(m.Author.ID) {
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
 			return
 		}
 
-		command.MessageRun(&MsgContext{&utils.MessageCreate{
-			MessageCreate: m,
-			Session:       s,
-		}, &args, command})
+		command.MessageRun(&MsgContext{m, &args, command})
 	}
 }
 
-func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) {
+	i := &utils.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
+		Options:           utils.GetInteractionOptions(inter),
+	}
+
+	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+
 	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
-		command.ChatInputRun(&ChatInputContext{&utils.InteractionCreate{
-			InteractionCreate: i,
-			Session:           s,
-			Options:           utils.GetInteractionOptions(i),
-		}, command})
+		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.Config.Bot.OwnerId {
+			utils.NewMessageSender(i).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return
+		}
+
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(i.User.ID) {
+			utils.NewMessageSender(i).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return
+		}
+
+		command.ChatInputRun(&ChatInputContext{i, command})
 	}
 }
 
