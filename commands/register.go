@@ -66,5 +66,6 @@ func registerRun(m any, userId, botName string) {
 		}).
 		SetComponentsV2(true).
 		SetReply(true).
+		SetEphemeral(true).
 		Send()
 }
