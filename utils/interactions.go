@@ -53,6 +53,7 @@ func GetInteractionOptions(i *discordgo.InteractionCreate) map[string]*discordgo
 	return optsMap
 }
 
+// NOTE: It's only can ApplicationCommand
 func GetInteractionUser(i *discordgo.InteractionCreate) *discordgo.User {
 	if i.Member != nil {
 		return i.Member.User

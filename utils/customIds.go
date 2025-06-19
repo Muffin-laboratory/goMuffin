@@ -16,6 +16,9 @@ const (
 	PaginationEmbedNext    = "#muffin-pages/next$"
 	PaginationEmbedModal   = "#muffin-pages/modal$"
 	PaginationEmbedSetPage = "#muffin-pages/modal/set$"
+
+	ServiceAgree    = "#muffin/serviceAgree@"
+	ServiceDisagree = "#muffin/serviceDisagree@"
 )
 
 func MakeDeleteLearnedData(id string, number int, userId string) string {
@@ -72,4 +75,23 @@ func GetPaginationEmbedId(customId string) string {
 
 func GetPaginationEmbedUserId(id string) string {
 	return RegexpPaginationEmbedId.FindAllStringSubmatch(id, 1)[0][1]
+}
+
+func MakeServiceAgree(userId string) string {
+	return fmt.Sprintf("%s%s", ServiceAgree, userId)
+}
+
+func MakeServiceDisagree(userId string) string {
+	return fmt.Sprintf("%s%s", ServiceDisagree, userId)
+}
+
+func GetServicesUserId(customId string) string {
+	switch {
+	case strings.HasPrefix(customId, ServiceAgree):
+		return customId[len(ServiceAgree):]
+	case strings.HasPrefix(customId, ServiceDisagree):
+		return customId[len(ServiceDisagree):]
+	default:
+		return customId
+	}
 }

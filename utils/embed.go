@@ -25,6 +25,19 @@ func GetErrorContainer(components ...discordgo.MessageComponent) *discordgo.Cont
 	return c
 }
 
+func GetDeclineContainer(components ...discordgo.MessageComponent) *discordgo.Container {
+	c := &discordgo.Container{
+		Components: []discordgo.MessageComponent{
+			discordgo.TextDisplay{
+				Content: "### ❌ 거부",
+			},
+		},
+	}
+
+	c.Components = append(c.Components, components...)
+	return c
+}
+
 func GetSuccessContainer(components ...discordgo.MessageComponent) *discordgo.Container {
 	c := &discordgo.Container{
 		Components: []discordgo.MessageComponent{

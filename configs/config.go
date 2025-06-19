@@ -40,11 +40,17 @@ type databaseConfig struct {
 	Port       int
 }
 
+type serviceConfig struct {
+	PrivacyPolicyURL string
+	TermOfServiceURL string
+}
+
 // MuffinConfig for Muffin bot
 type MuffinConfig struct {
 	Bot      botConfig
 	Database databaseConfig
 	Chatbot  chatbotConfig
+	Service  serviceConfig
 
 	// Deprecated: Use Chatbot.Train
 	Train trainConfig
@@ -111,4 +117,9 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	config.Train = config.Chatbot.Train
+
+	config.Service = serviceConfig{
+		PrivacyPolicyURL: getRequiredValue("SERVICE_PRIVACY_POLICY_URL"),
+		TermOfServiceURL: getRequiredValue("SERVICE_TERM_OF_SERVICE_URL"),
+	}
 }

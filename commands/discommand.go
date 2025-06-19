@@ -187,12 +187,15 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 	}
 }
 
-func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) {
+	i := &utils.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
+	}
+
+	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 	data := &ComponentContext{
-		Inter: &utils.InteractionCreate{
-			InteractionCreate: i,
-			Session:           s,
-		},
+		Inter: i,
 	}
 
 	for _, c := range d.Components {
