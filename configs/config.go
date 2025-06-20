@@ -67,7 +67,7 @@ func init() {
 func getRequiredValue(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		log.Fatalln(fmt.Sprintf("[goMuffin] .env 파일에서 필요한 '%s'값이 없어요.", key))
+		log.Fatalf("[goMuffin] .env 파일에서 필요한 '%s'값이 없어요.", key)
 	}
 	return value
 }
