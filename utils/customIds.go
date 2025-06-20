@@ -17,8 +17,11 @@ const (
 	PaginationEmbedModal   = "#muffin-pages/modal$"
 	PaginationEmbedSetPage = "#muffin-pages/modal/set$"
 
-	ServiceAgree    = "#muffin/serviceAgree@"
-	ServiceDisagree = "#muffin/serviceDisagree@"
+	ServiceAgree    = "#muffin/service/agree@"
+	ServiceDisagree = "#muffin/service/disagree@"
+
+	DeregisterAgree    = "#muffin/deregister/agree@"
+	DeregisterDisagree = "#muffin/deregister/disagree@"
 )
 
 func MakeDeleteLearnedData(id string, number int, userId string) string {
@@ -85,12 +88,31 @@ func MakeServiceDisagree(userId string) string {
 	return fmt.Sprintf("%s%s", ServiceDisagree, userId)
 }
 
-func GetServicesUserId(customId string) string {
+func GetServiceUserId(customId string) string {
 	switch {
 	case strings.HasPrefix(customId, ServiceAgree):
 		return customId[len(ServiceAgree):]
 	case strings.HasPrefix(customId, ServiceDisagree):
 		return customId[len(ServiceDisagree):]
+	default:
+		return customId
+	}
+}
+
+func MakeDeregisterAgree(userId string) string {
+	return fmt.Sprintf("%s%s", DeregisterAgree, userId)
+}
+
+func MakeDeregisterDisagree(userId string) string {
+	return fmt.Sprintf("%s%s", DeregisterDisagree, userId)
+}
+
+func GetDeregisterUserId(customId string) string {
+	switch {
+	case strings.HasPrefix(customId, DeregisterAgree):
+		return customId[len(DeregisterAgree):]
+	case strings.HasPrefix(customId, DeregisterDisagree):
+		return customId[len(DeregisterDisagree):]
 	default:
 		return customId
 	}

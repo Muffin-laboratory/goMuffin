@@ -33,10 +33,12 @@ func init() {
 	go commands.Discommand.LoadCommand(commands.SwitchModeCommand)
 	go commands.Discommand.LoadCommand(commands.ChatCommand)
 	go commands.Discommand.LoadCommand(commands.RegisterCommand)
+	go commands.Discommand.LoadCommand(commands.DeregisterCommand)
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
 	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
 	go commands.Discommand.LoadComponent(components.RegisterComponent)
+	go commands.Discommand.LoadComponent(components.DeregisterComponent)
 
 	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
 }

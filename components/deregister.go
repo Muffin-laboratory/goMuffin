@@ -2,25 +2,24 @@ package components
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var RegisterComponent *commands.Component = &commands.Component{
+var DeregisterComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		customId := ctx.Inter.MessageComponentData().CustomID
-		if !strings.HasPrefix(customId, utils.ServiceAgree) && !strings.HasPrefix(customId, utils.ServiceDisagree) {
+		if !strings.HasPrefix(customId, utils.DeregisterAgree) && !strings.HasPrefix(customId, utils.DeregisterDisagree) {
 			return false
 		}
 
-		if ctx.Inter.User.ID != utils.GetServiceUserId(customId) {
+		if ctx.Inter.User.ID != utils.GetDeregisterUserId(customId) {
 			return false
 		}
 		return true
@@ -31,21 +30,26 @@ var RegisterComponent *commands.Component = &commands.Component{
 		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
-		case strings.HasPrefix(customId, utils.ServiceAgree):
-			_, err := databases.Database.Users.InsertOne(context.TODO(), databases.InsertUser{
-				UserId:    ctx.Inter.User.ID,
-				CreatedAt: time.Now(),
-			})
+		case strings.HasPrefix(customId, utils.DeregisterAgree):
+			filter := bson.D{{Key: "user_id", Value: ctx.Inter.User.ID}}
+			_, err := databases.Database.Users.DeleteOne(context.TODO(), filter)
 			if err != nil {
 				log.Println(err)
-				ctx.Inter.EditReply(&utils.InteractionEdit{
-					Flags: &flags,
-					Components: &[]discordgo.MessageComponent{
-						utils.GetErrorContainer(discordgo.TextDisplay{
-							Content: "가입을 하다가 오류가 생겼어요.",
-						}),
-					},
-				})
+				// 나중에 에러처리 바꿔야지 :(
+				return
+			}
+
+			_, err = databases.Database.Learns.DeleteMany(context.TODO(), filter)
+			if err != nil {
+				log.Println(err)
+				// 나중에 에러처리 바꿔야지 :(
+				return
+			}
+
+			_, err = databases.Database.Memory.DeleteMany(context.TODO(), filter)
+			if err != nil {
+				log.Println(err)
+				// 나중에 에러처리 바꿔야지 :(
 				return
 			}
 
@@ -53,17 +57,17 @@ var RegisterComponent *commands.Component = &commands.Component{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					utils.GetSuccessContainer(discordgo.TextDisplay{
-						Content: fmt.Sprintf("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", ctx.Inter.Session.State.User.Username),
+						Content: "탈퇴를 했어요.",
 					}),
 				},
 			})
 			return
-		case strings.HasPrefix(customId, utils.ServiceDisagree):
+		case strings.HasPrefix(customId, utils.DeregisterDisagree):
 			ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					utils.GetDeclineContainer(discordgo.TextDisplay{
-						Content: "가입을 거부했어요.",
+						Content: "탈퇴를 거부했어요.",
 					}),
 				},
 			})
