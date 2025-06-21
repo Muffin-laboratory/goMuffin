@@ -59,6 +59,7 @@ var LearnCommand *Command = &Command{
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsRegistered,
 	MessageRun: func(ctx *MsgContext) {
 		if len(*ctx.Args) < 2 {
 			utils.NewMessageSender(ctx.Msg).

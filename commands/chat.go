@@ -28,6 +28,7 @@ var ChatCommand *Command = &Command{
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     false,
+	Flags:                      CommandFlagsIsRegistered,
 	ChatInputRun: func(ctx *ChatInputContext) {
 		i := ctx.Inter
 		i.DeferReply(&discordgo.InteractionResponseData{})

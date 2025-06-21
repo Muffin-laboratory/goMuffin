@@ -38,6 +38,17 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command := commands.Discommand.Aliases[args[0]]
 
 		if command == "" || command == "대화" {
+			if !databases.Database.IsUser(m.Author.ID) {
+				utils.NewMessageSender(&utils.MessageCreate{
+					MessageCreate: m,
+					Session:       s,
+				}).
+					AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+				return
+			}
 			s.ChannelTyping(m.ChannelID)
 
 			str, err := chatbot.ChatBot.GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))
