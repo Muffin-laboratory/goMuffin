@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"sync"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -88,53 +87,22 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	var data []databases.Text
 	var learnData []databases.Learn
 	var result string
-	var wg sync.WaitGroup
-
-	ch1 := make(chan error)
-	ch2 := make(chan error)
 	x := rand.Intn(10)
 
-	wg.Add(2)
-
-	// 머핀 데이터
-	go func() {
-		cur, err := databases.Database.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
-		if err != nil {
-			ch1 <- err
-		}
-
-		defer cur.Close(context.TODO())
-
-		cur.All(context.TODO(), &data)
-		ch1 <- nil
-		wg.Done()
-	}()
-
-	// 지식 데이터
-	go func() {
-		cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
-		if err != nil {
-			ch2 <- err
-		}
-
-		defer cur.Close(context.TODO())
-
-		cur.All(context.TODO(), &learnData)
-		ch2 <- nil
-		wg.Done()
-	}()
-
-	wg.Wait()
-	select {
-	case err := <-ch1:
-		if err != nil {
-			return "에러 발생", fmt.Errorf("muffin data error\n%s", err.Error())
-		}
-	case err := <-ch2:
-		if err != nil {
-			return "에러 발생", fmt.Errorf("learn data error\n%s", err.Error())
-		}
+	muffinCur, err := databases.Database.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+	if err != nil {
+		return "살려주ㅅ세요", err
 	}
+	learnCur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+	if err != nil {
+		return "살려주ㅅ세요", err
+	}
+
+	defer muffinCur.Close(context.TODO())
+	defer learnCur.Close(context.TODO())
+
+	muffinCur.All(context.TODO(), &data)
+	learnCur.All(context.TODO(), &learnData)
 
 	if x > 2 && len(learnData) != 0 {
 		data := learnData[rand.Intn(len(learnData))]
@@ -171,7 +139,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 		Answer:  resultText,
 	})
 	if err != nil {
-		return "", err
+		return "AI에 문제가 생겼ㅇ어요.", err
 	}
 
 	log.Printf("%s TOKEN: %d", user.ID, result.UsageMetadata.PromptTokenCount)
