@@ -116,7 +116,25 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	return result, nil
 }
 
-func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, error) {
+func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, question string) (string, error) {
+	var data []databases.Learn
+
+	x := rand.Intn(10)
+
+	cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+	if err != nil {
+		return "살려주ㅅ세요", err
+	}
+
+	defer cur.Close(context.TODO())
+	cur.All(context.TODO(), &data)
+
+	if x == 10 && len(data) != 0 {
+		data := data[rand.Intn(len(data))]
+		user, _ := s.User(data.UserId)
+		return fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), nil
+	}
+
 	contents, err := GetMemory(user.ID)
 	if err != nil {
 		ChatBot.Mode = ChatbotMuffin
@@ -152,6 +170,6 @@ func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, er
 	case ChatbotMuffin:
 		return getMuffinResponse(c.s, question)
 	default:
-		return getAIResponse(c, user, question)
+		return getAIResponse(c.s, c, user, question)
 	}
 }
