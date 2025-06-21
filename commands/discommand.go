@@ -169,6 +169,7 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
 				SetComponentsV2(true).
+				SetEphemeral(true).
 				SetReply(true).
 				Send()
 			return
@@ -178,6 +179,7 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
 				SetComponentsV2(true).
+				SetEphemeral(true).
 				SetReply(true).
 				Send()
 			return
