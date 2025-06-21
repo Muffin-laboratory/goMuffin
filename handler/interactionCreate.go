@@ -6,12 +6,13 @@ import (
 )
 
 func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if i.Type == discordgo.InteractionApplicationCommand {
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
 		commands.Discommand.ChatInputRun(i.ApplicationCommandData().Name, s, i)
 		return
-	} else if i.Type == discordgo.InteractionMessageComponent {
+	case discordgo.InteractionMessageComponent:
 		commands.Discommand.ComponentRun(s, i)
-	} else if i.Type == discordgo.InteractionModalSubmit {
+	case discordgo.InteractionModalSubmit:
 		commands.Discommand.ModalRun(s, i)
 	}
 }
