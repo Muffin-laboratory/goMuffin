@@ -20,13 +20,13 @@ var DeregisterCommand *Command = &Command{
 	RegisterMessageCommand:     true,
 	RegisterApplicationCommand: true,
 	Flags:                      CommandFlagsIsRegistered,
-	MessageRun: func(ctx *MsgContext) {
-		deregisterRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
+	MessageRun: func(ctx *MsgContext) error {
+		return deregisterRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
 	},
 }
 
-func deregisterRun(m any, userId, botName string) {
-	utils.NewMessageSender(m).
+func deregisterRun(m any, userId, botName string) error {
+	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{

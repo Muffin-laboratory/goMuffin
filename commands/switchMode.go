@@ -21,10 +21,10 @@ var SwitchModeCommand *Command = &Command{
 	RegisterApplicationCommand: false,
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsDeveloper,
-	MessageRun: func(ctx *MsgContext) {
+	MessageRun: func(ctx *MsgContext) error {
 		chatbot.ChatBot.SwitchMode()
 
-		utils.NewMessageSender(ctx.Msg).
+		return utils.NewMessageSender(ctx.Msg).
 			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("모드를 %s로 바꾸었어요.", chatbot.ChatBot.ModeString())})).
 			SetComponentsV2(true).
 			SetReply(true).

@@ -34,10 +34,13 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) {
+	Run: func(ctx *commands.ComponentContext) error {
 		i := ctx.Inter
 
-		i.DeferUpdate()
+		err := i.DeferUpdate()
+		if err != nil {
+			return err
+		}
 
 		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
 		fmt.Println(id, itemId)
@@ -45,7 +48,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 		databases.Database.Learns.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		i.EditReply(&utils.InteractionEdit{
+		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
 				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemId)}),

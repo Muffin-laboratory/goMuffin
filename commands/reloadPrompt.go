@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"log"
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -22,19 +21,13 @@ var ReloadPromptCommand *Command = &Command{
 	RegisterApplicationCommand: false,
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsDeveloper,
-	MessageRun: func(ctx *MsgContext) {
+	MessageRun: func(ctx *MsgContext) error {
 		err := chatbot.ChatBot.ReloadPrompt()
 		if err != nil {
-			log.Fatalln(err)
-			utils.NewMessageSender(ctx.Msg).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "프롬프트를 다시 불러오는 데 문제가 생겼어요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return
+			return err
 		}
 
-		utils.NewMessageSender(ctx.Msg).
+		return utils.NewMessageSender(ctx.Msg).
 			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: "프롬프트를 다시 불러왔어요."})).
 			SetComponentsV2(true).
 			SetReply(true).

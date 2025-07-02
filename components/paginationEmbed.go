@@ -33,17 +33,20 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) {
+	Run: func(ctx *commands.ComponentContext) error {
 		customId := ctx.Inter.MessageComponentData().CustomID
 		id := utils.GetPaginationEmbedId(customId)
 		p := utils.GetPaginationEmbed(id)
 
 		if strings.HasPrefix(customId, utils.PaginationEmbedPrev) {
 			p.Prev(ctx.Inter)
+			return nil
 		} else if strings.HasPrefix(customId, utils.PaginationEmbedNext) {
 			p.Next(ctx.Inter)
+			return nil
 		} else {
 			p.ShowModal(ctx.Inter)
+			return nil
 		}
 	},
 }

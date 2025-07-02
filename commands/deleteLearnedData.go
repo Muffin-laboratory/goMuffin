@@ -33,7 +33,7 @@ var DeleteLearnedDataCommand *Command = &Command{
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsRegistered,
-	MessageRun: func(ctx *MsgContext) {
+	MessageRun: func(ctx *MsgContext) error {
 		command := strings.Join(*ctx.Args, " ")
 		if command == "" {
 			utils.NewMessageSender(ctx.Msg).
@@ -51,13 +51,17 @@ var DeleteLearnedDataCommand *Command = &Command{
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
+			return nil
 		}
-		deleteLearnedDataRun(ctx.Msg, strings.Join(*ctx.Args, " "), ctx.Msg.Author.ID)
+		return deleteLearnedDataRun(ctx.Msg, strings.Join(*ctx.Args, " "), ctx.Msg.Author.ID)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
+		if err != nil {
+			return err
+		}
 
 		var command string
 
@@ -65,23 +69,18 @@ var DeleteLearnedDataCommand *Command = &Command{
 			command = opt.StringValue()
 		}
 
-		deleteLearnedDataRun(ctx.Inter, command, ctx.Inter.Member.User.ID)
+		return deleteLearnedDataRun(ctx.Inter, command, ctx.Inter.Member.User.ID)
 	},
 }
 
-func deleteLearnedDataRun(m any, command, userId string) {
+func deleteLearnedDataRun(m any, command, userId string) error {
 	var data []databases.Learn
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
 	cur, err := databases.Database.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
 	if err != nil {
-		utils.NewMessageSender(m).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "데이터를 가져오는데 실패했어요."})).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
-		return
+		return err
 	}
 
 	cur.All(context.TODO(), &data)
@@ -92,7 +91,7 @@ func deleteLearnedDataRun(m any, command, userId string) {
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
-		return
+		return nil
 	}
 
 	for i, data := range data {
@@ -127,7 +126,7 @@ func deleteLearnedDataRun(m any, command, userId string) {
 		containers = append(containers, container)
 	}
 
-	utils.PaginationEmbedBuilder(m).
+	return utils.PaginationEmbedBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

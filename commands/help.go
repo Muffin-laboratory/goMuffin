@@ -31,17 +31,17 @@ var HelpCommand *Command = &Command{
 	Category:                   General,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
-	MessageRun: func(ctx *MsgContext) {
-		helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
+	MessageRun: func(ctx *MsgContext) error {
+		return helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
+	ChatInputRun: func(ctx *ChatInputContext) error {
 		var command string
 
 		if opt, ok := ctx.Inter.Options["명령어"]; ok {
 			command = opt.StringValue()
 		}
 
-		helpRun(ctx.Inter.Session, ctx.Inter, command)
+		return helpRun(ctx.Inter.Session, ctx.Inter, command)
 	},
 }
 
@@ -55,7 +55,7 @@ func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
 	return commands
 }
 
-func helpRun(s *discordgo.Session, m any, commandName string) {
+func helpRun(s *discordgo.Session, m any, commandName string) error {
 	section := &discordgo.Section{
 		Accessory: discordgo.Thumbnail{
 			Media: discordgo.UnfurledMediaItem{
@@ -78,14 +78,13 @@ func helpRun(s *discordgo.Session, m any, commandName string) {
 				Content: fmt.Sprintf("- **채팅**\n%s", strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
 			},
 		)
-		utils.NewMessageSender(m).
+		return utils.NewMessageSender(m).
 			AddComponents(&discordgo.Container{
 				Components: []discordgo.MessageComponent{section},
 			}).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
-		return
 	}
 
 	var aliases, examples discordgo.TextDisplay
@@ -128,17 +127,16 @@ func helpRun(s *discordgo.Session, m any, commandName string) {
 		learnArgs := discordgo.TextDisplay{
 			Content: fmt.Sprintf("- **대답에 쓸 수 있는 인자**\n%s", learnArguments),
 		}
-		utils.NewMessageSender(m).
+		return utils.NewMessageSender(m).
 			AddComponents(discordgo.Container{
 				Components: []discordgo.MessageComponent{section, aliases, examples, learnArgs},
 			}).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
-		return
 	}
 
-	utils.NewMessageSender(m).
+	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{section, aliases, examples},
 		}).

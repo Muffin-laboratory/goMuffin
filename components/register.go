@@ -3,7 +3,7 @@ package components
 import (
 	"context"
 	"fmt"
-	"log"
+
 	"strings"
 	"time"
 
@@ -25,8 +25,12 @@ var RegisterComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) {
-		ctx.Inter.DeferUpdate()
+	Run: func(ctx *commands.ComponentContext) error {
+		err := ctx.Inter.DeferUpdate()
+		if err != nil {
+			return err
+		}
+
 		customId := ctx.Inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
@@ -37,19 +41,10 @@ var RegisterComponent *commands.Component = &commands.Component{
 				CreatedAt: time.Now(),
 			})
 			if err != nil {
-				log.Println(err)
-				ctx.Inter.EditReply(&utils.InteractionEdit{
-					Flags: &flags,
-					Components: &[]discordgo.MessageComponent{
-						utils.GetErrorContainer(discordgo.TextDisplay{
-							Content: "가입을 하다가 오류가 생겼어요.",
-						}),
-					},
-				})
-				return
+				return err
 			}
 
-			ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					utils.GetSuccessContainer(discordgo.TextDisplay{
@@ -57,9 +52,8 @@ var RegisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
-			return
 		case strings.HasPrefix(customId, utils.ServiceDisagree):
-			ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					utils.GetDeclineContainer(discordgo.TextDisplay{
@@ -67,7 +61,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
-			return
 		}
+		return nil
 	},
 }

@@ -75,7 +75,19 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		commands.Discommand.MessageRun(command, s, m, args[1:])
+		err := commands.Discommand.MessageRun(command, s, m, args[1:])
+		if err != nil {
+			log.Println(err)
+			utils.NewMessageSender(&utils.MessageCreate{
+				MessageCreate: m,
+				Session:       s,
+			}).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "오류가 발생하였어요. 만약 계속 발생한다면, `migan.`으로 연락해주세요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return
+		}
 		return
 	} else {
 		if m.Author.ID == config.Chatbot.Train.UserId {

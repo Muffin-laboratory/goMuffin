@@ -2,7 +2,6 @@ package components
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/commands"
@@ -24,8 +23,12 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) {
-		ctx.Inter.DeferUpdate()
+	Run: func(ctx *commands.ComponentContext) error {
+		err := ctx.Inter.DeferUpdate()
+		if err != nil {
+			return err
+		}
+
 		customId := ctx.Inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
@@ -34,26 +37,20 @@ var DeregisterComponent *commands.Component = &commands.Component{
 			filter := bson.D{{Key: "user_id", Value: ctx.Inter.User.ID}}
 			_, err := databases.Database.Users.DeleteOne(context.TODO(), filter)
 			if err != nil {
-				log.Println(err)
-				// 나중에 에러처리 바꿔야지 :(
-				return
+				return err
 			}
 
 			_, err = databases.Database.Learns.DeleteMany(context.TODO(), filter)
 			if err != nil {
-				log.Println(err)
-				// 나중에 에러처리 바꿔야지 :(
-				return
+				return err
 			}
 
 			_, err = databases.Database.Memory.DeleteMany(context.TODO(), filter)
 			if err != nil {
-				log.Println(err)
-				// 나중에 에러처리 바꿔야지 :(
-				return
+				return err
 			}
 
-			ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					utils.GetSuccessContainer(discordgo.TextDisplay{
@@ -61,9 +58,8 @@ var DeregisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
-			return
 		case strings.HasPrefix(customId, utils.DeregisterDisagree):
-			ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					utils.GetDeclineContainer(discordgo.TextDisplay{
@@ -71,7 +67,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
-			return
 		}
+		return nil
 	},
 }

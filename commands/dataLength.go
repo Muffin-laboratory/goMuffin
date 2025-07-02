@@ -43,17 +43,17 @@ var DataLengthCommand *Command = &Command{
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
-	RegisterMessageCommand: true,
-	Flags: CommandFlagsIsRegistered,
-	MessageRun: func(ctx *MsgContext) {
-		dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
+	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsRegistered,
+	MessageRun: func(ctx *MsgContext) error {
+		return dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
+	ChatInputRun: func(ctx *ChatInputContext) error {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
 
-		dataLengthRun(ctx.Inter.Session, ctx.Inter, ctx.Inter.Member.User.Username, ctx.Inter.Member.User.ID)
+		return dataLengthRun(ctx.Inter.Session, ctx.Inter, ctx.Inter.Member.User.Username, ctx.Inter.Member.User.ID)
 	},
 }
 
@@ -74,7 +74,7 @@ func getLength(ch chan chStruct, dType dataType, coll *mongo.Collection, filter 
 	ch <- chStruct{name: dType, length: len(data)}
 }
 
-func dataLengthRun(s *discordgo.Session, m any, username, userId string) {
+func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
 	ch := make(chan chStruct)
 	var textLength,
 		muffinLength,
@@ -118,7 +118,7 @@ func dataLengthRun(s *discordgo.Session, m any, username, userId string) {
 
 	sum := textLength + learnLength
 
-	utils.NewMessageSender(m).
+	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
 				discordgo.Section{

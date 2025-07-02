@@ -29,7 +29,7 @@ var ChatCommand *Command = &Command{
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     false,
 	Flags:                      CommandFlagsIsRegistered,
-	ChatInputRun: func(ctx *ChatInputContext) {
+	ChatInputRun: func(ctx *ChatInputContext) error {
 		i := ctx.Inter
 		i.DeferReply(&discordgo.InteractionResponseData{})
 
@@ -39,11 +39,11 @@ var ChatCommand *Command = &Command{
 			i.EditReply(&utils.InteractionEdit{
 				Content: &str,
 			})
-			return
+			return nil
 		}
 
 		result := chatbot.ParseResult(str, ctx.Inter.Session, i)
-		i.EditReply(&utils.InteractionEdit{
+		return i.EditReply(&utils.InteractionEdit{
 			Content: &result,
 		})
 	},

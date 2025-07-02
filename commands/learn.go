@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -60,7 +59,7 @@ var LearnCommand *Command = &Command{
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsRegistered,
-	MessageRun: func(ctx *MsgContext) {
+	MessageRun: func(ctx *MsgContext) error {
 		if len(*ctx.Args) < 2 {
 			utils.NewMessageSender(ctx.Msg).
 				AddComponents(utils.GetErrorContainer(
@@ -80,15 +79,18 @@ var LearnCommand *Command = &Command{
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 
-		learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
+		return learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
+		if err != nil {
+			return err
+		}
 
 		var command, result string
 
@@ -100,11 +102,11 @@ var LearnCommand *Command = &Command{
 			result = opt.StringValue()
 		}
 
-		learnRun(ctx.Inter, ctx.Inter.Member.User.ID, command, result)
+		return learnRun(ctx.Inter, ctx.Inter.Member.User.ID, command, result)
 	},
 }
 
-func learnRun(m any, userId, command, result string) {
+func learnRun(m any, userId, command, result string) error {
 	igCommands := []string{}
 
 	for _, command := range Discommand.Commands {
@@ -128,7 +130,7 @@ func learnRun(m any, userId, command, result string) {
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 	}
 
@@ -139,7 +141,7 @@ func learnRun(m any, userId, command, result string) {
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 	}
 
@@ -149,6 +151,7 @@ func learnRun(m any, userId, command, result string) {
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
+		return nil
 	}
 
 	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
@@ -158,17 +161,15 @@ func learnRun(m any, userId, command, result string) {
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
-		log.Println(err)
-
 		utils.NewMessageSender(m).
 			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "단어를 배우는데 오류가 생겼어요."})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
-		return
+		return err
 	}
 
-	utils.NewMessageSender(m).
+	return utils.NewMessageSender(m).
 		AddComponents(utils.GetSuccessContainer(
 			discordgo.TextDisplay{
 				Content: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),

@@ -9,10 +9,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type modalRun func(ctx *ModalContext)
-type messageRun func(ctx *MsgContext)
-type chatInputRun func(ctx *ChatInputContext)
-type componentRun func(ctx *ComponentContext)
+type modalRun func(ctx *ModalContext) error
+type messageRun func(ctx *MsgContext) error
+type chatInputRun func(ctx *ChatInputContext) error
+type componentRun func(ctx *ComponentContext) error
 
 type modalParse func(ctx *ModalContext) bool
 type componentParse func(ctx *ComponentContext) bool
@@ -126,7 +126,7 @@ func (d *DiscommandStruct) LoadModal(m *Modal) {
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) {
+func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) error {
 	m := &utils.MessageCreate{
 		MessageCreate: msg,
 		Session:       s,
@@ -139,7 +139,7 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *di
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 
 		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(m.Author.ID) {
@@ -148,14 +148,15 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *di
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 
-		command.MessageRun(&MsgContext{m, &args, command})
+		return command.MessageRun(&MsgContext{m, &args, command})
 	}
+	return nil
 }
 
-func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	i := &utils.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
@@ -172,7 +173,7 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 				SetEphemeral(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 
 		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(i.User.ID) {
@@ -182,14 +183,17 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 				SetEphemeral(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
 
-		command.ChatInputRun(&ChatInputContext{i, command})
+		return command.ChatInputRun(&ChatInputContext{i, command})
 	}
+	return nil
 }
 
-func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	var err error
+
 	i := &utils.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
@@ -207,12 +211,15 @@ func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.I
 			continue
 		}
 
-		c.Run(data)
+		err = c.Run(data)
 		break
 	}
+	return err
 }
 
-func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	var err error
+
 	data := &ModalContext{
 		Inter: &utils.InteractionCreate{
 			InteractionCreate: i,
@@ -227,7 +234,8 @@ func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.Interacti
 			continue
 		}
 
-		m.Run(data)
+		err = m.Run(data)
 		break
 	}
+	return err
 }

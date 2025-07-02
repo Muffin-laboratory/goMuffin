@@ -54,7 +54,7 @@ var LearnedDataListCommand *Command = &Command{
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsRegistered,
-	MessageRun: func(ctx *MsgContext) {
+	MessageRun: func(ctx *MsgContext) error {
 		var length int
 
 		filter := bson.D{{Key: "user_id", Value: ctx.Msg.Author.ID}}
@@ -76,7 +76,7 @@ var LearnedDataListCommand *Command = &Command{
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
-				return
+				return nil
 			}
 
 			if float64(length) > LIST_MAX_VALUE {
@@ -85,15 +85,18 @@ var LearnedDataListCommand *Command = &Command{
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
-				return
+				return nil
 			}
 		}
-		learnedDataListRun(ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
+		return learnedDataListRun(ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
+		if err != nil {
+			return err
+		}
 
 		var length int
 
@@ -109,7 +112,7 @@ var LearnedDataListCommand *Command = &Command{
 		if opt, ok := ctx.Inter.Options["개수"]; ok {
 			length = int(opt.IntValue())
 		}
-		learnedDataListRun(ctx.Inter, ctx.Inter.Member.User.GlobalName, ctx.Inter.Member.User.AvatarURL("512"), filter, length)
+		return learnedDataListRun(ctx.Inter, ctx.Inter.Member.User.GlobalName, ctx.Inter.Member.User.AvatarURL("512"), filter, length)
 	},
 }
 
@@ -173,7 +176,7 @@ func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, items []s
 	return containers
 }
 
-func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) {
+func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) error {
 	var data []databases.Learn
 
 	itemsMap := map[string]string{}
@@ -187,17 +190,15 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return
+			return nil
 		}
-
-		fmt.Println(err)
 
 		utils.NewMessageSender(m).
 			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "데이터를 가져오는데 실패했어요."})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
-		return
+		return err
 	}
 
 	defer cur.Close(context.TODO())
@@ -217,10 +218,9 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 			},
 		}, fmt.Sprintf("### %s님이 알려주신 지식\n- **%s**\n", globalName, command)+"%s", items, length)
 
-		utils.PaginationEmbedBuilder(m).
+		return utils.PaginationEmbedBuilder(m).
 			AddContainers(containers...).
 			Start()
-		return
 	}
 
 	for _, data := range data {
@@ -241,7 +241,7 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 		},
 	}, fmt.Sprintf("### %s님이 알려주신 지식\n총 %d개에요.\n", globalName, len(items))+"%s", items, length)
 
-	utils.PaginationEmbedBuilder(m).
+	return utils.PaginationEmbedBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

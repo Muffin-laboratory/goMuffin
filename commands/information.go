@@ -19,17 +19,20 @@ var InformationCommand *Command = &Command{
 	Category:                   General,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
-	MessageRun: func(ctx *MsgContext) {
-		informationRun(ctx.Msg.Session, ctx.Msg)
+	MessageRun: func(ctx *MsgContext) error {
+		return informationRun(ctx.Msg.Session, ctx.Msg)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		informationRun(ctx.Inter.Session, ctx.Inter)
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		return informationRun(ctx.Inter.Session, ctx.Inter)
 	},
 }
 
-func informationRun(s *discordgo.Session, m any) {
-	owner, _ := s.User(configs.Config.Bot.OwnerId)
-	utils.NewMessageSender(m).
+func informationRun(s *discordgo.Session, m any) error {
+	owner, err := s.User(configs.Config.Bot.OwnerId)
+	if err != nil {
+		return err
+	}
+	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
 				discordgo.Section{

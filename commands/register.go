@@ -20,25 +20,25 @@ var RegisterCommand *Command = &Command{
 	Category:                   General,
 	RegisterMessageCommand:     true,
 	RegisterApplicationCommand: true,
-	MessageRun: func(ctx *MsgContext) {
-		registerRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
+	MessageRun: func(ctx *MsgContext) error {
+		return registerRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		registerRun(ctx.Inter, ctx.Inter.User.ID, ctx.Inter.Session.State.User.Username)
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		return registerRun(ctx.Inter, ctx.Inter.User.ID, ctx.Inter.Session.State.User.Username)
 	},
 }
 
-func registerRun(m any, userId, botName string) {
+func registerRun(m any, userId, botName string) error {
 	if databases.Database.IsUser(userId) {
 		utils.NewMessageSender(m).
 			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 %s탈퇴를 이용해주세요.", configs.Config.Bot.Prefix)})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
-		return
+		return nil
 	}
 
-	utils.NewMessageSender(m).
+	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{
