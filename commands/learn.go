@@ -154,7 +154,7 @@ func learnRun(m any, userId, command, result string) error {
 		return nil
 	}
 
-	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
+	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.Learn{
 		Command:   command,
 		Result:    result,
 		UserId:    userId,

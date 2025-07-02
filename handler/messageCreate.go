@@ -91,7 +91,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	} else {
 		if m.Author.ID == config.Chatbot.Train.UserId {
-			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.InsertText{
+			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.Text{
 				Text:      m.Content,
 				Persona:   "muffin",
 				CreatedAt: time.Now(),

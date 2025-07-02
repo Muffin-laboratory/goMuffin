@@ -8,7 +8,7 @@ import (
 	"google.golang.org/genai"
 )
 
-func SaveMemory(data *databases.InsertMemory) error {
+func SaveMemory(data *databases.Memory) error {
 	_, err := databases.Database.Memory.InsertOne(context.TODO(), *data)
 	return err
 }

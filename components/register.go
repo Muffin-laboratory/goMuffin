@@ -36,7 +36,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 
 		switch {
 		case strings.HasPrefix(customId, utils.ServiceAgree):
-			_, err := databases.Database.Users.InsertOne(context.TODO(), databases.InsertUser{
+			_, err := databases.Database.Users.InsertOne(context.TODO(), databases.User{
 				UserId:    ctx.Inter.User.ID,
 				CreatedAt: time.Now(),
 			})

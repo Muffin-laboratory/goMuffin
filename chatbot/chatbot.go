@@ -151,7 +151,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	}
 
 	resultText := result.Text()
-	err = SaveMemory(&databases.InsertMemory{
+	err = SaveMemory(&databases.Memory{
 		UserId:  user.ID,
 		Content: question,
 		Answer:  resultText,
