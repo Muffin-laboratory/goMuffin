@@ -8,9 +8,11 @@ import (
 )
 
 type User struct {
-	Id        bson.ObjectID `bson:"_id,omitempty"`
-	UserId    string        `bson:"user_id"`
-	CreatedAt time.Time     `bson:"created_at"`
+	Id            bson.ObjectID `bson:"_id,omitempty"`
+	UserId        string        `bson:"user_id"`
+	Blocked       bool          `bson:"blocked"`
+	BlockedReason string        `bson:"blocked_reason"`
+	CreatedAt     time.Time     `bson:"created_at"`
 }
 
 func (d *MuffinDatabase) IsUser(userId string) bool {
