@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -12,20 +11,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var BlockCommand *Command = &Command{
+var UnblockCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
-		Name:        "차단",
-		Description: "유저를 차단해요.",
+		Name:        "차단해제",
+		Description: "유저의 차단을 해제해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s차단 (유저의 ID) [사유]", configs.Config.Bot.Prefix),
+		Usage: fmt.Sprintf("%s차단해제 (유저의 ID)", configs.Config.Bot.Prefix),
 	},
 	Category:                   DeveloperOnly,
 	RegisterApplicationCommand: false,
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsDeveloper,
 	MessageRun: func(ctx *MsgContext) error {
-		var reason string
 		if len(*ctx.Args) < 1 {
 			utils.NewMessageSender(ctx.Msg).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "유저 ID는 필수에요."})).
@@ -36,12 +34,6 @@ var BlockCommand *Command = &Command{
 		}
 
 		userId := (*ctx.Args)[0]
-		if len(*ctx.Args) >= 2 {
-			reason = strings.Join((*ctx.Args)[1:], " ")
-		} else {
-			reason = "없음"
-		}
-
 		user, err := ctx.Msg.Session.User(userId)
 		if err != nil {
 			return err
@@ -54,11 +46,11 @@ var BlockCommand *Command = &Command{
 				Value: bson.D{
 					{
 						Key:   "blocked",
-						Value: true,
+						Value: false,
 					},
 					{
 						Key:   "blocked_reason",
-						Value: reason,
+						Value: "",
 					},
 				},
 			}})
@@ -67,7 +59,7 @@ var BlockCommand *Command = &Command{
 		}
 
 		return utils.NewMessageSender(ctx.Msg).
-			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("- %s를 성공적으로 차단했어요.\n> 사유: %s", user.GlobalName, reason)})).
+			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%s의 차단을 성공적으로 해제했어요.", user.GlobalName)})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
