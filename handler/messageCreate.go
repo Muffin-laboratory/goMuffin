@@ -49,6 +49,18 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					Send()
 				return
 			}
+
+			blocked, reason := databases.Database.IsUserBlocked(m.Author.ID)
+			if blocked {
+				user, _ := s.User(m.Author.ID)
+				utils.NewMessageSender(m).
+					AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+				return
+			}
+
 			s.ChannelTyping(m.ChannelID)
 
 			str, err := chatbot.ChatBot.GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))

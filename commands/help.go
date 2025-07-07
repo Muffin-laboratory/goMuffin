@@ -31,6 +31,7 @@ var HelpCommand *Command = &Command{
 	Category:                   General,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
 	},

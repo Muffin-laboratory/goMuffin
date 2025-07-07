@@ -19,6 +19,7 @@ var InformationCommand *Command = &Command{
 	Category:                   General,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return informationRun(ctx.Msg.Session, ctx.Msg)
 	},

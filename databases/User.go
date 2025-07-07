@@ -20,3 +20,9 @@ func (d *MuffinDatabase) IsUser(userId string) bool {
 	d.Users.FindOne(context.TODO(), bson.D{{Key: "user_id", Value: userId}}).Decode(&user)
 	return user != nil
 }
+
+func (d *MuffinDatabase) IsUserBlocked(userId string) (bool, string) {
+	var user User
+	d.Users.FindOne(context.TODO(), bson.D{{Key: "user_id", Value: userId}}).Decode(&user)
+	return user.Blocked, user.BlockedReason
+}

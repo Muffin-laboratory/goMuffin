@@ -19,7 +19,7 @@ var DeregisterCommand *Command = &Command{
 	Category:                   General,
 	RegisterMessageCommand:     true,
 	RegisterApplicationCommand: true,
-	Flags:                      CommandFlagsIsRegistered,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return deregisterRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
 	},

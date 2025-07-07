@@ -28,7 +28,7 @@ var ChatCommand *Command = &Command{
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     false,
-	Flags:                      CommandFlagsIsRegistered,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	ChatInputRun: func(ctx *ChatInputContext) error {
 		i := ctx.Inter
 		i.DeferReply(&discordgo.InteractionResponseData{})

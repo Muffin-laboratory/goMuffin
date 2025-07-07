@@ -44,7 +44,7 @@ var DataLengthCommand *Command = &Command{
 	Category:                   General,
 	RegisterApplicationCommand: true,
 	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},

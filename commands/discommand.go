@@ -84,6 +84,7 @@ const (
 const (
 	CommandFlagsIsDeveloper CommandFlags = 1 << iota
 	CommandFlagsIsRegistered
+	CommandFlagsIsBlocked
 )
 
 var (
@@ -151,6 +152,17 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *di
 			return nil
 		}
 
+		blocked, reason := databases.Database.IsUserBlocked(m.Author.ID)
+		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
+			user, _ := s.User(m.Author.ID)
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
 		return command.MessageRun(&MsgContext{m, &args, command})
 	}
 	return nil
@@ -181,6 +193,17 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
 				SetComponentsV2(true).
 				SetEphemeral(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		blocked, reason := databases.Database.IsUserBlocked(i.User.ID)
+		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
+			user, _ := s.User(i.User.ID)
+			utils.NewMessageSender(i).
+				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+				SetComponentsV2(true).
 				SetReply(true).
 				Send()
 			return nil

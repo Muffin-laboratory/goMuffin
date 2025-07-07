@@ -20,6 +20,7 @@ var RegisterCommand *Command = &Command{
 	Category:                   General,
 	RegisterMessageCommand:     true,
 	RegisterApplicationCommand: true,
+	Flags:                      CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return registerRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
 	},
