@@ -34,6 +34,8 @@ func init() {
 	go commands.Discommand.LoadCommand(commands.ChatCommand)
 	go commands.Discommand.LoadCommand(commands.RegisterCommand)
 	go commands.Discommand.LoadCommand(commands.DeregisterCommand)
+	go commands.Discommand.LoadCommand(commands.BlockCommand)
+	go commands.Discommand.LoadCommand(commands.UnblockCommand)
 
 	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
 	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
