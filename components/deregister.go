@@ -8,7 +8,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var DeregisterComponent *commands.Component = &commands.Component{
@@ -34,7 +33,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 
 		switch {
 		case strings.HasPrefix(customId, utils.DeregisterAgree):
-			filter := bson.D{{Key: "user_id", Value: ctx.Inter.User.ID}}
+			filter := databases.User{UserId: ctx.Inter.User.ID}
 			_, err := databases.Database.Users.DeleteOne(context.TODO(), filter)
 			if err != nil {
 				return err

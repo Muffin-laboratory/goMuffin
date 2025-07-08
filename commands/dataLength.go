@@ -57,7 +57,7 @@ var DataLengthCommand *Command = &Command{
 	},
 }
 
-func getLength(ch chan chStruct, dType dataType, coll *mongo.Collection, filter bson.D) {
+func getLength(ch chan chStruct, dType dataType, coll *mongo.Collection, filter any) {
 	defer dataLengthWg.Done()
 	var err error
 	var cur *mongo.Cursor
@@ -84,7 +84,7 @@ func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
 
 	dataLengthWg.Add(5)
 	go getLength(ch, text, databases.Database.Texts, bson.D{{}})
-	go getLength(ch, muffin, databases.Database.Texts, bson.D{{Key: "persona", Value: "muffin"}})
+	go getLength(ch, muffin, databases.Database.Texts, databases.Text{Persona: "muffin"})
 	go getLength(ch, nsfw, databases.Database.Texts, bson.D{
 		{
 			Key: "persona",
@@ -94,7 +94,7 @@ func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
 		},
 	})
 	go getLength(ch, learn, databases.Database.Learns, bson.D{{}})
-	go getLength(ch, userLearn, databases.Database.Learns, bson.D{{Key: "user_id", Value: userId}})
+	go getLength(ch, userLearn, databases.Database.Learns, databases.Learn{UserId: userId})
 
 	go func() {
 		dataLengthWg.Wait()

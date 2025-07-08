@@ -9,7 +9,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var DeleteLearnedDataComponent *commands.Component = &commands.Component{
@@ -45,7 +44,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
 		fmt.Println(id, itemId)
 
-		databases.Database.Learns.DeleteOne(context.TODO(), bson.D{{Key: "_id", Value: id}})
+		databases.Database.Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
 
 		flags := discordgo.MessageFlagsIsComponentsV2
 		return i.EditReply(&utils.InteractionEdit{

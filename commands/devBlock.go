@@ -48,19 +48,10 @@ var BlockCommand *Command = &Command{
 		}
 
 		_, err = databases.Database.Users.UpdateOne(context.TODO(),
-			bson.D{{Key: "user_id", Value: userId}},
+			databases.User{UserId: userId},
 			bson.D{{
-				Key: "$set",
-				Value: bson.D{
-					{
-						Key:   "blocked",
-						Value: true,
-					},
-					{
-						Key:   "blocked_reason",
-						Value: reason,
-					},
-				},
+				Key:   "$set",
+				Value: databases.User{Blocked: true, BlockedReason: reason},
 			}})
 		if err != nil {
 			return err

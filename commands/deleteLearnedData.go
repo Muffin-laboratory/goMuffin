@@ -9,7 +9,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var DeleteLearnedDataCommand *Command = &Command{
@@ -78,7 +77,7 @@ func deleteLearnedDataRun(m any, command, userId string) error {
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
+	cur, err := databases.Database.Learns.Find(context.TODO(), databases.Learn{UserId: userId, Command: command})
 	if err != nil {
 		return err
 	}

@@ -9,10 +9,10 @@ import (
 
 type User struct {
 	Id            bson.ObjectID `bson:"_id,omitempty"`
-	UserId        string        `bson:"user_id"`
-	Blocked       bool          `bson:"blocked"`
-	BlockedReason string        `bson:"blocked_reason"`
-	CreatedAt     time.Time     `bson:"created_at"`
+	UserId        string        `bson:"user_id,omitempty"`
+	Blocked       bool          `bson:"blocked,omitempty"`
+	BlockedReason string        `bson:"blocked_reason,omitempty"`
+	CreatedAt     time.Time     `bson:"created_at,omitempty"`
 }
 
 func (d *MuffinDatabase) IsUser(userId string) bool {
