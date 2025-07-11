@@ -22,6 +22,8 @@ const (
 
 	DeregisterAgree    = "#muffin/deregister/agree@"
 	DeregisterDisagree = "#muffin/deregister/disagree@"
+
+	SelectChat = "#muffin/chat/select@"
 )
 
 func MakeDeleteLearnedData(id string, number int, userId string) string {
@@ -116,4 +118,8 @@ func GetDeregisterUserId(customId string) string {
 	default:
 		return customId
 	}
+}
+
+func MakeSelectChat(id string, number int, userId string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userId)
 }

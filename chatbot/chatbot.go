@@ -11,6 +11,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 	"google.golang.org/genai"
 )
 
@@ -84,8 +85,8 @@ func (c *Chatbot) ReloadPrompt() error {
 }
 
 func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
-	var data []databases.Text
 	var learnData []databases.Learn
+	var data []databases.Text
 	var result string
 	x := rand.Intn(10)
 
@@ -101,8 +102,15 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	defer muffinCur.Close(context.TODO())
 	defer learnCur.Close(context.TODO())
 
-	muffinCur.All(context.TODO(), &data)
-	learnCur.All(context.TODO(), &learnData)
+	err = muffinCur.All(context.TODO(), &data)
+	if err != nil {
+		return "살려주ㅅ세요", err
+	}
+
+	err = learnCur.All(context.TODO(), &learnData)
+	if err != nil {
+		return "살려주ㅅ세요", err
+	}
 
 	if x > 2 && len(learnData) != 0 {
 		data := learnData[rand.Intn(len(learnData))]
@@ -118,6 +126,7 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 
 func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, question string) (string, error) {
 	var data []databases.Learn
+	var dbUser databases.User
 
 	x := rand.Intn(10)
 
@@ -135,7 +144,23 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 		return fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), nil
 	}
 
-	contents, err := GetMemory(user.ID)
+	err = databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+	if err != nil {
+		return "살려주ㅅ세요", err
+	}
+
+	err = databases.Database.Chats.FindOne(context.TODO(), databases.Chat{UserId: user.ID}).Err()
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			_, err = databases.CreateChat(user.ID, "새로운 채팅")
+			if err != nil {
+				return "살려주ㅅ세요", err
+			}
+		}
+		return "살려주ㅅ세요", err
+	}
+
+	contents, err := GetMemory(dbUser.ChatId)
 	if err != nil {
 		ChatBot.Mode = ChatbotMuffin
 		return "AI에 문제가 생겼ㅇ어요.", err
@@ -155,9 +180,10 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 		UserId:  user.ID,
 		Content: question,
 		Answer:  resultText,
+		ChatId:  dbUser.ChatId,
 	})
 	if err != nil {
-		return "AI에 문제가 생겼ㅇ어요.", err
+		return "살려주ㅅ세요", err
 	}
 
 	log.Printf("%s TOKEN: %d", user.ID, result.UsageMetadata.PromptTokenCount)

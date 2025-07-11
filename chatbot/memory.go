@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"git.wh64.net/muffin/goMuffin/databases"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"google.golang.org/genai"
 )
 
@@ -12,17 +13,20 @@ func SaveMemory(data *databases.Memory) error {
 	return err
 }
 
-func GetMemory(userId string) ([]*genai.Content, error) {
+func GetMemory(chatId bson.ObjectID) ([]*genai.Content, error) {
 	var data []databases.Memory
 
 	memory := []*genai.Content{}
 
-	cur, err := databases.Database.Memory.Find(context.TODO(), databases.User{UserId: userId})
+	cur, err := databases.Database.Memory.Find(context.TODO(), databases.User{ChatId: chatId})
 	if err != nil {
 		return memory, err
 	}
 
-	cur.All(context.TODO(), &data)
+	err = cur.All(context.TODO(), &data)
+	if err != nil {
+		return memory, err
+	}
 
 	for _, data := range data {
 		memory = append(memory,

@@ -110,7 +110,6 @@ func deleteLearnedDataRun(m any, command, userId string) error {
 
 	textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s 삭제", command)}
 	container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
-
 	for i, section := range sections {
 		container.Components = append(container.Components, section, discordgo.Separator{})
 

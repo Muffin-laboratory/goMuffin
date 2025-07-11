@@ -14,6 +14,7 @@ type MuffinDatabase struct {
 	Texts  *mongo.Collection
 	Memory *mongo.Collection
 	Users  *mongo.Collection
+	Chats  *mongo.Collection
 }
 
 var Database *MuffinDatabase
@@ -38,5 +39,6 @@ func Connect() (*MuffinDatabase, error) {
 		Texts:  client.Database(configs.Config.Database.Name).Collection("text"),
 		Memory: client.Database(configs.Config.Database.Name).Collection("memory"),
 		Users:  client.Database(configs.Config.Database.Name).Collection("user"),
+		Chats:  client.Database(configs.Config.Database.Name).Collection("chat"),
 	}, nil
 }

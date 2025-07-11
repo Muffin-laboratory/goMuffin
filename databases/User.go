@@ -12,6 +12,7 @@ type User struct {
 	UserId        string        `bson:"user_id,omitempty"`
 	Blocked       bool          `bson:"blocked,omitempty"`
 	BlockedReason string        `bson:"blocked_reason,omitempty"`
+	ChatId        bson.ObjectID `bson:"chat_id,omitempty"`
 	CreatedAt     time.Time     `bson:"created_at,omitempty"`
 }
 
