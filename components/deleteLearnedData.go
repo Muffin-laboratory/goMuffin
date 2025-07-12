@@ -25,10 +25,9 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					utils.GetErrorContainer(discordgo.TextDisplay{Content: "당신은 해당 권한이 없ㅇ어요."}),
+					utils.GetDeclineContainer(discordgo.TextDisplay{Content: "당신은 해당 권한이 없ㅇ어요."}),
 				},
-			},
-			)
+			})
 			return false
 		}
 		return true
@@ -42,9 +41,10 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-		fmt.Println(id, itemId)
-
-		databases.Database.Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
+		_, err = databases.Database.Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
+		if err != nil {
+			return err
+		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
 		return i.EditReply(&utils.InteractionEdit{
