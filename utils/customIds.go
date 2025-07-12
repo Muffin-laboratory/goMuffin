@@ -123,3 +123,14 @@ func GetDeregisterUserId(customId string) string {
 func MakeSelectChat(id string, number int, userId string) string {
 	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userId)
 }
+
+func GetSelectChatId(customId string) (id bson.ObjectID, itemId int) {
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpDLDId.FindAllString(customId, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpDLDItemId.FindAllString(customId, 1)[0], "no=", "")
+	itemId, _ = strconv.Atoi(stringItemId)
+	return
+}
+
+func GetSelectChatUserId(customId string) string {
+	return strings.ReplaceAll(RegexpDLDUserId.FindAllString(customId, 1)[0], "user_id=", "")
+}
