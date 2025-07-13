@@ -1,9 +1,10 @@
-package commands
+package dev
 
 import (
 	"context"
 	"fmt"
 
+	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -11,19 +12,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var UnblockCommand *Command = &Command{
+var UnblockCommand *commands.Command = &commands.Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "차단해제",
 		Description: "유저의 차단을 해제해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: &commands.DetailedDescription{
 		Usage: fmt.Sprintf("%s차단해제 (유저의 ID)", configs.Config.Bot.Prefix),
 	},
-	Category:                   DeveloperOnly,
+	Category:                   commands.DeveloperOnly,
 	RegisterApplicationCommand: false,
 	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsDeveloper,
-	MessageRun: func(ctx *MsgContext) error {
+	Flags:                      commands.CommandFlagsIsDeveloper,
+	MessageRun: func(ctx *commands.MsgContext) error {
 		if len(*ctx.Args) < 1 {
 			utils.NewMessageSender(ctx.Msg).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "유저 ID는 필수에요."})).

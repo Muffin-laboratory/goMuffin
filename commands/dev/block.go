@@ -1,10 +1,11 @@
-package commands
+package dev
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -12,19 +13,19 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var BlockCommand *Command = &Command{
+var BlockCommand *commands.Command = &commands.Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "차단",
 		Description: "유저를 차단해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: &commands.DetailedDescription{
 		Usage: fmt.Sprintf("%s차단 (유저의 ID) [사유]", configs.Config.Bot.Prefix),
 	},
-	Category:                   DeveloperOnly,
+	Category:                   commands.DeveloperOnly,
 	RegisterApplicationCommand: false,
 	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsDeveloper,
-	MessageRun: func(ctx *MsgContext) error {
+	Flags:                      commands.CommandFlagsIsDeveloper,
+	MessageRun: func(ctx *commands.MsgContext) error {
 		var reason string
 		if len(*ctx.Args) < 1 {
 			utils.NewMessageSender(ctx.Msg).
