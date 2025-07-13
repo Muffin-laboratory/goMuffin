@@ -43,10 +43,10 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Aliases: []string{"list", "목록", "지식목록"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
+		Usage: fmt.Sprintf("%s리스트 [단어]", configs.Config.Bot.Prefix),
 		Examples: []string{
 			fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 단어:안녕", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s리스트 안녕", configs.Config.Bot.Prefix),
 			fmt.Sprintf("%s리스트 개수:10", configs.Config.Bot.Prefix),
 		},
 	},
@@ -60,10 +60,12 @@ var LearnedDataListCommand *Command = &Command{
 		filter := bson.D{{Key: "user_id", Value: ctx.Msg.Author.ID}}
 		query := strings.Join(*ctx.Args, " ")
 
-		if match := utils.RegexpLearnQueryCommand.FindStringSubmatch(query); match != nil {
+		command := utils.RegexpLearnQueryLength.ReplaceAllString(query, "")
+		command = strings.Join(strings.Fields(command), " ")
+		if command != "" {
 			filter = append(filter, bson.E{
 				Key:   "command",
-				Value: match[1],
+				Value: command,
 			})
 		}
 

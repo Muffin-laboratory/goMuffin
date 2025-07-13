@@ -195,7 +195,7 @@ func ExportData(n *commando.Node) error {
 
 		if refined {
 			for i, text := range data {
-				if utils.RegexpEmoji.Match([]byte(text.Text)) {
+				if utils.RegexpDiscordEmoji.Match([]byte(text.Text)) {
 					data = append(data[:i], data[i+1:]...)
 					return
 				}

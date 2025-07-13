@@ -31,14 +31,14 @@ func MakeDeleteLearnedData(id string, number int, userId string) string {
 }
 
 func GetDeleteLearnedDataId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpDLDId.FindAllString(customId, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpDLDItemId.FindAllString(customId, 1)[0], "no=", "")
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpId.FindAllString(customId, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "no=", "")
 	itemId, _ = strconv.Atoi(stringItemId)
 	return
 }
 
 func GetDeleteLearnedDataUserId(customId string) string {
-	return strings.ReplaceAll(RegexpDLDUserId.FindAllString(customId, 1)[0], "user_id=", "")
+	return strings.ReplaceAll(RegexpUserId.FindAllString(customId, 1)[0], "user_id=", "")
 }
 
 func MakePaginationEmbedPrev(id string) string {
@@ -125,12 +125,12 @@ func MakeSelectChat(id string, number int, userId string) string {
 }
 
 func GetSelectChatId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpDLDId.FindAllString(customId, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpDLDItemId.FindAllString(customId, 1)[0], "no=", "")
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpId.FindAllString(customId, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "no=", "")
 	itemId, _ = strconv.Atoi(stringItemId)
 	return
 }
 
 func GetSelectChatUserId(customId string) string {
-	return strings.ReplaceAll(RegexpDLDUserId.FindAllString(customId, 1)[0], "user_id=", "")
+	return strings.ReplaceAll(RegexpUserId.FindAllString(customId, 1)[0], "user_id=", "")
 }
