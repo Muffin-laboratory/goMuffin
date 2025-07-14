@@ -37,12 +37,12 @@ func deregisterRun(m any, userId, botName string) error {
 						discordgo.Button{
 							CustomID: utils.MakeDeregisterAgree(userId),
 							Label:    "탈퇴",
-							Style:    discordgo.SuccessButton,
+							Style:    discordgo.DangerButton,
 						},
 						discordgo.Button{
 							CustomID: utils.MakeDeregisterDisagree(userId),
 							Label:    "취소",
-							Style:    discordgo.DangerButton,
+							Style:    discordgo.PrimaryButton,
 						},
 					},
 				},
