@@ -3,33 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"sync"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
-
-type chStruct struct {
-	name   dataType
-	length int
-}
-
-type dataType int
-
-const (
-	text dataType = iota
-	muffin
-	nsfw
-	learn
-	userLearn
-)
-
-var dataLengthWg sync.WaitGroup
 
 var DataLengthCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
@@ -57,63 +36,22 @@ var DataLengthCommand *Command = &Command{
 	},
 }
 
-func getLength(ch chan chStruct, dType dataType, coll *mongo.Collection, filter any) {
-	defer dataLengthWg.Done()
-	var err error
-	var cur *mongo.Cursor
-	var data []bson.M
-
-	cur, err = coll.Find(context.TODO(), filter)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	defer cur.Close(context.TODO())
-
-	cur.All(context.TODO(), &data)
-	ch <- chStruct{name: dType, length: len(data)}
-}
-
 func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
-	ch := make(chan chStruct)
-	var textLength,
-		muffinLength,
-		nsfwLength,
-		learnLength,
-		userLearnLength int
-
-	dataLengthWg.Add(5)
-	go getLength(ch, text, databases.Database.Texts, bson.D{{}})
-	go getLength(ch, muffin, databases.Database.Texts, databases.Text{Persona: "muffin"})
-	go getLength(ch, nsfw, databases.Database.Texts, bson.D{
-		{
-			Key: "persona",
-			Value: bson.M{
-				"$regex": "^user",
-			},
-		},
-	})
-	go getLength(ch, learn, databases.Database.Learns, bson.D{{}})
-	go getLength(ch, userLearn, databases.Database.Learns, databases.Learn{UserId: userId})
-
-	go func() {
-		dataLengthWg.Wait()
-		close(ch)
-	}()
-
-	for resp := range ch {
-		switch dataType(resp.name) {
-		case text:
-			textLength = resp.length
-		case muffin:
-			muffinLength = resp.length
-		case nsfw:
-			nsfwLength = resp.length
-		case learn:
-			learnLength = resp.length
-		case userLearn:
-			userLearnLength = resp.length
-		}
+	textLength, err := databases.Database.Texts.EstimatedDocumentCount(context.TODO())
+	if err != nil {
+		return err
+	}
+	muffinLength, err := databases.Database.Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
+	if err != nil {
+		return err
+	}
+	learnLength, err := databases.Database.Learns.EstimatedDocumentCount(context.TODO())
+	if err != nil {
+		return err
+	}
+	userLearnLength, err := databases.Database.Learns.CountDocuments(context.TODO(), databases.Learn{UserId: userId})
+	if err != nil {
+		return err
 	}
 
 	sum := textLength + learnLength
@@ -129,24 +67,21 @@ func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
 					},
 					Components: []discordgo.MessageComponent{
 						discordgo.TextDisplay{
-							Content: fmt.Sprintf("### 저장된 데이터량\n총합: %s", utils.InlineCode(strconv.Itoa(sum)+"개")),
+							Content: fmt.Sprintf("### 저장된 데이터량\n총합: `%d`개", sum),
 						},
 						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **총 채팅 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(textLength))+"개"),
+							Content: fmt.Sprintf("- **총 채팅 데이터량**\n> `%d`개", textLength),
 						},
 						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **머핀 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(muffinLength))+"개"),
+							Content: fmt.Sprintf("- **머핀 데이터량**\n> `%d`개", muffinLength),
 						},
 					},
 				},
 				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **nsfw 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(nsfwLength))+"개"),
+					Content: fmt.Sprintf("- **총 지식 데이터량**\n> `%d`개", learnLength),
 				},
 				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **총 지식 데이터량**\n> %s", utils.InlineCode(strconv.Itoa(learnLength))+"개"),
-				},
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **%s님이 가르쳐준 데이터량**\n> %s", username, utils.InlineCode(strconv.Itoa(userLearnLength))+"개"),
+					Content: fmt.Sprintf("- **%s님이 가르쳐준 데이터량**\n> `%d`개", username, userLearnLength),
 				},
 			},
 		}).
