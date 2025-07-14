@@ -61,7 +61,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetDeclineContainer(discordgo.TextDisplay{
+					utils.GetCanceledContainer(discordgo.TextDisplay{
 						Content: "탈퇴를 거부했어요.",
 					}),
 				},
