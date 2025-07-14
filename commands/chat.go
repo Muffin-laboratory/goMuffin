@@ -19,6 +19,7 @@ var (
 	chatCommandChatting chatCommandType = "하기"
 	chatCommandList     chatCommandType = "목록"
 	chatCommandCreate   chatCommandType = "생성"
+	chatCommandDelete   chatCommandType = "삭제"
 )
 
 var ChatCommand *Command = &Command{
@@ -58,6 +59,19 @@ var ChatCommand *Command = &Command{
 					},
 				},
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        string(chatCommandDelete),
+				Description: "채팅을 삭제해요.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionString,
+						Name:        "제목",
+						Description: "채팅의 제목",
+						Required:    true,
+					},
+				},
+			},
 		},
 	},
 	Aliases: []string{"채팅"},
@@ -79,13 +93,22 @@ var ChatCommand *Command = &Command{
 		var str string
 
 		if opt, ok := ctx.Inter.Options[string(chatCommandChatting)]; ok {
+			ctx.Inter.DeferReply(nil)
 			cType = chatCommandChatting
 			str = opt.Options[0].StringValue()
 		} else if opt, ok := ctx.Inter.Options[string(chatCommandCreate)]; ok {
+			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			})
 			cType = chatCommandCreate
 			str = opt.Options[0].StringValue()
 		} else if _, ok := ctx.Inter.Options[string(chatCommandList)]; ok {
+			ctx.Inter.DeferReply(nil)
 			cType = chatCommandList
+		} else if _, ok := ctx.Inter.Options[string(chatCommandDelete)]; ok {
+			ctx.Inter.DeferReply(nil)
+			cType = chatCommandDelete
+			str = opt.Options[0].StringValue()
 		}
 		return chatCommandRun(cType, ctx.Inter, ctx.Inter.User, str)
 	},
@@ -106,6 +129,15 @@ var ChatCommand *Command = &Command{
 			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, string([]rune(strings.Join((*ctx.Args)[1:], " "))[:25]))
 		case string(chatCommandList):
 			return chatCommandRun(chatCommandList, ctx.Msg, ctx.Msg.Author, "")
+		case string(chatCommandDelete):
+			if len((*ctx.Args)) < 2 {
+				return utils.NewMessageSender(ctx.Msg).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름을 적어야해요."})).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+			}
+			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, strings.Join((*ctx.Args)[1:], " "))
 		default:
 			goto RequiredValue
 		}
@@ -206,6 +238,56 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		return utils.PaginationEmbedBuilder(m).
 			AddContainers(containers...).
 			Start()
+	case chatCommandDelete:
+		var data []databases.Chat
+
+		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{Name: contentOrName})
+		if err != nil {
+			return err
+		}
+
+		err = cur.All(context.TODO(), &data)
+		if err != nil {
+			return err
+		}
+
+		if len(data) == 0 {
+			return utils.NewMessageSender(m).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당하는 채팅을 찾을 수 없어요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+		}
+
+		if len(data) > 1 {
+			//TODO: 이름이 같은 채팅이 여러개일때
+			return nil
+		}
+
+		return utils.NewMessageSender(m).
+			AddComponents(discordgo.Container{
+				Components: []discordgo.MessageComponent{
+					discordgo.TextDisplay{Content: fmt.Sprintf("### 채팅 %s 삭제", contentOrName)},
+					discordgo.TextDisplay{Content: "이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요."},
+					discordgo.ActionsRow{
+						Components: []discordgo.MessageComponent{
+							discordgo.Button{
+								Label:    "삭제",
+								Style:    discordgo.DangerButton,
+								CustomID: utils.MakeDeleteChat(data[0].Id.Hex(), 0, user.ID),
+							},
+							discordgo.Button{
+								Label:    "취소",
+								Style:    discordgo.PrimaryButton,
+								CustomID: utils.MakeDeleteChatCancel(user.ID),
+							},
+						},
+					},
+				},
+			}).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
 	}
 	return nil
 }

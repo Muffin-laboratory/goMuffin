@@ -43,6 +43,7 @@ func init() {
 	go commands.Discommand.LoadComponent(components.RegisterComponent)
 	go commands.Discommand.LoadComponent(components.DeregisterComponent)
 	go commands.Discommand.LoadComponent(components.SelectChatComponent)
+	go commands.Discommand.LoadComponent(components.DeleteChatComponent)
 
 	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
 }
