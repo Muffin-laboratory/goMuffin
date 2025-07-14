@@ -144,7 +144,7 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 			return err
 		}
 		return utils.NewMessageSender(m).
-			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%s를 생성했어요. 이제 현재 채팅은  %s에요.", contentOrName, contentOrName)})).
+			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%s를 생성했어요. 이제 현재 채팅은 %s에요.", contentOrName, contentOrName)})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
