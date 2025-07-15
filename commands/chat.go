@@ -126,7 +126,17 @@ var ChatCommand *Command = &Command{
 					SetReply(true).
 					Send()
 			}
-			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, string([]rune(strings.Join((*ctx.Args)[1:], " "))[:25]))
+
+			name := strings.Trim(strings.Join((*ctx.Args), " "), " ")
+			if len([]rune(name)) > 25 {
+				return utils.NewMessageSender(ctx.Msg).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름은 25자를 초과할 수 없어요."})).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+			}
+
+			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, name)
 		case string(chatCommandList):
 			return chatCommandRun(chatCommandList, ctx.Msg, ctx.Msg.Author, "")
 		case string(chatCommandDelete):
@@ -137,7 +147,7 @@ var ChatCommand *Command = &Command{
 					SetReply(true).
 					Send()
 			}
-			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, strings.Join((*ctx.Args)[1:], " "))
+			return chatCommandRun(chatCommandDelete, ctx.Msg, ctx.Msg.Author, strings.Join((*ctx.Args)[1:], " "))
 		default:
 			goto RequiredValue
 		}
@@ -260,15 +270,50 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		}
 
 		if len(data) > 1 {
-			//TODO: 이름이 같은 채팅이 여러개일때
-			return nil
+			var sections []discordgo.Section
+			var containers []*discordgo.Container
+
+			for i, data := range data {
+				sections = append(sections, discordgo.Section{
+					Accessory: discordgo.Button{
+						Label:    "삭제",
+						Style:    discordgo.DangerButton,
+						CustomID: utils.MakeDeleteChat(data.Id.Hex(), i+1, user.ID),
+					},
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("%d. %s\n", i+1, data.Name),
+						},
+					},
+				})
+			}
+
+			textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", user.GlobalName)}
+			container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+			for i, section := range sections {
+				container.Components = append(container.Components, section, discordgo.Separator{})
+
+				if (i+1)%10 == 0 {
+					containers = append(containers, container)
+					container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+					continue
+				}
+			}
+
+			if len(container.Components) > 1 {
+				containers = append(containers, container)
+			}
+
+			return utils.PaginationEmbedBuilder(m).
+				AddContainers(containers...).
+				Start()
 		}
 
 		return utils.NewMessageSender(m).
 			AddComponents(discordgo.Container{
 				Components: []discordgo.MessageComponent{
 					discordgo.TextDisplay{Content: fmt.Sprintf("### 채팅 %s 삭제", contentOrName)},
-					discordgo.TextDisplay{Content: "이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요."},
+					discordgo.TextDisplay{Content: "- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**"},
 					discordgo.ActionsRow{
 						Components: []discordgo.MessageComponent{
 							discordgo.Button{
