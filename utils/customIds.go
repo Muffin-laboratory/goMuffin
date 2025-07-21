@@ -146,7 +146,7 @@ func GetChatUserId(customId string) string {
 }
 
 func MakeDeleteChat(id string, number int, userId string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userId)
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteChat, id, number, userId)
 }
 
 func GetDeleteChatId(customId string) (id bson.ObjectID, itemId int) {
