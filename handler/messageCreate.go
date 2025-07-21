@@ -37,7 +37,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		args := argParser(content)
 		command := commands.Discommand.Aliases[args[0]]
 
-		if command == "" || command == "대화" {
+		if command == "" {
 			if !databases.Database.IsUser(m.Author.ID) {
 				utils.NewMessageSender(&utils.MessageCreate{
 					MessageCreate: m,
