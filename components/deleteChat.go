@@ -16,7 +16,7 @@ var DeleteChatComponent = &commands.Component{
 		i := ctx.Inter
 		customId := i.MessageComponentData().CustomID
 
-		if !strings.HasPrefix(customId, utils.DeleteChat) {
+		if !strings.HasPrefix(customId, utils.DeleteChat) && !strings.HasPrefix(customId, utils.DeleteChatCancel) {
 			return false
 		}
 
@@ -36,43 +36,46 @@ var DeleteChatComponent = &commands.Component{
 		i := ctx.Inter
 		customId := i.MessageComponentData().CustomID
 
-		switch {
-		case strings.HasPrefix(customId, utils.DeleteChatCancel):
+		if strings.HasPrefix(customId, utils.DeleteChatCancel) {
 			return i.Update(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
 					utils.GetCanceledContainer(discordgo.TextDisplay{Content: "아무 채팅방을 삭제하지 않았어요."}),
 				},
 			})
-		case strings.HasPrefix(customId, utils.DeleteChat):
-			id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-			_, err := databases.Database.Chats.DeleteOne(context.TODO(), databases.Chat{Id: id})
-			if err != nil {
-				return err
-			}
+		}
 
-			_, err = databases.Database.Memory.DeleteMany(context.TODO(), databases.Memory{ChatId: id})
-			if err != nil {
-				return err
-			}
+		err := i.DeferUpdate()
+		if err != nil {
+			return err
+		}
 
-			flags := discordgo.MessageFlagsIsComponentsV2
-			if itemId == 0 {
-				return i.EditReply(&utils.InteractionEdit{
-					Flags: &flags,
-					Components: &[]discordgo.MessageComponent{
-						utils.GetSuccessContainer(discordgo.TextDisplay{Content: "해당 채팅을 삭제했어요."}),
-					},
-				})
-			}
+		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
+		_, err = databases.Database.Chats.DeleteOne(context.TODO(), databases.Chat{Id: id})
+		if err != nil {
+			return err
+		}
 
+		_, err = databases.Database.Memory.DeleteMany(context.TODO(), databases.Memory{ChatId: id})
+		if err != nil {
+			return err
+		}
+
+		flags := discordgo.MessageFlagsIsComponentsV2
+		if itemId == 0 {
 			return i.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemId)}),
+					utils.GetSuccessContainer(discordgo.TextDisplay{Content: "해당 채팅을 삭제했어요."}),
 				},
 			})
 		}
-		return nil
+
+		return i.EditReply(&utils.InteractionEdit{
+			Flags: &flags,
+			Components: &[]discordgo.MessageComponent{
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemId)}),
+			},
+		})
 	},
 }
