@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log"
 
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -32,7 +31,6 @@ func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// 아 몰라 goto 쓸래
 ErrMsg:
-	log.Println(err)
 	owner, _ := s.User(configs.Config.Bot.OwnerId)
 	utils.NewMessageSender(&utils.InteractionCreate{
 		InteractionCreate: i,

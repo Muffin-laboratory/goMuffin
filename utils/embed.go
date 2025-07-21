@@ -38,6 +38,19 @@ func GetDeclineContainer(components ...discordgo.MessageComponent) *discordgo.Co
 	return c
 }
 
+func GetCanceledContainer(components ...discordgo.MessageComponent) *discordgo.Container {
+	c := &discordgo.Container{
+		Components: []discordgo.MessageComponent{
+			discordgo.TextDisplay{
+				Content: "### ❌ 취소",
+			},
+		},
+	}
+
+	c.Components = append(c.Components, components...)
+	return c
+}
+
 func GetSuccessContainer(components ...discordgo.MessageComponent) *discordgo.Container {
 	c := &discordgo.Container{
 		Components: []discordgo.MessageComponent{

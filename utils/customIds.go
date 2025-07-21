@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	DeleteLearnedData = "#muffin/deleteLearnedData@"
+	DeleteLearnedData = "#muffin/deleteLearnedData$"
 
 	PaginationEmbedPrev    = "#muffin-pages/prev$"
 	PaginationEmbedPages   = "#muffin-pages/pages$"
@@ -23,7 +23,9 @@ const (
 	DeregisterAgree    = "#muffin/deregister/agree@"
 	DeregisterDisagree = "#muffin/deregister/disagree@"
 
-	SelectChat = "#muffin/chat/select@"
+	SelectChat       = "#muffin/chat/select$"
+	DeleteChat       = "#muffin/chat/delete$"
+	DeleteChatCancel = "#muffin/chat/delete/cancel@"
 )
 
 func MakeDeleteLearnedData(id string, number int, userId string) string {
@@ -131,6 +133,29 @@ func GetSelectChatId(customId string) (id bson.ObjectID, itemId int) {
 	return
 }
 
-func GetSelectChatUserId(customId string) string {
-	return strings.ReplaceAll(RegexpUserId.FindAllString(customId, 1)[0], "user_id=", "")
+func GetChatUserId(customId string) string {
+	switch {
+	case strings.HasPrefix(customId, SelectChat),
+		strings.HasPrefix(customId, DeleteChat):
+		return strings.ReplaceAll(RegexpUserId.FindAllString(customId, 1)[0], "user_id=", "")
+	case strings.HasPrefix(customId, DeleteChatCancel):
+		return customId[len(DeleteChatCancel):]
+	default:
+		return ""
+	}
+}
+
+func MakeDeleteChat(id string, number int, userId string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteChat, id, number, userId)
+}
+
+func GetDeleteChatId(customId string) (id bson.ObjectID, itemId int) {
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpId.FindAllString(customId, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "no=", "")
+	itemId, _ = strconv.Atoi(stringItemId)
+	return
+}
+
+func MakeDeleteChatCancel(userId string) string {
+	return fmt.Sprintf("%s%s", DeleteChatCancel, userId)
 }

@@ -21,7 +21,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 			return false
 		}
 
-		userId := utils.GetSelectChatUserId(customId)
+		userId := utils.GetChatUserId(customId)
 		if i.User.ID != userId {
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
