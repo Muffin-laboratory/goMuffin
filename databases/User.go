@@ -2,9 +2,11 @@ package databases
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
 type User struct {
@@ -24,6 +26,14 @@ func (d *MuffinDatabase) IsUser(userId string) bool {
 
 func (d *MuffinDatabase) IsUserBlocked(userId string) (bool, string) {
 	var user User
-	d.Users.FindOne(context.TODO(), bson.D{{Key: "user_id", Value: userId}}).Decode(&user)
+	err := d.Users.FindOne(context.TODO(), bson.D{{Key: "user_id", Value: userId}}).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return false, ""
+		}
+
+		fmt.Println(err)
+		return true, "에러가 발생하여 차단한 유저를 구별 못해요. 계속 이러면 연락주세요."
+	}
 	return user.Blocked, user.BlockedReason
 }
