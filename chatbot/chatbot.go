@@ -16,7 +16,6 @@ import (
 )
 
 type Chatbot struct {
-	Mode         ChatbotMode
 	Gemini       *genai.Client
 	systemPrompt string
 	s            *discordgo.Session
@@ -34,7 +33,6 @@ func New(s *discordgo.Session) error {
 	}
 
 	ChatBot = &Chatbot{
-		Mode:   ChatbotAI,
 		Gemini: gemini,
 		s:      s,
 	}
@@ -46,32 +44,6 @@ func New(s *discordgo.Session) error {
 
 	ChatBot.systemPrompt = prompt
 	return nil
-}
-
-func (c *Chatbot) SetMode(mode ChatbotMode) *Chatbot {
-	c.Mode = mode
-	return c
-}
-
-func (c *Chatbot) SwitchMode() *Chatbot {
-	switch c.Mode {
-	case ChatbotAI:
-		c.SetMode(ChatbotMuffin)
-	case ChatbotMuffin:
-		c.SetMode(ChatbotAI)
-	}
-	return c
-}
-
-func (c *Chatbot) ModeString() string {
-	switch c.Mode {
-	case ChatbotAI:
-		return "AI모드"
-	case ChatbotMuffin:
-		return "머핀 모드"
-	default:
-		return "알 수 없음"
-	}
 }
 
 func (c *Chatbot) ReloadPrompt() error {
@@ -162,7 +134,6 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 
 	contents, err := GetMemory(dbUser.ChatId)
 	if err != nil {
-		ChatBot.Mode = ChatbotMuffin
 		return "AI에 문제가 생겼ㅇ어요.", err
 	}
 
@@ -171,7 +142,6 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 		SystemInstruction: genai.NewContentFromText(makePrompt(c.systemPrompt, user), genai.RoleUser),
 	})
 	if err != nil {
-		ChatBot.Mode = ChatbotMuffin
 		return "AI에 문제가 생겼ㅇ어요.", err
 	}
 
@@ -192,8 +162,13 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 }
 
 func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, error) {
-	switch c.Mode {
-	case ChatbotMuffin:
+	mode, err := databases.Database.GetUserChattingMode(user.ID)
+	if err != nil {
+		return "살려주ㅅ세요", err
+	}
+
+	switch mode {
+	case databases.ChattingMuffinMode:
 		return getMuffinResponse(c.s, question)
 	default:
 		return getAIResponse(c.s, c, user, question)

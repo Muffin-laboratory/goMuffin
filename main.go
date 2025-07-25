@@ -31,7 +31,7 @@ func init() {
 	go commands.Discommand.LoadCommand(commands.InformationCommand)
 	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
 	go commands.Discommand.LoadCommand(dev.ReloadPromptCommand)
-	go commands.Discommand.LoadCommand(dev.SwitchModeCommand)
+	go commands.Discommand.LoadCommand(commands.SwitchModeCommand)
 	go commands.Discommand.LoadCommand(commands.ChatCommand)
 	go commands.Discommand.LoadCommand(commands.RegisterCommand)
 	go commands.Discommand.LoadCommand(commands.DeregisterCommand)
