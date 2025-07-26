@@ -14,7 +14,7 @@ var InformationCommand *Command = &Command{
 		Description: "해당 봇의 정보를 알ㄹ려줘요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s정보", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s정보"),
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
@@ -29,7 +29,7 @@ var InformationCommand *Command = &Command{
 }
 
 func informationRun(s *discordgo.Session, m any) error {
-	owner, err := s.User(configs.Config.Bot.OwnerId)
+	owner, err := s.User(configs.GetConfig().Bot.OwnerId)
 	if err != nil {
 		return err
 	}

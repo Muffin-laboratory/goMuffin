@@ -34,17 +34,17 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		switch {
 		case strings.HasPrefix(customId, utils.DeregisterAgree):
 			filter := databases.User{UserId: ctx.Inter.User.ID}
-			_, err := databases.Database.Users.DeleteOne(context.TODO(), filter)
+			_, err := databases.GetDatabase().Users.DeleteOne(context.TODO(), filter)
 			if err != nil {
 				return err
 			}
 
-			_, err = databases.Database.Learns.DeleteMany(context.TODO(), filter)
+			_, err = databases.GetDatabase().Learns.DeleteMany(context.TODO(), filter)
 			if err != nil {
 				return err
 			}
 
-			_, err = databases.Database.Memory.DeleteMany(context.TODO(), filter)
+			_, err = databases.GetDatabase().Memory.DeleteMany(context.TODO(), filter)
 			if err != nil {
 				return err
 			}

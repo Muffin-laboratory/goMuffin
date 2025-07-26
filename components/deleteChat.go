@@ -51,12 +51,12 @@ var DeleteChatComponent = &commands.Component{
 		}
 
 		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-		_, err = databases.Database.Chats.DeleteOne(context.TODO(), databases.Chat{Id: id})
+		_, err = databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{Id: id})
 		if err != nil {
 			return err
 		}
 
-		_, err = databases.Database.Memory.DeleteMany(context.TODO(), databases.Memory{ChatId: id})
+		_, err = databases.GetDatabase().Memory.DeleteMany(context.TODO(), databases.Memory{ChatId: id})
 		if err != nil {
 			return err
 		}

@@ -1,8 +1,6 @@
 package dev
 
 import (
-	"fmt"
-
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -16,7 +14,7 @@ var ReloadPromptCommand *commands.Command = &commands.Command{
 		Description: "프롬프트를 다시 불러와요.",
 	},
 	DetailedDescription: &commands.DetailedDescription{
-		Usage: fmt.Sprintf("%s프롬프트재설정", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s프롬프트재설정"),
 	},
 	Category:                   commands.DeveloperOnly,
 	RegisterApplicationCommand: false,

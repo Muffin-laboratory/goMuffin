@@ -25,7 +25,7 @@ var ChatBot *Chatbot
 
 func New(s *discordgo.Session) error {
 	gemini, err := genai.NewClient(context.TODO(), &genai.ClientConfig{
-		APIKey:  configs.Config.Chatbot.Gemini.Token,
+		APIKey:  configs.GetConfig().Chatbot.Gemini.Token,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {
@@ -62,11 +62,11 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	var result string
 	x := rand.Intn(10)
 
-	muffinCur, err := databases.Database.Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+	muffinCur, err := databases.GetDatabase().Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
-	learnCur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+	learnCur, err := databases.GetDatabase().Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
@@ -102,7 +102,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 
 	x := rand.Intn(10)
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
@@ -116,12 +116,12 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 		return fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), nil
 	}
 
-	err = databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	err = databases.Database.Chats.FindOne(context.TODO(), databases.Chat{UserId: user.ID}).Err()
+	err = databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserId: user.ID}).Err()
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			_, err = databases.CreateChat(user.ID, "새로운 채팅")
@@ -140,7 +140,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	}
 
 	contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
-	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
+	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(makePrompt(c.systemPrompt, user), genai.RoleUser),
 	})
 	if err != nil {
@@ -164,7 +164,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 }
 
 func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, error) {
-	mode, err := databases.Database.GetUserChattingMode(user.ID)
+	mode, err := databases.GetDatabase().GetUserChattingMode(user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}

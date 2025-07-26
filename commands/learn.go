@@ -47,12 +47,12 @@ var LearnCommand *Command = &Command{
 	},
 	Aliases: []string{"공부"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s배워 (등록할 단어) (대답)", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s배워 (등록할 단어) (대답)"),
 		Examples: []string{
-			fmt.Sprintf("%s배워 안녕 안녕!", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s배워 \"야 죽을래?\" \"아니요 ㅠㅠㅠ\"", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s배워 미간은_누구야? 이봇의_개발자요", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\"", configs.Config.Bot.Prefix),
+			configs.AddPrefix("%s배워 안녕 안녕!"),
+			configs.AddPrefix("%s배워 \"야 죽을래?\" \"아니요 ㅠㅠㅠ\""),
+			configs.AddPrefix("%s배워 미간은_누구야? 이봇의_개발자요"),
+			configs.AddPrefix("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\""),
 		},
 	},
 	Category:                   Chatting,
@@ -109,7 +109,7 @@ var LearnCommand *Command = &Command{
 func learnRun(m any, userId, command, result string) error {
 	igCommands := []string{}
 
-	for _, command := range Discommand.Commands {
+	for _, command := range instance.Commands {
 		igCommands = append(igCommands, command.Name)
 		igCommands = append(igCommands, command.Aliases...)
 	}
@@ -120,7 +120,7 @@ func learnRun(m any, userId, command, result string) error {
 	disallows := []string{
 		"@everyone",
 		"@here",
-		fmt.Sprintf("<@%s>", configs.Config.Bot.OwnerId),
+		fmt.Sprintf("<@%s>", configs.GetConfig().Bot.OwnerId),
 	}
 
 	for _, ig := range ignores {
@@ -154,7 +154,7 @@ func learnRun(m any, userId, command, result string) error {
 		return nil
 	}
 
-	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.Learn{
+	_, err := databases.GetDatabase().Learns.InsertOne(context.TODO(), databases.Learn{
 		Command:   command,
 		Result:    result,
 		UserId:    userId,

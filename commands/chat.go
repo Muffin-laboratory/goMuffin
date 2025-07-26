@@ -76,10 +76,10 @@ var ChatCommand *Command = &Command{
 	},
 	Aliases: []string{"채팅"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s대화 (목록/생성) [채팅 이름]", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s대화 (목록/생성) [채팅 이름]"),
 		Examples: []string{
-			fmt.Sprintf("%s대화 목록", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s대화 생성 머핀 냠냠", configs.Config.Bot.Prefix),
+			configs.AddPrefix("%s대화 목록"),
+			configs.AddPrefix("%s대화 생성 머핀 냠냠"),
 		},
 	},
 	Category:                   Chatting,
@@ -196,7 +196,7 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		var sections []discordgo.Section
 		var containers []*discordgo.Container
 
-		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{UserId: user.ID})
+		cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{UserId: user.ID})
 		if err != nil {
 			return err
 		}
@@ -271,7 +271,7 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 	case chatCommandDelete:
 		var data []databases.Chat
 
-		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{Name: contentOrName})
+		cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{Name: contentOrName})
 		if err != nil {
 			return err
 		}

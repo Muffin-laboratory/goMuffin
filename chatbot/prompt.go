@@ -9,7 +9,7 @@ import (
 )
 
 func loadPrompt() (string, error) {
-	bin, err := os.ReadFile(configs.Config.Chatbot.Gemini.PromptPath)
+	bin, err := os.ReadFile(configs.GetConfig().Chatbot.Gemini.PromptPath)
 	if err != nil {
 		return "", err
 	}
@@ -18,7 +18,7 @@ func loadPrompt() (string, error) {
 }
 
 func makePrompt(systemPrompt string, user *discordgo.User) string {
-	if user.ID == configs.Config.Bot.OwnerId {
+	if user.ID == configs.GetConfig().Bot.OwnerId {
 		return fmt.Sprintf(systemPrompt, fmt.Sprintf(
 			"## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is your developer.",
 			user.ID,

@@ -25,8 +25,8 @@ var HelpCommand *Command = &Command{
 	},
 	Aliases: []string{"도움", "명령어", "help"},
 	DetailedDescription: &DetailedDescription{
-		Usage:    fmt.Sprintf("%s도움말 [명령어]", configs.Config.Bot.Prefix),
-		Examples: []string{fmt.Sprintf("%s도움말", configs.Config.Bot.Prefix), fmt.Sprintf("%s도움말 배워", configs.Config.Bot.Prefix)},
+		Usage:    configs.AddPrefix("%s도움말 [명령어]"),
+		Examples: []string{configs.AddPrefix("%s도움말"), configs.AddPrefix("%s도움말 배워")},
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
@@ -46,7 +46,7 @@ var HelpCommand *Command = &Command{
 	},
 }
 
-func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
+func getCommandsByCategory(d *Discommand, category Category) []string {
 	commands := []string{}
 	for _, command := range d.Commands {
 		if command.Category == category {
@@ -65,18 +65,18 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 		},
 	}
 
-	commandName = Discommand.Aliases[commandName]
+	commandName = instance.Aliases[commandName]
 
-	if commandName == "" || Discommand.Commands[commandName] == nil {
+	if commandName == "" || instance.Commands[commandName] == nil {
 		section.Components = append(section.Components,
 			discordgo.TextDisplay{
 				Content: fmt.Sprintf("### %s의 도움말", s.State.User.Username),
 			},
 			discordgo.TextDisplay{
-				Content: fmt.Sprintf("- **일반**\n%s", strings.Join(getCommandsByCategory(Discommand, General), "\n")),
+				Content: fmt.Sprintf("- **일반**\n%s", strings.Join(getCommandsByCategory(instance, General), "\n")),
 			},
 			discordgo.TextDisplay{
-				Content: fmt.Sprintf("- **채팅**\n%s", strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
+				Content: fmt.Sprintf("- **채팅**\n%s", strings.Join(getCommandsByCategory(instance, Chatting), "\n")),
 			},
 		)
 		return utils.NewMessageSender(m).
@@ -90,7 +90,7 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 
 	var aliases, examples discordgo.TextDisplay
 
-	command := Discommand.Commands[commandName]
+	command := instance.Commands[commandName]
 
 	section.Components = append(section.Components,
 		discordgo.TextDisplay{

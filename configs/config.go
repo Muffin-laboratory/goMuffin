@@ -56,12 +56,16 @@ type MuffinConfig struct {
 	Train trainConfig
 }
 
-var Config *MuffinConfig
+var instance *MuffinConfig
 
 func init() {
 	godotenv.Load()
-	Config = &MuffinConfig{}
-	setConfig(Config)
+	instance = &MuffinConfig{}
+	setConfig(instance)
+}
+
+func GetConfig() *MuffinConfig {
+	return instance
 }
 
 func getRequiredValue(key string) string {

@@ -42,7 +42,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemId := utils.GetSelectChatId(i.MessageComponentData().CustomID)
-		_, err = databases.Database.Users.UpdateOne(context.TODO(), databases.User{UserId: i.User.ID}, bson.D{{
+		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserId: i.User.ID}, bson.D{{
 			Key:   "$set",
 			Value: databases.User{ChatId: id},
 		}})

@@ -37,7 +37,7 @@ type Command struct {
 	ChatInputRun               chatInputRun
 }
 
-type DiscommandStruct struct {
+type Discommand struct {
 	Commands   map[string]*Command
 	Components []*Component
 	Aliases    map[string]string
@@ -93,10 +93,10 @@ var (
 	modalMutex     sync.Mutex
 )
 
-var Discommand *DiscommandStruct
+var instance *Discommand
 
 func init() {
-	Discommand = &DiscommandStruct{
+	instance = &Discommand{
 		Commands:   map[string]*Command{},
 		Aliases:    map[string]string{},
 		Components: []*Component{},
@@ -104,7 +104,11 @@ func init() {
 	}
 }
 
-func (d *DiscommandStruct) LoadCommand(c *Command) {
+func GetDiscommand() *Discommand {
+	return instance
+}
+
+func (d *Discommand) LoadCommand(c *Command) {
 	defer commandMutex.Unlock()
 	commandMutex.Lock()
 	d.Commands[c.Name] = c
@@ -115,26 +119,26 @@ func (d *DiscommandStruct) LoadCommand(c *Command) {
 	}
 }
 
-func (d *DiscommandStruct) LoadComponent(c *Component) {
+func (d *Discommand) LoadComponent(c *Component) {
 	defer componentMutex.Unlock()
 	componentMutex.Lock()
 	d.Components = append(d.Components, c)
 }
 
-func (d *DiscommandStruct) LoadModal(m *Modal) {
+func (d *Discommand) LoadModal(m *Modal) {
 	defer modalMutex.Unlock()
 	modalMutex.Lock()
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) error {
+func (d *Discommand) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) error {
 	m := &utils.MessageCreate{
 		MessageCreate: msg,
 		Session:       s,
 	}
 
 	if command, ok := d.Commands[name]; ok && command.RegisterMessageCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.Config.Bot.OwnerId {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.GetConfig().Bot.OwnerId {
 			utils.NewMessageSender(m).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
 				SetComponentsV2(true).
@@ -143,16 +147,16 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *di
 			return nil
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(m.Author.ID) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().IsUser(m.Author.ID) {
 			utils.NewMessageSender(m).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
 			return nil
 		}
 
-		blocked, reason := databases.Database.IsUserBlocked(m.Author.ID)
+		blocked, reason := databases.GetDatabase().IsUserBlocked(m.Author.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(m.Author.ID)
 			utils.NewMessageSender(m).
@@ -168,7 +172,7 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *di
 	return nil
 }
 
-func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	i := &utils.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
@@ -178,7 +182,7 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.Config.Bot.OwnerId {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.GetConfig().Bot.OwnerId {
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
 				SetComponentsV2(true).
@@ -188,9 +192,9 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 			return nil
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(i.User.ID) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().IsUser(i.User.ID) {
 			utils.NewMessageSender(i).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				SetReply(true).
@@ -198,7 +202,7 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 			return nil
 		}
 
-		blocked, reason := databases.Database.IsUserBlocked(i.User.ID)
+		blocked, reason := databases.GetDatabase().IsUserBlocked(i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
 			utils.NewMessageSender(i).
@@ -214,7 +218,7 @@ func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter
 	return nil
 }
 
-func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	var err error
 
 	i := &utils.InteractionCreate{
@@ -240,7 +244,7 @@ func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.I
 	return err
 }
 
-func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func (d *Discommand) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) error {
 	var err error
 
 	data := &ModalContext{

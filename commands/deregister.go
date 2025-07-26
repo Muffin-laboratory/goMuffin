@@ -14,7 +14,7 @@ var DeregisterCommand *Command = &Command{
 		Description: "이 봇에서 탈퇴해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s탈퇴", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s탈퇴"),
 	},
 	Category:                   General,
 	RegisterMessageCommand:     true,

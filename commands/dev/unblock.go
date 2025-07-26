@@ -18,7 +18,7 @@ var UnblockCommand *commands.Command = &commands.Command{
 		Description: "유저의 차단을 해제해요.",
 	},
 	DetailedDescription: &commands.DetailedDescription{
-		Usage: fmt.Sprintf("%s차단해제 (유저의 ID)", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s차단해제 (유저의 ID)"),
 	},
 	Category:                   commands.DeveloperOnly,
 	RegisterApplicationCommand: false,
@@ -40,7 +40,7 @@ var UnblockCommand *commands.Command = &commands.Command{
 			return err
 		}
 
-		_, err = databases.Database.Users.UpdateOne(context.TODO(),
+		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(),
 			databases.User{UserId: userId},
 			bson.D{{
 				Key:   "$set",

@@ -18,7 +18,7 @@ var DataLengthCommand *Command = &Command{
 	},
 	Aliases: []string{"학습데이터량", "데이터량", "학습량"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s학습데이터량", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s학습데이터량"),
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,
@@ -37,19 +37,19 @@ var DataLengthCommand *Command = &Command{
 }
 
 func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
-	textLength, err := databases.Database.Texts.EstimatedDocumentCount(context.TODO())
+	textLength, err := databases.GetDatabase().Texts.EstimatedDocumentCount(context.TODO())
 	if err != nil {
 		return err
 	}
-	muffinLength, err := databases.Database.Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
+	muffinLength, err := databases.GetDatabase().Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
 	if err != nil {
 		return err
 	}
-	learnLength, err := databases.Database.Learns.EstimatedDocumentCount(context.TODO())
+	learnLength, err := databases.GetDatabase().Learns.EstimatedDocumentCount(context.TODO())
 	if err != nil {
 		return err
 	}
-	userLearnLength, err := databases.Database.Learns.CountDocuments(context.TODO(), databases.Learn{UserId: userId})
+	userLearnLength, err := databases.GetDatabase().Learns.CountDocuments(context.TODO(), databases.Learn{UserId: userId})
 	if err != nil {
 		return err
 	}

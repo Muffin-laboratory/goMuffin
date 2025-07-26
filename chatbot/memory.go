@@ -9,7 +9,7 @@ import (
 )
 
 func SaveMemory(data *databases.Memory) error {
-	_, err := databases.Database.Memory.InsertOne(context.TODO(), *data)
+	_, err := databases.GetDatabase().Memory.InsertOne(context.TODO(), *data)
 	return err
 }
 
@@ -18,7 +18,7 @@ func GetMemory(chatId bson.ObjectID) ([]*genai.Content, error) {
 
 	memory := []*genai.Content{}
 
-	cur, err := databases.Database.Memory.Find(context.TODO(), databases.User{ChatId: chatId})
+	cur, err := databases.GetDatabase().Memory.Find(context.TODO(), databases.User{ChatId: chatId})
 	if err != nil {
 		return memory, err
 	}

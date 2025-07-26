@@ -37,7 +37,7 @@ func DeleteAllCommands(n *commando.Node) error {
 		return err
 	}
 
-	req.Header.Add("Authorization", "Bot "+configs.Config.Bot.Token)
+	req.Header.Add("Authorization", "Bot "+configs.GetConfig().Bot.Token)
 
 	resp, err := c.Do(req)
 	if err != nil {

@@ -27,7 +27,7 @@ func argParser(content string) (args []string) {
 
 // MessageCreate is handlers of messageCreate event
 func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	config := configs.Config
+	config := configs.GetConfig()
 	if m.Author.ID == s.State.User.ID || m.Author.Bot {
 		return
 	}
@@ -35,22 +35,22 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if strings.HasPrefix(m.Content, config.Bot.Prefix) {
 		content := strings.TrimPrefix(m.Content, config.Bot.Prefix)
 		args := argParser(content)
-		command := commands.Discommand.Aliases[args[0]]
+		command := commands.GetDiscommand().Aliases[args[0]]
 
 		if command == "" {
-			if !databases.Database.IsUser(m.Author.ID) {
+			if !databases.GetDatabase().IsUser(m.Author.ID) {
 				utils.NewMessageSender(&utils.MessageCreate{
 					MessageCreate: m,
 					Session:       s,
 				}).
-					AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+					AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
 				return
 			}
 
-			blocked, reason := databases.Database.IsUserBlocked(m.Author.ID)
+			blocked, reason := databases.GetDatabase().IsUserBlocked(m.Author.ID)
 			if blocked {
 				user, _ := s.User(m.Author.ID)
 				utils.NewMessageSender(m).
@@ -87,7 +87,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		err := commands.Discommand.MessageRun(command, s, m, args[1:])
+		err := commands.GetDiscommand().MessageRun(command, s, m, args[1:])
 		if err != nil {
 			log.Println(err)
 			utils.NewMessageSender(&utils.MessageCreate{
@@ -103,7 +103,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	} else {
 		if m.Author.ID == config.Chatbot.Train.UserId {
-			if _, err := databases.Database.Texts.InsertOne(context.TODO(), databases.Text{
+			if _, err := databases.GetDatabase().Texts.InsertOne(context.TODO(), databases.Text{
 				Text:      m.Content,
 				Persona:   "muffin",
 				CreatedAt: time.Now(),

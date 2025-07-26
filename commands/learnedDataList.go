@@ -43,11 +43,11 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Aliases: []string{"list", "목록", "지식목록"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s리스트 [단어]", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s리스트 [단어]"),
 		Examples: []string{
-			fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 안녕", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 개수:10", configs.Config.Bot.Prefix),
+			configs.AddPrefix("%s리스트"),
+			configs.AddPrefix("%s리스트 안녕"),
+			configs.AddPrefix("%s리스트 개수:10"),
 		},
 	},
 	Category:                   Chatting,
@@ -184,7 +184,7 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 	itemsMap := map[string]string{}
 	items := []string{}
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
+	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			utils.NewMessageSender(m).

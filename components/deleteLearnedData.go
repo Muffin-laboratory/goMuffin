@@ -41,7 +41,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-		_, err = databases.Database.Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
+		_, err = databases.GetDatabase().Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
 		if err != nil {
 			return err
 		}

@@ -25,8 +25,8 @@ var DeleteLearnedDataCommand *Command = &Command{
 	},
 	Aliases: []string{"잊어", "지워"},
 	DetailedDescription: &DetailedDescription{
-		Usage:    fmt.Sprintf("%s삭제 (삭제할 단어)", configs.Config.Bot.Prefix),
-		Examples: []string{fmt.Sprintf("%s삭제 머핀", configs.Config.Bot.Prefix)},
+		Usage:    configs.AddPrefix("%s삭제 (삭제할 단어)"),
+		Examples: []string{configs.AddPrefix("%s삭제 머핀")},
 	},
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
@@ -77,7 +77,7 @@ func deleteLearnedDataRun(m any, command, userId string) error {
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), databases.Learn{UserId: userId, Command: command})
+	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), databases.Learn{UserId: userId, Command: command})
 	if err != nil {
 		return err
 	}

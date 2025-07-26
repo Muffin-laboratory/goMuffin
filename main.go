@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -24,33 +23,33 @@ import (
 )
 
 func init() {
-	go commands.Discommand.LoadCommand(commands.HelpCommand)
-	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
-	go commands.Discommand.LoadCommand(commands.LearnCommand)
-	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
-	go commands.Discommand.LoadCommand(commands.InformationCommand)
-	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
-	go commands.Discommand.LoadCommand(dev.ReloadPromptCommand)
-	go commands.Discommand.LoadCommand(commands.SwitchModeCommand)
-	go commands.Discommand.LoadCommand(commands.ChatCommand)
-	go commands.Discommand.LoadCommand(commands.RegisterCommand)
-	go commands.Discommand.LoadCommand(commands.DeregisterCommand)
-	go commands.Discommand.LoadCommand(dev.BlockCommand)
-	go commands.Discommand.LoadCommand(dev.UnblockCommand)
+	go commands.GetDiscommand().LoadCommand(commands.HelpCommand)
+	go commands.GetDiscommand().LoadCommand(commands.DataLengthCommand)
+	go commands.GetDiscommand().LoadCommand(commands.LearnCommand)
+	go commands.GetDiscommand().LoadCommand(commands.LearnedDataListCommand)
+	go commands.GetDiscommand().LoadCommand(commands.InformationCommand)
+	go commands.GetDiscommand().LoadCommand(commands.DeleteLearnedDataCommand)
+	go commands.GetDiscommand().LoadCommand(dev.ReloadPromptCommand)
+	go commands.GetDiscommand().LoadCommand(commands.SwitchModeCommand)
+	go commands.GetDiscommand().LoadCommand(commands.ChatCommand)
+	go commands.GetDiscommand().LoadCommand(commands.RegisterCommand)
+	go commands.GetDiscommand().LoadCommand(commands.DeregisterCommand)
+	go commands.GetDiscommand().LoadCommand(dev.BlockCommand)
+	go commands.GetDiscommand().LoadCommand(dev.UnblockCommand)
 
-	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
-	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
-	go commands.Discommand.LoadComponent(components.RegisterComponent)
-	go commands.Discommand.LoadComponent(components.DeregisterComponent)
-	go commands.Discommand.LoadComponent(components.SelectChatComponent)
-	go commands.Discommand.LoadComponent(components.DeleteChatComponent)
+	go commands.GetDiscommand().LoadComponent(components.DeleteLearnedDataComponent)
+	go commands.GetDiscommand().LoadComponent(components.PaginationEmbedComponent)
+	go commands.GetDiscommand().LoadComponent(components.RegisterComponent)
+	go commands.GetDiscommand().LoadComponent(components.DeregisterComponent)
+	go commands.GetDiscommand().LoadComponent(components.SelectChatComponent)
+	go commands.GetDiscommand().LoadComponent(components.DeleteChatComponent)
 
-	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
+	go commands.GetDiscommand().LoadModal(modals.PaginationEmbedModal)
 }
 
 func main() {
 	command := commando.NewCommando(os.Args[1:])
-	config := configs.Config
+	config := configs.GetConfig()
 
 	if len(os.Args) > 1 {
 		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
@@ -63,24 +62,6 @@ func main() {
 				Name:  "isYes",
 				Short: []string{"y"},
 				Type:  types.BOOLEAN,
-			},
-		)
-
-		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
-			types.OptionData{
-				Name: "type",
-				Desc: "파일형식을 지정합니다. (json, jsonl, finetune)",
-				Type: types.STRING,
-			},
-			types.OptionData{
-				Name: "export-path",
-				Desc: "데이터를 저장할 위치를 지정합니다.",
-				Type: types.STRING,
-			},
-			types.OptionData{
-				Name: "refined",
-				Desc: "머핀 데이터를 있는 그대로 추출할 지, 가려내서 추출할 지를 지정합니다.",
-				Type: types.BOOLEAN,
 			},
 		)
 
@@ -115,11 +96,11 @@ func main() {
 		}
 	}()
 
-	for _, cmd := range commands.Discommand.Commands {
+	for _, cmd := range commands.GetDiscommand().Commands {
 		if cmd.Name == commands.HelpCommand.Name {
 			// 극한의 성능 똥망 코드 탄생!
 			// 무려 똑같은 걸 반복해서 돌리는!
-			for _, a := range commands.Discommand.Commands {
+			for _, a := range commands.GetDiscommand().Commands {
 				cmd.Options[0].Choices = append(cmd.Options[0].Choices, &discordgo.ApplicationCommandOptionChoice{
 					Name:  a.Name,
 					Value: a.Name,
@@ -134,7 +115,7 @@ func main() {
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
 	}
 
-	defer databases.Database.Client.Disconnect(context.TODO())
+	defer databases.Disconnect()
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)

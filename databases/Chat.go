@@ -16,12 +16,12 @@ type Chat struct {
 }
 
 func CreateChat(userId, name string) (*mongo.InsertOneResult, error) {
-	createdChat, err := Database.Chats.InsertOne(context.TODO(), Chat{UserId: userId, Name: name, CreatedAt: time.Now()})
+	createdChat, err := GetDatabase().Chats.InsertOne(context.TODO(), Chat{UserId: userId, Name: name, CreatedAt: time.Now()})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = Database.Users.UpdateOne(context.TODO(), User{UserId: userId}, bson.D{{
+	_, err = GetDatabase().Users.UpdateOne(context.TODO(), User{UserId: userId}, bson.D{{
 		Key:   "$set",
 		Value: User{ChatId: createdChat.InsertedID.(bson.ObjectID)},
 	}})

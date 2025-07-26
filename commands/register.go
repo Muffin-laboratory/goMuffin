@@ -15,7 +15,7 @@ var RegisterCommand *Command = &Command{
 		Description: "이 봇에 가입해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s가입", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s가입"),
 	},
 	Category:                   General,
 	RegisterMessageCommand:     true,
@@ -30,9 +30,9 @@ var RegisterCommand *Command = &Command{
 }
 
 func registerRun(m any, userId, botName string) error {
-	if databases.Database.IsUser(userId) {
+	if databases.GetDatabase().IsUser(userId) {
 		utils.NewMessageSender(m).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 %s탈퇴를 이용해주세요.", configs.Config.Bot.Prefix)})).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 %s탈퇴를 이용해주세요.", configs.GetConfig().Bot.Prefix)})).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
@@ -45,8 +45,8 @@ func registerRun(m any, userId, botName string) error {
 				discordgo.TextDisplay{
 					Content: fmt.Sprintf("### %s 가입\n해당 서비스에 가입하실려면 [개인정보처리방침](%s)과 [서비스 이용약관](%s)에 동의해야해요.",
 						botName,
-						configs.Config.Service.PrivacyPolicyURL,
-						configs.Config.Service.TermOfServiceURL,
+						configs.GetConfig().Service.PrivacyPolicyURL,
+						configs.GetConfig().Service.TermOfServiceURL,
 					),
 				},
 				discordgo.ActionsRow{

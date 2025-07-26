@@ -19,7 +19,7 @@ var BlockCommand *commands.Command = &commands.Command{
 		Description: "유저를 차단해요.",
 	},
 	DetailedDescription: &commands.DetailedDescription{
-		Usage: fmt.Sprintf("%s차단 (유저의 ID) [사유]", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s차단 (유저의 ID) [사유]"),
 	},
 	Category:                   commands.DeveloperOnly,
 	RegisterApplicationCommand: false,
@@ -48,7 +48,7 @@ var BlockCommand *commands.Command = &commands.Command{
 			return err
 		}
 
-		_, err = databases.Database.Users.UpdateOne(context.TODO(),
+		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(),
 			databases.User{UserId: userId},
 			bson.D{{
 				Key:   "$set",

@@ -1,6 +1,12 @@
 package databases
 
-import "go.mongodb.org/mongo-driver/v2/bson"
+import (
+	"context"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
+)
 
 type Memory struct {
 	Id      bson.ObjectID `bson:"_id,omitempty"`
@@ -8,4 +14,12 @@ type Memory struct {
 	Content string        `bson:"content,omitempty"`
 	Answer  string        `bson:"answer,omitempty"`
 	ChatId  bson.ObjectID `bson:"chat_id,omitempty"`
+}
+
+type MemoryCollection struct {
+	Collection *mongo.Collection
+}
+
+func (c *MemoryCollection) Find(ctx context.Context, filter any, opts ...options.Lister[options.FindOptions]) (*mongo.Cursor, error) {
+	return c.Collection.Find(ctx, filter, opts...)
 }

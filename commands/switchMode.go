@@ -17,7 +17,7 @@ var SwitchModeCommand *Command = &Command{
 		Description: "봇의 대답 방법을 전환해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s모드전환", configs.Config.Bot.Prefix),
+		Usage: configs.AddPrefix("%s모드전환"),
 	},
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,
@@ -36,7 +36,7 @@ var SwitchModeCommand *Command = &Command{
 
 func switchModeRun(m any, user *discordgo.User) error {
 	var newMode databases.ChattingMode
-	mode, err := databases.Database.GetUserChattingMode(user.ID)
+	mode, err := databases.GetDatabase().GetUserChattingMode(user.ID)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func switchModeRun(m any, user *discordgo.User) error {
 	case databases.ChattingMuffinMode:
 		newMode = databases.ChattingMuffinMode
 	}
-	_, err = databases.Database.Users.UpdateOne(context.TODO(), databases.User{UserId: user.ID}, bson.D{{
+	_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserId: user.ID}, bson.D{{
 		Key: "$set",
 		Value: databases.User{
 			ChattingMode: newMode,
