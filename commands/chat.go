@@ -191,6 +191,7 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 			SetReply(true).
 			Send()
 	case chatCommandList:
+		var dbUser databases.User
 		var data []databases.Chat
 		var sections []discordgo.Section
 		var containers []*discordgo.Container
@@ -205,6 +206,11 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 			return err
 		}
 
+		err = databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+		if err != nil {
+			return err
+		}
+
 		if len(data) == 0 {
 			return utils.NewMessageSender(m).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅이 단 하나도 없어요. 새로운 채팅을 만들거나, 대화를 시작해 채팅을 만들어주세요."})).
@@ -215,17 +221,31 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		}
 
 		for i, data := range data {
+			var isDisabled bool
+			var textDisplay discordgo.TextDisplay
+
+			if data.Id == dbUser.ChatId {
+				textDisplay = discordgo.TextDisplay{
+					Content: fmt.Sprintf("**%d. %s\n (선택됨)**", i+1, data.Name),
+				}
+
+				isDisabled = true
+			} else {
+				textDisplay = discordgo.TextDisplay{
+					Content: fmt.Sprintf("%d. %s\n", i+1, data.Name),
+				}
+
+				isDisabled = false
+			}
+
 			sections = append(sections, discordgo.Section{
 				Accessory: discordgo.Button{
 					Label:    "선택",
 					Style:    discordgo.SuccessButton,
 					CustomID: utils.MakeSelectChat(data.Id.Hex(), i+1, user.ID),
+					Disabled: isDisabled,
 				},
-				Components: []discordgo.MessageComponent{
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("%d. %s\n", i+1, data.Name),
-					},
-				},
+				Components: []discordgo.MessageComponent{textDisplay},
 			})
 		}
 
