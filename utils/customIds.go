@@ -123,7 +123,7 @@ func GetDeregisterUserId(customId string) string {
 }
 
 func MakeSelectChat(id string, number int, userId string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userId)
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", SelectChat, id, number, userId)
 }
 
 func GetSelectChatId(customId string) (id bson.ObjectID, itemId int) {
