@@ -125,11 +125,13 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			_, err = databases.CreateChat(user.ID, "새로운 채팅")
+			fmt.Println(err)
 			if err != nil {
 				return "살려주ㅅ세요", err
 			}
+		} else {
+			return "살려주ㅅ세요", err
 		}
-		return "살려주ㅅ세요", err
 	}
 
 	contents, err := GetMemory(dbUser.ChatId)
