@@ -10,42 +10,14 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/commands/dev"
-	"git.wh64.net/muffin/goMuffin/components"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
-	"git.wh64.net/muffin/goMuffin/modals"
 	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
 	"github.com/devproje/commando"
 	"github.com/devproje/commando/types"
 )
-
-func init() {
-	go commands.GetDiscommand().LoadCommand(commands.HelpCommand)
-	go commands.GetDiscommand().LoadCommand(commands.DataLengthCommand)
-	go commands.GetDiscommand().LoadCommand(commands.LearnCommand)
-	go commands.GetDiscommand().LoadCommand(commands.LearnedDataListCommand)
-	go commands.GetDiscommand().LoadCommand(commands.InformationCommand)
-	go commands.GetDiscommand().LoadCommand(commands.DeleteLearnedDataCommand)
-	go commands.GetDiscommand().LoadCommand(dev.ReloadPromptCommand)
-	go commands.GetDiscommand().LoadCommand(commands.SwitchModeCommand)
-	go commands.GetDiscommand().LoadCommand(commands.ChatCommand)
-	go commands.GetDiscommand().LoadCommand(commands.RegisterCommand)
-	go commands.GetDiscommand().LoadCommand(commands.DeregisterCommand)
-	go commands.GetDiscommand().LoadCommand(dev.BlockCommand)
-	go commands.GetDiscommand().LoadCommand(dev.UnblockCommand)
-
-	go commands.GetDiscommand().LoadComponent(components.DeleteLearnedDataComponent)
-	go commands.GetDiscommand().LoadComponent(components.PaginationEmbedComponent)
-	go commands.GetDiscommand().LoadComponent(components.RegisterComponent)
-	go commands.GetDiscommand().LoadComponent(components.DeregisterComponent)
-	go commands.GetDiscommand().LoadComponent(components.SelectChatComponent)
-	go commands.GetDiscommand().LoadComponent(components.DeleteChatComponent)
-
-	go commands.GetDiscommand().LoadModal(modals.PaginationEmbedModal)
-}
 
 func main() {
 	command := commando.NewCommando(os.Args[1:])
