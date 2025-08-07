@@ -254,7 +254,7 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		for i, section := range sections {
 			container.Components = append(container.Components, section, discordgo.Separator{})
 
-			if (i+1)%10 == 0 {
+			if (i+1)%5 == 0 {
 				containers = append(containers, container)
 				container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
 				continue
