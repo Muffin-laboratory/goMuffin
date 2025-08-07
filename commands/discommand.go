@@ -3,19 +3,22 @@ package commands
 import (
 	"sync"
 
+	"git.wh64.net/muffin/goMuffin/configs"
+	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-type modalRun func(ctx *ModalContext)
-type messageRun func(ctx *MsgContext)
-type chatInputRun func(ctx *ChatInputContext)
-type componentRun func(ctx *ComponentContext)
+type modalRun func(ctx *ModalContext) error
+type messageRun func(ctx *MsgContext) error
+type chatInputRun func(ctx *ChatInputContext) error
+type componentRun func(ctx *ComponentContext) error
 
 type modalParse func(ctx *ModalContext) bool
 type componentParse func(ctx *ComponentContext) bool
 
 type Category string
+type CommandFlags uint8
 
 type DetailedDescription struct {
 	Usage    string
@@ -24,11 +27,14 @@ type DetailedDescription struct {
 
 type Command struct {
 	*discordgo.ApplicationCommand
-	Aliases             []string
-	DetailedDescription *DetailedDescription
-	Category            Category
-	MessageRun          messageRun
-	ChatInputRun        chatInputRun
+	Aliases                    []string
+	DetailedDescription        *DetailedDescription
+	Category                   Category
+	RegisterApplicationCommand bool
+	RegisterMessageCommand     bool
+	Flags                      CommandFlags
+	MessageRun                 messageRun
+	ChatInputRun               chatInputRun
 }
 
 type DiscommandStruct struct {
@@ -39,20 +45,17 @@ type DiscommandStruct struct {
 }
 
 type MsgContext struct {
-	Session *discordgo.Session
-	Msg     *discordgo.MessageCreate
+	Msg     *utils.MessageCreate
 	Args    *[]string
 	Command *Command
 }
 
 type ChatInputContext struct {
-	Session *discordgo.Session
 	Inter   *utils.InteractionCreate
 	Command *Command
 }
 
 type ComponentContext struct {
-	Session   *discordgo.Session
 	Inter     *utils.InteractionCreate
 	Component *Component
 }
@@ -73,8 +76,15 @@ type Modal struct {
 }
 
 const (
-	Chatting Category = "채팅"
-	General  Category = "일반"
+	Chatting      Category = "채팅"
+	General       Category = "일반"
+	DeveloperOnly Category = "개발자 전용"
+)
+
+const (
+	CommandFlagsIsDeveloper CommandFlags = 1 << iota
+	CommandFlagsIsRegistered
+	CommandFlagsIsBlocked
 )
 
 var (
@@ -83,14 +93,15 @@ var (
 	modalMutex     sync.Mutex
 )
 
-func new() *DiscommandStruct {
-	discommand := DiscommandStruct{
+var Discommand *DiscommandStruct
+
+func init() {
+	Discommand = &DiscommandStruct{
 		Commands:   map[string]*Command{},
 		Aliases:    map[string]string{},
 		Components: []*Component{},
 		Modals:     []*Modal{},
 	}
-	return &discommand
 }
 
 func (d *DiscommandStruct) LoadCommand(c *Command) {
@@ -116,29 +127,104 @@ func (d *DiscommandStruct) LoadModal(m *Modal) {
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, m *discordgo.MessageCreate, args []string) {
-	if command, ok := d.Commands[name]; ok {
-		command.MessageRun(&MsgContext{s, m, &args, command})
+func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) error {
+	m := &utils.MessageCreate{
+		MessageCreate: msg,
+		Session:       s,
 	}
+
+	if command, ok := d.Commands[name]; ok && command.RegisterMessageCommand {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.Config.Bot.OwnerId {
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(m.Author.ID) {
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		blocked, reason := databases.Database.IsUserBlocked(m.Author.ID)
+		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
+			user, _ := s.User(m.Author.ID)
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		return command.MessageRun(&MsgContext{m, &args, command})
+	}
+	return nil
 }
 
-func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, i *discordgo.InteractionCreate) {
-	if command, ok := d.Commands[name]; ok {
-		command.ChatInputRun(&ChatInputContext{s, &utils.InteractionCreate{
-			InteractionCreate: i,
-			Session:           s,
-			Options:           utils.GetInteractionOptions(i),
-		}, command})
+func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	i := &utils.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
+		Options:           utils.GetInteractionOptions(inter),
 	}
+
+	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+
+	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.Config.Bot.OwnerId {
+			utils.NewMessageSender(i).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
+				SetComponentsV2(true).
+				SetEphemeral(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(i.User.ID) {
+			utils.NewMessageSender(i).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
+				SetComponentsV2(true).
+				SetEphemeral(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		blocked, reason := databases.Database.IsUserBlocked(i.User.ID)
+		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
+			user, _ := s.User(i.User.ID)
+			utils.NewMessageSender(i).
+				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+
+		return command.ChatInputRun(&ChatInputContext{i, command})
+	}
+	return nil
 }
 
-func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	var err error
+
+	i := &utils.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
+	}
+
+	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 	data := &ComponentContext{
-		Session: s,
-		Inter: &utils.InteractionCreate{
-			InteractionCreate: i,
-			Session:           s,
-		},
+		Inter: i,
 	}
 
 	for _, c := range d.Components {
@@ -148,12 +234,15 @@ func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, i *discordgo.Inter
 			continue
 		}
 
-		c.Run(data)
+		err = c.Run(data)
 		break
 	}
+	return err
 }
 
-func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) {
+func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+	var err error
+
 	data := &ModalContext{
 		Inter: &utils.InteractionCreate{
 			InteractionCreate: i,
@@ -168,9 +257,8 @@ func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.Interacti
 			continue
 		}
 
-		m.Run(data)
+		err = m.Run(data)
 		break
 	}
+	return err
 }
-
-var Discommand *DiscommandStruct = new()

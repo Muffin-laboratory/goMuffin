@@ -12,6 +12,9 @@ type MuffinDatabase struct {
 	Client *mongo.Client
 	Learns *mongo.Collection
 	Texts  *mongo.Collection
+	Memory *mongo.Collection
+	Users  *mongo.Collection
+	Chats  *mongo.Collection
 }
 
 var Database *MuffinDatabase
@@ -26,13 +29,16 @@ func init() {
 }
 
 func Connect() (*MuffinDatabase, error) {
-	client, err := mongo.Connect(options.Client().ApplyURI(configs.Config.DatabaseURL))
+	client, err := mongo.Connect(options.Client().ApplyURI(configs.Config.Database.URL))
 	if err != nil {
 		return nil, err
 	}
 	return &MuffinDatabase{
 		Client: client,
-		Learns: client.Database(configs.Config.DatabaseName).Collection("learn"),
-		Texts:  client.Database(configs.Config.DatabaseName).Collection("text"),
+		Learns: client.Database(configs.Config.Database.Name).Collection("learn"),
+		Texts:  client.Database(configs.Config.Database.Name).Collection("text"),
+		Memory: client.Database(configs.Config.Database.Name).Collection("memory"),
+		Users:  client.Database(configs.Config.Database.Name).Collection("user"),
+		Chats:  client.Database(configs.Config.Database.Name).Collection("chat"),
 	}, nil
 }

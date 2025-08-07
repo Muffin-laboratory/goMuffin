@@ -9,19 +9,20 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var DeleteLearnedDataComponent *commands.Component = &commands.Component{
+var SelectChatComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		i := ctx.Inter
 		customId := i.MessageComponentData().CustomID
 
-		if !strings.HasPrefix(customId, utils.DeleteLearnedData) {
+		if !strings.HasPrefix(customId, utils.SelectChat) {
 			return false
 		}
 
-		userId := utils.GetDeleteLearnedDataUserId(customId)
-		if i.Member.User.ID != userId {
+		userId := utils.GetChatUserId(customId)
+		if i.User.ID != userId {
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
@@ -40,8 +41,11 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-		_, err = databases.Database.Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
+		id, itemId := utils.GetSelectChatId(i.MessageComponentData().CustomID)
+		_, err = databases.Database.Users.UpdateOne(context.TODO(), databases.User{UserId: i.User.ID}, bson.D{{
+			Key:   "$set",
+			Value: databases.User{ChatId: id},
+		}})
 		if err != nil {
 			return err
 		}
@@ -50,7 +54,7 @@ var DeleteLearnedDataComponent *commands.Component = &commands.Component{
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemId)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번으로 채팅을 변경했어요.", itemId)}),
 			},
 		})
 	},

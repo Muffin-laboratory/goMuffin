@@ -28,19 +28,13 @@ var LearnedDataListCommand *Command = &Command{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "단어",
-				Description: "해당 단어가 포함된 결과만 찾아요.",
-				Required:    false,
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "대답",
-				Description: "해당 대답이 포함된 결과만 찾아요.",
+				Description: "해당 단어에 대한 결과를 찾아요.",
 				Required:    false,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "개수",
-				Description: "한 페이지당 보여줄 지식의 데이터 양을 정해요.",
+				Description: "한 페이지당 보여줄 지식 데이터 양을 정해요.",
 				MinValue:    &LIST_MIN_VALUE,
 				MaxValue:    LIST_MAX_VALUE,
 				Required:    false,
@@ -49,54 +43,96 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Aliases: []string{"list", "목록", "지식목록"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
+		Usage: fmt.Sprintf("%s리스트 [단어]", configs.Config.Bot.Prefix),
 		Examples: []string{
-			fmt.Sprintf("%s리스트 ㅁㄴㅇㄹ", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 단어:안녕", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 대답:머핀", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s리스트 안녕", configs.Config.Bot.Prefix),
+			fmt.Sprintf("%s리스트 개수:10", configs.Config.Bot.Prefix),
 		},
 	},
-	Category: Chatting,
-	MessageRun: func(ctx *MsgContext) {
-		learnedDataListRun(ctx.Session, ctx.Msg, ctx.Args)
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	MessageRun: func(ctx *MsgContext) error {
+		var length int
+
+		filter := bson.D{{Key: "user_id", Value: ctx.Msg.Author.ID}}
+		query := strings.Join(*ctx.Args, " ")
+
+		command := utils.RegexpLearnQueryLength.ReplaceAllString(query, "")
+		command = strings.Join(strings.Fields(command), " ")
+		if command != "" {
+			filter = append(filter, bson.E{
+				Key:   "command",
+				Value: command,
+			})
+		}
+
+		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
+			length, _ = strconv.Atoi(match[1])
+
+			if float64(length) < LIST_MIN_VALUE {
+				utils.NewMessageSender(ctx.Msg).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE))})).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+				return nil
+			}
+
+			if float64(length) > LIST_MAX_VALUE {
+				utils.NewMessageSender(ctx.Msg).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE))})).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+				return nil
+			}
+		}
+		return learnedDataListRun(ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		learnedDataListRun(ctx.Session, ctx.Inter, nil)
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		if err != nil {
+			return err
+		}
+
+		var length int
+
+		filter := bson.D{{Key: "user_id", Value: ctx.Inter.Member.User.ID}}
+
+		if opt, ok := ctx.Inter.Options["단어"]; ok {
+			filter = append(filter, bson.E{
+				Key:   "command",
+				Value: opt.StringValue(),
+			})
+		}
+
+		if opt, ok := ctx.Inter.Options["개수"]; ok {
+			length = int(opt.IntValue())
+		}
+		return learnedDataListRun(ctx.Inter, ctx.Inter.Member.User.GlobalName, ctx.Inter.Member.User.AvatarURL("512"), filter, length)
 	},
 }
 
-func getDescriptions(data *[]databases.Learn, length int) (descriptions []string) {
+func getDescriptions(items []string, length int) (descriptions []string) {
 	var builder strings.Builder
-	MAX_LENGTH := 100
 
 	if length == 0 {
 		length = 25
 	}
 
-	tempDesc := []string{}
-
-	for _, data := range *data {
-		command := data.Command
-		result := data.Result
-
-		if runeCommand := []rune(command); len(runeCommand) >= MAX_LENGTH {
-			command = string(runeCommand)[:MAX_LENGTH] + "..."
-		}
-
-		if runeResult := []rune(result); len(runeResult) >= MAX_LENGTH {
-			result = string(runeResult[:MAX_LENGTH]) + "..."
-		}
-
-		tempDesc = append(tempDesc, fmt.Sprintf("- %s: %s\n", command, result))
-	}
-
-	for i, s := range tempDesc {
-		builder.WriteString(s)
+	for i, item := range items {
+		builder.WriteString(fmt.Sprintf("%s\n", item))
 
 		if (i+1)%length == 0 {
 			descriptions = append(descriptions, builder.String())
 			builder.Reset()
 		}
+		i += 1
 	}
 
 	if builder.Len() > 0 {
@@ -105,148 +141,109 @@ func getDescriptions(data *[]databases.Learn, length int) (descriptions []string
 	return
 }
 
-func learnedDataListRun(s *discordgo.Session, m any, args *[]string) {
-	var globalName, avatarUrl string
-	var data []databases.Learn
-	var filter bson.D
-	var length int
+func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, items []string, length int) []*discordgo.Container {
+	var containers []*discordgo.Container
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		filter = bson.D{{Key: "user_id", Value: m.Author.ID}}
-		globalName = m.Author.GlobalName
-		avatarUrl = m.Author.AvatarURL("512")
+	descriptions := getDescriptions(items, length)
 
-		query := strings.Join(*args, " ")
-
-		if match := utils.RegexpLearnQueryCommand.FindStringSubmatch(query); match != nil {
-			filter = append(filter, bson.E{
-				Key: "command",
-				Value: bson.M{
-					"$regex": match[1],
+	if len(descriptions) <= 0 {
+		containers = append(containers, &discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.Section{
+					Accessory: accessory,
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: utils.MakeDesc(defaultDesc, "없음"),
+						},
+					},
 				},
-			})
-		}
-
-		if match := utils.RegexpLearnQueryResult.FindStringSubmatch(query); match != nil {
-			filter = append(filter, bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": match[1],
-				},
-			})
-		}
-
-		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
-			var err error
-			length, err = strconv.Atoi(match[1])
-
-			if err != nil {
-				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: "개수의 값은 숫자여야해요.",
-					Color:       utils.EmbedFail,
-				}, m.Reference())
-				return
-			}
-
-			if float64(length) < LIST_MIN_VALUE {
-				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE)),
-					Color:       utils.EmbedFail,
-				}, m.Reference())
-				return
-			}
-
-			if float64(length) > LIST_MAX_VALUE {
-				s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-					Title:       "❌ 오류",
-					Description: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE)),
-					Color:       utils.EmbedFail,
-				}, m.Reference())
-				return
-			}
-		}
-	case *utils.InteractionCreate:
-		m.DeferReply(true)
-
-		filter = bson.D{{Key: "user_id", Value: m.Member.User.ID}}
-		globalName = m.Member.User.GlobalName
-		avatarUrl = m.Member.User.AvatarURL("512")
-
-		if opt, ok := m.Options["단어"]; ok {
-			filter = append(filter, bson.E{
-				Key: "command",
-				Value: bson.M{
-					"$regex": opt.StringValue(),
-				},
-			})
-		}
-
-		if opt, ok := m.Options["대답"]; ok {
-			filter = append(filter, bson.E{
-				Key: "result",
-				Value: bson.M{
-					"$regex": opt.StringValue(),
-				},
-			})
-		}
-
-		if opt, ok := m.Options["개수"]; ok {
-			length = int(opt.IntValue())
-		}
+			},
+		})
 	}
+
+	for _, desc := range descriptions {
+		containers = append(containers, &discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.Section{
+					Accessory: accessory,
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: utils.MakeDesc(defaultDesc, desc),
+						},
+					},
+				},
+			},
+		})
+	}
+	return containers
+}
+
+func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) error {
+	var data []databases.Learn
+
+	itemsMap := map[string]string{}
+	items := []string{}
 
 	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			embed := &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "당신은 지식ㅇ을 가르쳐준 적이 없어요!",
-				Color:       utils.EmbedFail,
-			}
-
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
-			return
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "당신은 지식ㅇ을 가르쳐준 적이 없어요!"})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
 		}
 
-		fmt.Println(err)
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "데이터를 가져오는데 실패했어요.",
-			Color:       utils.EmbedFail,
-		}
-
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
-		return
+		utils.NewMessageSender(m).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "데이터를 가져오는데 실패했어요."})).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
+		return err
 	}
 
 	defer cur.Close(context.TODO())
 
 	cur.All(context.TODO(), &data)
 
-	embed := &discordgo.MessageEmbed{
-		Title: fmt.Sprintf("%s님이 알려주신 지식", globalName),
-		Color: utils.EmbedDefault,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: avatarUrl,
-		},
+	if len(filter) > 1 {
+		command := filter[1].Value.(string)
+
+		for _, data := range data {
+			items = append(items, fmt.Sprintf("> %s", data.Result))
+		}
+
+		containers := getContainers(&discordgo.Thumbnail{
+			Media: discordgo.UnfurledMediaItem{
+				URL: avatarUrl,
+			},
+		}, fmt.Sprintf("### %s님이 알려주신 지식\n- **%s**\n", globalName, command)+"%s", items, length)
+
+		return utils.PaginationEmbedBuilder(m).
+			AddContainers(containers...).
+			Start()
 	}
 
-	utils.StartPaginationEmbed(s, m, embed, getDescriptions(&data, length), utils.CodeBlock("md", fmt.Sprintf("# 총 %d개에요.\n", len(data))+"%s"))
+	for _, data := range data {
+		if _, ok := itemsMap[data.Command]; ok {
+			continue
+		}
+
+		itemsMap[data.Command] = fmt.Sprintf("- `%s`", data.Command)
+	}
+
+	for _, v := range itemsMap {
+		items = append(items, v)
+	}
+
+	containers := getContainers(&discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: avatarUrl,
+		},
+	}, fmt.Sprintf("### %s님이 알려주신 지식\n총 %d개에요.\n", globalName, len(items))+"%s", items, length)
+
+	return utils.PaginationEmbedBuilder(m).
+		AddContainers(containers...).
+		Start()
 }

@@ -52,7 +52,7 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 
 		return true
 	},
-	Run: func(ctx *commands.ModalContext) {
+	Run: func(ctx *commands.ModalContext) error {
 		data := ctx.Inter.ModalSubmitData()
 		customId := data.CustomID
 		id := utils.GetPaginationEmbedId(customId)
@@ -61,6 +61,6 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 
 		page, _ := strconv.Atoi(cmp.Value)
 
-		p.Set(ctx.Inter, page)
+		return p.Set(ctx.Inter, page)
 	},
 }

@@ -13,17 +13,17 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var learnArguments = utils.InlineCode("{user.name}") + "\n" +
-	utils.InlineCode("{user.mention}") + "\n" +
-	utils.InlineCode("{user.globalName}") + "\n" +
-	utils.InlineCode("{user.id}") + "\n" +
-	utils.InlineCode("{user.createdAt}") + "\n" +
-	utils.InlineCode("{user.joinedAt}") + "\n" +
-	utils.InlineCode("{muffin.version}") + "\n" +
-	utils.InlineCode("{muffin.updatedAt}") + "\n" +
-	utils.InlineCode("{muffin.statedAt}") + "\n" +
-	utils.InlineCode("{muffin.name}") + "\n" +
-	utils.InlineCode("{muffin.id}")
+var learnArguments = "> " + utils.InlineCode("{user.name}") + "\n" +
+	"> " + utils.InlineCode("{user.mention}") + "\n" +
+	"> " + utils.InlineCode("{user.globalName}") + "\n" +
+	"> " + utils.InlineCode("{user.id}") + "\n" +
+	"> " + utils.InlineCode("{user.createdAt}") + "\n" +
+	"> " + utils.InlineCode("{user.joinedAt}") + "\n" +
+	"> " + utils.InlineCode("{muffin.version}") + "\n" +
+	"> " + utils.InlineCode("{muffin.updatedAt}") + "\n" +
+	"> " + utils.InlineCode("{muffin.statedAt}") + "\n" +
+	"> " + utils.InlineCode("{muffin.name}") + "\n" +
+	"> " + utils.InlineCode("{muffin.id}")
 
 var LearnCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
@@ -55,70 +55,59 @@ var LearnCommand *Command = &Command{
 			fmt.Sprintf("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\"", configs.Config.Bot.Prefix),
 		},
 	},
-	Category: Chatting,
-	MessageRun: func(ctx *MsgContext) {
-		learnRun(ctx.Command, ctx.Session, ctx.Msg, ctx.Args)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		learnRun(ctx.Command, ctx.Session, ctx.Inter, nil)
-	},
-}
-
-func addPrefix(arr []string) (newArr []string) {
-	for _, item := range arr {
-		newArr = append(newArr, fmt.Sprintf("- %s", item))
-	}
-	return
-}
-
-func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
-	var userId, command, result string
-
-	igCommands := []string{}
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		userId = m.Author.ID
-
-		if len(*args) < 2 {
-			s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "올바르지 않ㅇ은 용법이에요.",
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:   "사용법",
-						Value:  utils.InlineCode(c.DetailedDescription.Usage),
-						Inline: true,
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	MessageRun: func(ctx *MsgContext) error {
+		if len(*ctx.Args) < 2 {
+			utils.NewMessageSender(ctx.Msg).
+				AddComponents(utils.GetErrorContainer(
+					discordgo.TextDisplay{
+						Content: "올바르지 않ㅇ은 용법이에요.",
 					},
-					{
-						Name:   "사용 가능한 인자",
-						Value:  learnArguments,
-						Inline: true,
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
 					},
-					{
-						Name:  "예시",
-						Value: utils.CodeBlock("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
 					},
-				},
-				Color: utils.EmbedFail,
-			}, m.Reference())
-			return
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **사용 가능한 인자**\n%s", learnArguments),
+					},
+				)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
 		}
 
-		command = strings.ReplaceAll((*args)[0], "_", " ")
-		result = strings.ReplaceAll((*args)[1], "_", " ")
-	case *utils.InteractionCreate:
-		m.DeferReply(true)
+		return learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
+	},
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		if err != nil {
+			return err
+		}
 
-		userId = m.Member.User.ID
+		var command, result string
 
-		if opt, ok := m.Options["단어"]; ok {
+		if opt, ok := ctx.Inter.Options["단어"]; ok {
 			command = opt.StringValue()
 		}
 
-		if opt, ok := m.Options["대답"]; ok {
+		if opt, ok := ctx.Inter.Options["대답"]; ok {
 			result = opt.StringValue()
 		}
-	}
+
+		return learnRun(ctx.Inter, ctx.Inter.Member.User.ID, command, result)
+	},
+}
+
+func learnRun(m any, userId, command, result string) error {
+	igCommands := []string{}
 
 	for _, command := range Discommand.Commands {
 		igCommands = append(igCommands, command.Name)
@@ -136,97 +125,57 @@ func learnRun(c *Command, s *discordgo.Session, m any, args *[]string) {
 
 	for _, ig := range ignores {
 		if strings.Contains(command, ig) {
-			embed := &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "해ㄷ당 단어는 배우기 껄끄ㄹ럽네요.",
-				Color:       utils.EmbedFail,
-			}
-
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
-			return
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해ㄷ당 단어는 배우기 껄끄ㄹ럽네요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
 		}
 	}
 
 	for _, di := range disallows {
 		if strings.Contains(result, di) {
-			embed := &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "해당 단ㅇ어의 대답으로 하기 좀 그렇ㄴ네요.",
-				Color:       utils.EmbedFail,
-			}
-
-			switch m := m.(type) {
-			case *discordgo.MessageCreate:
-				s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-			case *utils.InteractionCreate:
-				m.EditReply(&discordgo.WebhookEdit{
-					Embeds: &[]*discordgo.MessageEmbed{embed},
-				})
-			}
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 단ㅇ어의 대답으로 하기 좀 그렇ㄴ네요."})).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
 		}
 	}
 
 	if len([]rune(command)) > 100 {
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "단어는 100글자를 못 넘ㅇ어가요.",
-			Color:       utils.EmbedFail,
-		}
-
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
+		utils.NewMessageSender(m).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "단어는 100글자를 못 넘ㅇ어가요."})).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
+		return nil
 	}
 
-	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.InsertLearn{
+	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.Learn{
 		Command:   command,
 		Result:    result,
 		UserId:    userId,
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
-		fmt.Println(err)
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "단어를 배우는데 오류가 생겼어요.",
-			Color:       utils.EmbedFail,
-		}
-
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
-		return
+		utils.NewMessageSender(m).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "단어를 배우는데 오류가 생겼어요."})).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
+		return err
 	}
 
-	embed := &discordgo.MessageEmbed{
-		Title:       "✅ 성공",
-		Description: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
-		Color:       utils.EmbedSuccess,
-	}
-
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
-		})
-	}
+	return utils.NewMessageSender(m).
+		AddComponents(utils.GetSuccessContainer(
+			discordgo.TextDisplay{
+				Content: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
+			},
+		)).
+		SetComponentsV2(true).
+		SetReply(true).
+		Send()
 }

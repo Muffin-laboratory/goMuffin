@@ -1,12 +1,6 @@
 package utils
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -16,20 +10,37 @@ type ModalData struct {
 	Components []discordgo.MessageComponent `json:"components"`
 }
 
+type InteractionEdit struct {
+	Content         *string                           `json:"content,omitempty"`
+	Components      *[]discordgo.MessageComponent     `json:"components,omitempty"`
+	Embeds          *[]*discordgo.MessageEmbed        `json:"embeds,omitempty"`
+	Flags           *discordgo.MessageFlags           `json:"flags,omitempty"`
+	Attachments     *[]*discordgo.MessageAttachment   `json:"attachments,omitempty"`
+	AllowedMentions *discordgo.MessageAllowedMentions `json:"allowed_mentions,omitempty"`
+}
+
 // InteractionCreate custom data of discordgo.InteractionCreate
 type InteractionCreate struct {
 	*discordgo.InteractionCreate
 	Session *discordgo.Session
 	// NOTE: It's only can ApplicationCommand
-	Options map[string]*discordgo.ApplicationCommandInteractionDataOption
+	Options  map[string]*discordgo.ApplicationCommandInteractionDataOption
+	Deferred bool
+	Replied  bool
 }
 
 // Reply to this interaction.
-func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) {
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: data,
 	})
+	if err != nil {
+		return err
+	}
+
+	i.Replied = true
+	return nil
 }
 
 // GetInteractionOptions to this interaction.
@@ -42,39 +53,67 @@ func GetInteractionOptions(i *discordgo.InteractionCreate) map[string]*discordgo
 	return optsMap
 }
 
-// DeferReply to this interaction.
-func (i *InteractionCreate) DeferReply(ephemeral bool) {
-	var flags discordgo.MessageFlags
-	if ephemeral {
-		flags = discordgo.MessageFlagsEphemeral
+// NOTE: It's only can ApplicationCommand
+func GetInteractionUser(i *discordgo.InteractionCreate) *discordgo.User {
+	if i.Member != nil {
+		return i.Member.User
 	}
 
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if i.User != nil {
+		return i.User
+	}
+	return nil
+}
+
+// DeferReply to this interaction.
+func (i *InteractionCreate) DeferReply(data *discordgo.InteractionResponseData) error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Flags: flags,
-		},
+		Data: data,
 	})
+	if err != nil {
+		return err
+	}
+
+	i.Deferred = true
+	return err
 }
 
 // DeferUpdate to this interaction.
-func (i *InteractionCreate) DeferUpdate() {
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func (i *InteractionCreate) DeferUpdate() error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
 	})
+	if err != nil {
+		return err
+	}
+
+	i.Deferred = true
+	return err
 }
 
 // EditReply to this interaction.
-func (i *InteractionCreate) EditReply(data *discordgo.WebhookEdit) {
-	i.Session.InteractionResponseEdit(i.Interaction, data)
+func (i *InteractionCreate) EditReply(data *InteractionEdit) error {
+	endpoint := discordgo.EndpointWebhookMessage(i.AppID, i.Token, "@original")
+
+	_, err := i.Session.RequestWithBucketID("PATCH", endpoint, *data, discordgo.EndpointWebhookToken("", ""))
+
+	i.Replied = true
+	return err
 }
 
 // Update to this interaction.
-func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) {
-	i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) error {
+	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: data,
 	})
+	if err != nil {
+		return err
+	}
+
+	i.Replied = true
+	return err
 }
 
 func (i *InteractionCreate) ShowModal(data *ModalData) error {
@@ -85,35 +124,8 @@ func (i *InteractionCreate) ShowModal(data *ModalData) error {
 
 	reqData.Type = discordgo.InteractionResponseModal
 	reqData.Data = *data
-	bin, err := json.Marshal(reqData)
-	if err != nil {
-		return err
-	}
 
-	buf := bytes.NewBuffer(bin)
-
-	req, err := http.NewRequest("POST", discordgo.EndpointInteractionResponse(i.ID, i.Token), buf)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Add("Authorization", i.Session.Identify.Token)
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := i.Session.Client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	respBin, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("%s", string(respBin))
-	}
-
-	defer resp.Body.Close()
-	return nil
+	endpoint := discordgo.EndpointInteractionResponse(i.ID, i.Token)
+	_, err := i.Session.RequestWithBucketID("POST", endpoint, reqData, endpoint)
+	return err
 }

@@ -3,34 +3,12 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"sync"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
-	"go.mongodb.org/mongo-driver/v2/mongo"
 )
-
-type chStruct struct {
-	name   dataType
-	length int
-}
-
-type dataType int
-
-const (
-	text dataType = iota
-	muffin
-	nsfw
-	learn
-	userLearn
-)
-
-var dataLengthCh chan chStruct = make(chan chStruct)
-var dataLengthWg sync.WaitGroup
 
 var DataLengthCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
@@ -42,128 +20,72 @@ var DataLengthCommand *Command = &Command{
 	DetailedDescription: &DetailedDescription{
 		Usage: fmt.Sprintf("%s학습데이터량", configs.Config.Bot.Prefix),
 	},
-	Category: General,
-	MessageRun: func(ctx *MsgContext) {
-		dataLengthRun(ctx.Session, ctx.Msg)
+	Category:                   General,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	MessageRun: func(ctx *MsgContext) error {
+		return dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		dataLengthRun(ctx.Session, ctx.Inter)
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+
+		return dataLengthRun(ctx.Inter.Session, ctx.Inter, ctx.Inter.Member.User.Username, ctx.Inter.Member.User.ID)
 	},
 }
 
-func getLength(dType dataType, coll *mongo.Collection, filter bson.D) {
-	defer dataLengthWg.Done()
-	var err error
-	var cur *mongo.Cursor
-	var data []bson.M
-
-	cur, err = coll.Find(context.TODO(), filter)
+func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
+	textLength, err := databases.Database.Texts.EstimatedDocumentCount(context.TODO())
 	if err != nil {
-		fmt.Println(err)
+		return err
 	}
-
-	defer cur.Close(context.TODO())
-
-	cur.All(context.TODO(), &data)
-	dataLengthCh <- chStruct{name: dType, length: len(data)}
-}
-
-func dataLengthRun(s *discordgo.Session, m any) {
-	var username, userId, channelId string
-	var textLength,
-		muffinLength,
-		nsfwLength,
-		learnLength,
-		userLearnLength int
-
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		username = m.Author.Username
-		userId = m.Author.ID
-		channelId = m.ChannelID
-	case *utils.InteractionCreate:
-		m.DeferReply(true)
-		username = m.Member.User.Username
-		userId = m.Member.User.ID
-		channelId = m.ChannelID
+	muffinLength, err := databases.Database.Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
+	if err != nil {
+		return err
 	}
-
-	dataLengthWg.Add(5)
-	go getLength(text, databases.Database.Texts, bson.D{{}})
-	go getLength(muffin, databases.Database.Texts, bson.D{{Key: "persona", Value: "muffin"}})
-	go getLength(nsfw, databases.Database.Texts, bson.D{
-		{
-			Key: "persona",
-			Value: bson.M{
-				"$regex": "^user",
-			},
-		},
-	})
-	go getLength(learn, databases.Database.Learns, bson.D{{}})
-	go getLength(userLearn, databases.Database.Learns, bson.D{{Key: "user_id", Value: userId}})
-
-	go func() {
-		dataLengthWg.Wait()
-		close(dataLengthCh)
-	}()
-
-	for resp := range dataLengthCh {
-		switch dataType(resp.name) {
-		case text:
-			textLength = resp.length
-		case muffin:
-			muffinLength = resp.length
-		case nsfw:
-			nsfwLength = resp.length
-		case learn:
-			learnLength = resp.length
-		case userLearn:
-			userLearnLength = resp.length
-		}
+	learnLength, err := databases.Database.Learns.EstimatedDocumentCount(context.TODO())
+	if err != nil {
+		return err
+	}
+	userLearnLength, err := databases.Database.Learns.CountDocuments(context.TODO(), databases.Learn{UserId: userId})
+	if err != nil {
+		return err
 	}
 
 	sum := textLength + learnLength
 
-	// 나중에 djs처럼 Embed 만들어 주는 함수 만들어야겠다
-	// 지금은 임시방편
-	embed := &discordgo.MessageEmbed{
-		Title:       "저장된 데이터량",
-		Description: fmt.Sprintf("총합: %s개", utils.InlineCode(strconv.Itoa(sum))),
-		Color:       utils.EmbedDefault,
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "총 채팅 데이터량",
-				Value:  utils.InlineCode(strconv.Itoa(textLength)) + "개",
-				Inline: true,
+	return utils.NewMessageSender(m).
+		AddComponents(discordgo.Container{
+			Components: []discordgo.MessageComponent{
+				discordgo.Section{
+					Accessory: discordgo.Thumbnail{
+						Media: discordgo.UnfurledMediaItem{
+							URL: s.State.User.AvatarURL("512"),
+						},
+					},
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("### 저장된 데이터량\n총합: `%d`개", sum),
+						},
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("- **총 채팅 데이터량**\n> `%d`개", textLength),
+						},
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("- **머핀 데이터량**\n> `%d`개", muffinLength),
+						},
+					},
+				},
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("- **총 지식 데이터량**\n> `%d`개", learnLength),
+				},
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("- **%s님이 가르쳐준 데이터량**\n> `%d`개", username, userLearnLength),
+				},
 			},
-			{
-				Name:   "총 지식 데이터량",
-				Value:  utils.InlineCode(strconv.Itoa(learnLength)) + "개",
-				Inline: true,
-			},
-			{
-				Name:  "머핀 데이터량",
-				Value: utils.InlineCode(strconv.Itoa(muffinLength)) + "개",
-			},
-			{
-				Name:   "nsfw 데이터량",
-				Value:  utils.InlineCode(strconv.Itoa(nsfwLength)) + "개",
-				Inline: true,
-			},
-			{
-				Name:   fmt.Sprintf("%s님이 가르쳐준 데이터량", username),
-				Value:  utils.InlineCode(strconv.Itoa(userLearnLength)) + "개",
-				Inline: true,
-			},
-		},
-	}
-
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(channelId, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds: &[]*discordgo.MessageEmbed{embed},
-		})
-	}
+		}).
+		SetComponentsV2(true).
+		SetReply(true).
+		Send()
 }

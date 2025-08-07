@@ -9,7 +9,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var DeleteLearnedDataCommand *Command = &Command{
@@ -29,141 +28,103 @@ var DeleteLearnedDataCommand *Command = &Command{
 		Usage:    fmt.Sprintf("%s삭제 (삭제할 단어)", configs.Config.Bot.Prefix),
 		Examples: []string{fmt.Sprintf("%s삭제 머핀", configs.Config.Bot.Prefix)},
 	},
-	Category: Chatting,
-	MessageRun: func(ctx *MsgContext) {
-		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Msg, ctx.Args)
+	Category:                   Chatting,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	MessageRun: func(ctx *MsgContext) error {
+		command := strings.Join(*ctx.Args, " ")
+		if command == "" {
+			utils.NewMessageSender(ctx.Msg).
+				AddComponents(utils.GetErrorContainer(
+					discordgo.TextDisplay{
+						Content: "올바르지 않ㅇ은 용법이에요.",
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
+					},
+				)).
+				SetComponentsV2(true).
+				SetReply(true).
+				Send()
+			return nil
+		}
+		return deleteLearnedDataRun(ctx.Msg, strings.Join(*ctx.Args, " "), ctx.Msg.Author.ID)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		deleteLearnedDataRun(ctx.Command, ctx.Session, ctx.Inter, nil)
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			Flags: discordgo.MessageFlagsEphemeral,
+		})
+		if err != nil {
+			return err
+		}
+
+		var command string
+
+		if opt, ok := ctx.Inter.Options["단어"]; ok {
+			command = opt.StringValue()
+		}
+
+		return deleteLearnedDataRun(ctx.Inter, command, ctx.Inter.Member.User.ID)
 	},
 }
 
-func deleteLearnedDataRun(c *Command, s *discordgo.Session, m any, args *[]string) {
-	var command, userId, description string
+func deleteLearnedDataRun(m any, command, userId string) error {
 	var data []databases.Learn
-	var options []discordgo.SelectMenuOption
+	var sections []discordgo.Section
+	var containers []*discordgo.Container
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		command = strings.Join(*args, " ")
-		userId = m.Author.ID
-
-		if command == "" {
-			s.ChannelMessageSendEmbedReply(m.ChannelID, &discordgo.MessageEmbed{
-				Title:       "❌ 오류",
-				Description: "올바르지 않ㅇ은 용법이에요.",
-				Fields: []*discordgo.MessageEmbedField{
-					{
-						Name:  "사용법",
-						Value: utils.InlineCode(c.DetailedDescription.Usage),
-					},
-					{
-						Name:  "예시",
-						Value: utils.CodeBlock("md", strings.Join(addPrefix(c.DetailedDescription.Examples), "\n")),
-					},
-				},
-				Color: utils.EmbedFail,
-			}, m.Reference())
-		}
-	case *utils.InteractionCreate:
-		m.DeferReply(true)
-
-		if opt, ok := m.Options["단어"]; ok {
-			command = opt.StringValue()
-		}
-		userId = m.Member.User.ID
-	}
-
-	cur, err := databases.Database.Learns.Find(context.TODO(), bson.M{"user_id": userId, "command": command})
+	cur, err := databases.Database.Learns.Find(context.TODO(), databases.Learn{UserId: userId, Command: command})
 	if err != nil {
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "데이터를 가져오는데 실패했어요.",
-			Color:       utils.EmbedFail,
-		}
-
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
-		return
+		return err
 	}
 
 	cur.All(context.TODO(), &data)
 
 	if len(data) < 1 {
-		embed := &discordgo.MessageEmbed{
-			Title:       "❌ 오류",
-			Description: "해당 하는 지식ㅇ을 찾을 수 없어요.",
-			Color:       utils.EmbedFail,
-		}
-
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.EditReply(&discordgo.WebhookEdit{
-				Embeds: &[]*discordgo.MessageEmbed{embed},
-			})
-		}
-		return
+		utils.NewMessageSender(m).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 하는 지식ㅇ을 찾을 수 없어요."})).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
+		return nil
 	}
 
-	for i := range len(data) {
-		data := data[i]
-
-		options = append(options, discordgo.SelectMenuOption{
-			Label:       fmt.Sprintf("%d번 지식", i+1),
-			Description: data.Result,
-			Value:       utils.MakeDeleteLearnedData(data.Id.Hex(), i+1),
-		})
-		description += fmt.Sprintf("%d. %s\n", i+1, data.Result)
-	}
-
-	embed := &discordgo.MessageEmbed{
-		Title:       fmt.Sprintf("%s 삭제", command),
-		Description: utils.CodeBlock("md", fmt.Sprintf("# %s에 대한 대답 중 하나를 선ㅌ택하여 삭제해주세요.\n%s", command, description)),
-		Color:       utils.EmbedDefault,
-	}
-
-	components := []discordgo.MessageComponent{
-		discordgo.ActionsRow{
+	for i, data := range data {
+		sections = append(sections, discordgo.Section{
+			Accessory: discordgo.Button{
+				Label:    "삭제",
+				Style:    discordgo.DangerButton,
+				CustomID: utils.MakeDeleteLearnedData(data.Id.Hex(), i+1, userId),
+			},
 			Components: []discordgo.MessageComponent{
-				discordgo.SelectMenu{
-					MenuType:    discordgo.StringSelectMenu,
-					CustomID:    utils.MakeDeleteLearnedDataUserId(userId),
-					Options:     options,
-					Placeholder: "ㅈ지울 응답을 선택해주세요.",
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("%d. %s\n", i+1, data.Result),
 				},
 			},
-		},
-		discordgo.ActionsRow{
-			Components: []discordgo.MessageComponent{
-				discordgo.Button{
-					CustomID: utils.MakeDeleteLearnedDataCancel(userId),
-					Label:    "취소하기",
-					Style:    discordgo.DangerButton,
-					Disabled: false,
-				},
-			},
-		},
+		})
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Embeds:     []*discordgo.MessageEmbed{embed},
-			Components: components,
-			Reference:  m.Reference(),
-		})
-	case *utils.InteractionCreate:
-		m.EditReply(&discordgo.WebhookEdit{
-			Embeds:     &[]*discordgo.MessageEmbed{embed},
-			Components: &components,
-		})
+	textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s 삭제", command)}
+	container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+	for i, section := range sections {
+		container.Components = append(container.Components, section, discordgo.Separator{})
+
+		if (i+1)%10 == 0 {
+			containers = append(containers, container)
+			container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+			continue
+		}
 	}
+
+	if len(container.Components) > 1 {
+		containers = append(containers, container)
+	}
+
+	return utils.PaginationEmbedBuilder(m).
+		AddContainers(containers...).
+		Start()
 }

@@ -28,12 +28,21 @@ var HelpCommand *Command = &Command{
 		Usage:    fmt.Sprintf("%s도움말 [명령어]", configs.Config.Bot.Prefix),
 		Examples: []string{fmt.Sprintf("%s도움말", configs.Config.Bot.Prefix), fmt.Sprintf("%s도움말 배워", configs.Config.Bot.Prefix)},
 	},
-	Category: General,
-	MessageRun: func(ctx *MsgContext) {
-		helpRun(ctx.Session, ctx.Msg, ctx.Args)
+	Category:                   General,
+	RegisterApplicationCommand: true,
+	RegisterMessageCommand:     true,
+	Flags:                      CommandFlagsIsBlocked,
+	MessageRun: func(ctx *MsgContext) error {
+		return helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
 	},
-	ChatInputRun: func(ctx *ChatInputContext) {
-		helpRun(ctx.Session, ctx.Inter, nil)
+	ChatInputRun: func(ctx *ChatInputContext) error {
+		var command string
+
+		if opt, ok := ctx.Inter.Options["명령어"]; ok {
+			command = opt.StringValue()
+		}
+
+		return helpRun(ctx.Inter.Session, ctx.Inter, command)
 	},
 }
 
@@ -41,108 +50,98 @@ func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
 	commands := []string{}
 	for _, command := range d.Commands {
 		if command.Category == category {
-			commands = append(commands, fmt.Sprintf("- %s: %s", command.Name, command.Description))
+			commands = append(commands, fmt.Sprintf("> **%s**: %s", command.Name, command.Description))
 		}
 	}
 	return commands
 }
 
-func helpRun(s *discordgo.Session, m any, args *[]string) {
-	var commandName string
-	embed := &discordgo.MessageEmbed{
-		Color: utils.EmbedDefault,
-		Footer: &discordgo.MessageEmbedFooter{
-			Text: fmt.Sprintf("버전: %s", configs.MUFFIN_VERSION),
-		},
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: s.State.User.AvatarURL("512"),
+func helpRun(s *discordgo.Session, m any, commandName string) error {
+	section := &discordgo.Section{
+		Accessory: discordgo.Thumbnail{
+			Media: discordgo.UnfurledMediaItem{
+				URL: s.State.User.AvatarURL("512"),
+			},
 		},
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		commandName = Discommand.Aliases[strings.Join(*args, " ")]
-	case *utils.InteractionCreate:
-		if opt, ok := m.Options["명령어"]; ok {
-			commandName = opt.StringValue()
-		} else {
-			commandName = ""
-		}
-	}
+	commandName = Discommand.Aliases[commandName]
 
 	if commandName == "" || Discommand.Commands[commandName] == nil {
-		embed.Title = fmt.Sprintf("%s의 도움말", s.State.User.Username)
-		embed.Description = utils.CodeBlock(
-			"md",
-			fmt.Sprintf("# 일반\n%s\n\n# 채팅\n%s",
-				strings.Join(getCommandsByCategory(Discommand, General), "\n"),
-				strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
+		section.Components = append(section.Components,
+			discordgo.TextDisplay{
+				Content: fmt.Sprintf("### %s의 도움말", s.State.User.Username),
+			},
+			discordgo.TextDisplay{
+				Content: fmt.Sprintf("- **일반**\n%s", strings.Join(getCommandsByCategory(Discommand, General), "\n")),
+			},
+			discordgo.TextDisplay{
+				Content: fmt.Sprintf("- **채팅**\n%s", strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
+			},
 		)
-
-		switch m := m.(type) {
-		case *discordgo.MessageCreate:
-			s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-		case *utils.InteractionCreate:
-			m.Reply(&discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{embed},
-			})
-		}
-		return
+		return utils.NewMessageSender(m).
+			AddComponents(&discordgo.Container{
+				Components: []discordgo.MessageComponent{section},
+			}).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
 	}
+
+	var aliases, examples discordgo.TextDisplay
 
 	command := Discommand.Commands[commandName]
 
-	embed.Title = fmt.Sprintf("%s의 %s 명령어의 도움말", s.State.User.Username, command.Name)
-	embed.Fields = []*discordgo.MessageEmbedField{
-		{
-			Name:   "설명",
-			Value:  utils.InlineCode(command.Description),
-			Inline: true,
+	section.Components = append(section.Components,
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("### %s의 %s 명령어의 도움말", s.State.User.Username, command.Name),
 		},
-		{
-			Name:   "사용법",
-			Value:  utils.InlineCode(command.DetailedDescription.Usage),
-			Inline: true,
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("- **설명**\n> %s", command.Description),
 		},
-	}
-
-	if command.Name == LearnCommand.Name {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:  "대답에 쓸 수 있는 인자",
-			Value: learnArguments,
-		})
-	}
+		discordgo.TextDisplay{
+			Content: fmt.Sprintf("- **사용법**\n> %s", command.DetailedDescription.Usage),
+		},
+	)
 
 	if command.Aliases != nil {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:  "별칭",
-			Value: utils.CodeBlock("md", strings.Join(addPrefix(command.Aliases), "\n")),
-		})
+		aliases = discordgo.TextDisplay{
+			Content: fmt.Sprintf("- **별칭**\n%s", strings.Join(utils.AddPrefix("> ", command.Aliases), "\n")),
+		}
 	} else {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:  "별칭",
-			Value: "없음",
-		})
+		aliases = discordgo.TextDisplay{
+			Content: "- **별칭**\n> 없음",
+		}
 	}
 
 	if command.DetailedDescription.Examples != nil {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:  "예시",
-			Value: utils.CodeBlock("md", strings.Join(addPrefix(command.DetailedDescription.Examples), "\n")),
-		})
+		examples = discordgo.TextDisplay{
+			Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", command.DetailedDescription.Examples), "\n")),
+		}
 	} else {
-		embed.Fields = append(embed.Fields, &discordgo.MessageEmbedField{
-			Name:  "예시",
-			Value: "없음",
-		})
+		aliases = discordgo.TextDisplay{
+			Content: "- **예시**\n> 없음",
+		}
 	}
 
-	switch m := m.(type) {
-	case *discordgo.MessageCreate:
-		s.ChannelMessageSendEmbedReply(m.ChannelID, embed, m.Reference())
-	case *utils.InteractionCreate:
-		m.Reply(&discordgo.InteractionResponseData{
-			Embeds: []*discordgo.MessageEmbed{embed},
-		})
+	if command.Name == LearnCommand.Name {
+		learnArgs := discordgo.TextDisplay{
+			Content: fmt.Sprintf("- **대답에 쓸 수 있는 인자**\n%s", learnArguments),
+		}
+		return utils.NewMessageSender(m).
+			AddComponents(discordgo.Container{
+				Components: []discordgo.MessageComponent{section, aliases, examples, learnArgs},
+			}).
+			SetComponentsV2(true).
+			SetReply(true).
+			Send()
 	}
+
+	return utils.NewMessageSender(m).
+		AddComponents(discordgo.Container{
+			Components: []discordgo.MessageComponent{section, aliases, examples},
+		}).
+		SetComponentsV2(true).
+		SetReply(true).
+		Send()
 }

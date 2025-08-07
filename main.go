@@ -9,7 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
+	"git.wh64.net/muffin/goMuffin/commands/dev"
 	"git.wh64.net/muffin/goMuffin/components"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -21,12 +23,36 @@ import (
 	"github.com/devproje/commando/types"
 )
 
+func init() {
+	go commands.Discommand.LoadCommand(commands.HelpCommand)
+	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
+	go commands.Discommand.LoadCommand(commands.LearnCommand)
+	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
+	go commands.Discommand.LoadCommand(commands.InformationCommand)
+	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
+	go commands.Discommand.LoadCommand(dev.ReloadPromptCommand)
+	go commands.Discommand.LoadCommand(commands.SwitchModeCommand)
+	go commands.Discommand.LoadCommand(commands.ChatCommand)
+	go commands.Discommand.LoadCommand(commands.RegisterCommand)
+	go commands.Discommand.LoadCommand(commands.DeregisterCommand)
+	go commands.Discommand.LoadCommand(dev.BlockCommand)
+	go commands.Discommand.LoadCommand(dev.UnblockCommand)
+
+	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
+	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
+	go commands.Discommand.LoadComponent(components.RegisterComponent)
+	go commands.Discommand.LoadComponent(components.DeregisterComponent)
+	go commands.Discommand.LoadComponent(components.SelectChatComponent)
+	go commands.Discommand.LoadComponent(components.DeleteChatComponent)
+
+	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
+}
+
 func main() {
 	command := commando.NewCommando(os.Args[1:])
 	config := configs.Config
 
 	if len(os.Args) > 1 {
-		command.Root("db-migrate", "봇의 데이터를 MariaDB에서 MongoDB로 옮깁니다.", scripts.DBMigrate)
 		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
 			types.OptionData{
 				Name: "id",
@@ -43,7 +69,7 @@ func main() {
 		command.Root("export", "머핀봇의 데이터를 추출합니다.", scripts.ExportData,
 			types.OptionData{
 				Name: "type",
-				Desc: "파일형식을 지정합니다. (json, txt(txt는 머핀 데이터만 적용))",
+				Desc: "파일형식을 지정합니다. (json, jsonl, finetune)",
 				Type: types.STRING,
 			},
 			types.OptionData{
@@ -68,18 +94,6 @@ func main() {
 
 	dg, _ := discordgo.New("Bot " + config.Bot.Token)
 
-	go commands.Discommand.LoadCommand(commands.HelpCommand)
-	go commands.Discommand.LoadCommand(commands.DataLengthCommand)
-	go commands.Discommand.LoadCommand(commands.LearnCommand)
-	go commands.Discommand.LoadCommand(commands.LearnedDataListCommand)
-	go commands.Discommand.LoadCommand(commands.InformationCommand)
-	go commands.Discommand.LoadCommand(commands.DeleteLearnedDataCommand)
-
-	go commands.Discommand.LoadComponent(components.DeleteLearnedDataComponent)
-	go commands.Discommand.LoadComponent(components.PaginationEmbedComponent)
-
-	go commands.Discommand.LoadModal(modals.PaginationEmbedModal)
-
 	go dg.AddHandler(handler.MessageCreate)
 	go dg.AddHandler(handler.InteractionCreate)
 
@@ -88,6 +102,8 @@ func main() {
 		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
 		log.Fatalln(err)
 	}
+
+	chatbot.New(dg)
 
 	defer dg.Close()
 
@@ -109,6 +125,10 @@ func main() {
 					Value: a.Name,
 				})
 			}
+		}
+
+		if !cmd.RegisterApplicationCommand {
+			continue
 		}
 
 		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
