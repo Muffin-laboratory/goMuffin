@@ -11,7 +11,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var DeleteLearnedDataCommand *Command = &Command{
+var DeleteKnowledgeCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "삭제",
 		Description: "당신이 가르쳐준 단ㅇ어를 삭제해요.",

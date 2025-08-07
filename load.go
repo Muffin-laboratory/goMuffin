@@ -18,8 +18,8 @@ func init() {
 	// Chatting command
 	go commands.GetDiscommand().LoadCommand(commands.RegisterCommand)
 	go commands.GetDiscommand().LoadCommand(commands.LearnCommand)
-	go commands.GetDiscommand().LoadCommand(commands.LearnedDataListCommand)
-	go commands.GetDiscommand().LoadCommand(commands.DeleteLearnedDataCommand)
+	go commands.GetDiscommand().LoadCommand(commands.KnowledgeListCommand)
+	go commands.GetDiscommand().LoadCommand(commands.DeleteKnowledgeCommand)
 	go commands.GetDiscommand().LoadCommand(commands.ChatCommand)
 
 	// Developer only command
@@ -28,7 +28,7 @@ func init() {
 	go commands.GetDiscommand().LoadCommand(dev.UnblockCommand)
 
 	// Message component
-	go commands.GetDiscommand().LoadComponent(components.DeleteLearnedDataComponent)
+	go commands.GetDiscommand().LoadComponent(components.DeleteKnowledgeComponent)
 	go commands.GetDiscommand().LoadComponent(components.PaginationEmbedComponent)
 	go commands.GetDiscommand().LoadComponent(components.RegisterComponent)
 	go commands.GetDiscommand().LoadComponent(components.DeregisterComponent)

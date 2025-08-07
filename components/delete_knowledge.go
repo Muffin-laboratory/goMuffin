@@ -11,7 +11,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var DeleteLearnedDataComponent *commands.Component = &commands.Component{
+var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		i := ctx.Inter
 		customId := i.MessageComponentData().CustomID

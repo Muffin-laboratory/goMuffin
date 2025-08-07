@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
+	"git.wh64.net/muffin/goMuffin/cmd"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/handler"
-	"git.wh64.net/muffin/goMuffin/scripts"
 	"github.com/bwmarrin/discordgo"
 	"github.com/devproje/commando"
 	"github.com/devproje/commando/types"
@@ -24,7 +24,7 @@ func main() {
 	config := configs.GetConfig()
 
 	if len(os.Args) > 1 {
-		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", scripts.DeleteAllCommands,
+		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", cmd.DeleteAllCommands,
 			types.OptionData{
 				Name: "id",
 				Desc: "봇의 디스코드 아이디",

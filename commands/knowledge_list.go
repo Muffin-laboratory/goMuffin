@@ -19,7 +19,7 @@ var (
 	LIST_MAX_VALUE float64 = 100.0
 )
 
-var LearnedDataListCommand *Command = &Command{
+var KnowledgeListCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
 		Name:        "리스트",
