@@ -17,7 +17,7 @@ type PaginationEmbed struct {
 	m          any
 }
 
-var PaginationEmbeds = make(map[string]*PaginationEmbed)
+var paginationEmbeds = make(map[string]*PaginationEmbed)
 
 func PaginationEmbedBuilder(m any) *PaginationEmbed {
 	var userId string
@@ -98,7 +98,7 @@ func startPaginationEmbed(p *PaginationEmbed) error {
 	container := *p.Containers[0]
 	container.Components = append(container.Components, makeComponents(p.Id, p.Current, p.Total))
 
-	PaginationEmbeds[p.Id] = p
+	paginationEmbeds[p.Id] = p
 
 	err := NewMessageSender(p.m).
 		AddComponents(container).
@@ -110,66 +110,40 @@ func startPaginationEmbed(p *PaginationEmbed) error {
 }
 
 func GetPaginationEmbed(id string) *PaginationEmbed {
-	if p, ok := PaginationEmbeds[id]; ok {
+	if p, ok := paginationEmbeds[id]; ok {
 		return p
 	}
 	return nil
 }
 
-func (p *PaginationEmbed) Prev(i *InteractionCreate) {
+func (p *PaginationEmbed) Prev(i *InteractionCreate) error {
 	if p.Current == 1 {
-		i.Reply(&discordgo.InteractionResponseData{
-			Components: []discordgo.MessageComponent{
-				GetErrorContainer(discordgo.TextDisplay{Content: "해당 페이지가 처음ㅇ이에요."}),
-			},
-			Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-		})
-		return
+		p.Current = p.Total
+	} else {
+		p.Current -= 1
 	}
 
-	p.Current -= 1
-
-	p.Set(i, p.Current)
+	return p.Set(i, p.Current)
 }
 
-func (p *PaginationEmbed) Next(i *InteractionCreate) {
+func (p *PaginationEmbed) Next(i *InteractionCreate) error {
 	if p.Current >= p.Total {
-		i.Reply(&discordgo.InteractionResponseData{
-			Components: []discordgo.MessageComponent{
-				GetErrorContainer(discordgo.TextDisplay{Content: "해당 페이지가 마지막ㅇ이에요."}),
-			},
-			Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-		})
-		return
+		p.Current = 1
+	} else {
+		p.Current += 1
 	}
 
-	p.Current += 1
-
-	p.Set(i, p.Current)
+	return p.Set(i, p.Current)
 }
 
 func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
 	if page <= 0 {
-		i.Reply(&discordgo.InteractionResponseData{
-			Components: []discordgo.MessageComponent{
-				GetErrorContainer(discordgo.TextDisplay{Content: "해당 값은 0보다 커야해요."}),
-			},
-			Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-		})
-		return nil
+		p.Current = 1
+	} else if page > p.Total {
+		p.Current = p.Total
+	} else {
+		p.Current = page
 	}
-
-	if page > p.Total {
-		i.Reply(&discordgo.InteractionResponseData{
-			Components: []discordgo.MessageComponent{
-				GetErrorContainer(discordgo.TextDisplay{Content: "해당 값은 총 페이지의 수보다 작아야해요."}),
-			},
-			Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-		})
-		return nil
-	}
-
-	p.Current = page
 
 	container := *p.Containers[p.Current-1]
 	container.Components = append(container.Components, makeComponents(p.Id, p.Current, p.Total))
