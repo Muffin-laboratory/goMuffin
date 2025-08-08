@@ -29,8 +29,8 @@ var RegisterCommand *Command = &Command{
 	},
 }
 
-func registerRun(m any, userId, botName string) error {
-	if databases.GetDatabase().IsUser(userId) {
+func registerRun(m any, userID, botName string) error {
+	if databases.GetDatabase().IsUser(userID) {
 		utils.NewMessageSender(m).
 			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 %s탈퇴를 이용해주세요.", configs.GetConfig().Bot.Prefix)})).
 			SetComponentsV2(true).
@@ -52,12 +52,12 @@ func registerRun(m any, userId, botName string) error {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							CustomID: utils.MakeServiceAgree(userId),
+							CustomID: utils.MakeServiceAgree(userID),
 							Label:    "동의 후 가입",
 							Style:    discordgo.SuccessButton,
 						},
 						discordgo.Button{
-							CustomID: utils.MakeServiceDisagree(userId),
+							CustomID: utils.MakeServiceDisagree(userID),
 							Label:    "취소",
 							Style:    discordgo.DangerButton,
 						},

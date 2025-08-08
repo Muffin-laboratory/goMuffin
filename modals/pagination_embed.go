@@ -13,20 +13,20 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 	Parse: func(ctx *commands.ModalContext) bool {
 		i := ctx.Inter
 		data := i.ModalSubmitData()
-		customId := data.CustomID
+		customID := data.CustomID
 
 		if data.Components[0].Type() != discordgo.ActionsRowComponent {
 			return false
 		}
 
-		if !strings.HasPrefix(customId, utils.PaginationEmbedModal) {
+		if !strings.HasPrefix(customID, utils.PaginationEmbedModal) {
 			return false
 		}
 
-		id := utils.GetPaginationEmbedId(customId)
-		userId := utils.GetPaginationEmbedUserId(id)
+		id := utils.GetPaginationEmbedID(customID)
+		userID := utils.GetPaginationEmbedUserID(id)
 
-		if i.Member.User.ID != userId {
+		if i.Member.User.ID != userID {
 			return false
 		}
 
@@ -55,7 +55,7 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 	Run: func(ctx *commands.ModalContext) error {
 		data := ctx.Inter.ModalSubmitData()
 		customId := data.CustomID
-		id := utils.GetPaginationEmbedId(customId)
+		id := utils.GetPaginationEmbedID(customId)
 		p := utils.GetPaginationEmbed(id)
 		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
 

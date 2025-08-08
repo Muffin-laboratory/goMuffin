@@ -86,7 +86,7 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 
 	if x > 2 && len(learnData) != 0 {
 		data := learnData[rand.Intn(len(learnData))]
-		user, _ := s.User(data.UserId)
+		user, _ := s.User(data.UserID)
 
 		result =
 			fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username)))
@@ -112,11 +112,11 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 
 	if x == 10 && len(data) != 0 {
 		data := data[rand.Intn(len(data))]
-		user, _ := s.User(data.UserId)
+		user, _ := s.User(data.UserID)
 		return fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username))), nil
 	}
 
-	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: user.ID}).Decode(&dbUser)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
@@ -134,7 +134,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 		}
 	}
 
-	contents, err := GetMemory(dbUser.ChatId)
+	contents, err := GetMemory(dbUser.ChatID)
 	if err != nil {
 		return "AI에 문제가 생겼ㅇ어요.", err
 	}
@@ -149,10 +149,10 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 
 	resultText := result.Text()
 	err = SaveMemory(&databases.Memory{
-		UserId:  user.ID,
+		UserID:  user.ID,
 		Content: question,
 		Answer:  resultText,
-		ChatId:  dbUser.ChatId,
+		ChatID:  dbUser.ChatID,
 	})
 	if err != nil {
 		return "살려주ㅅ세요", err

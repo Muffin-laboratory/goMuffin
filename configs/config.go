@@ -12,11 +12,11 @@ import (
 type botConfig struct {
 	Token   string
 	Prefix  string
-	OwnerId string
+	OwnerID string
 }
 
 type trainConfig struct {
-	UserId string
+	UserID string
 }
 
 type geminiConfig struct {
@@ -84,7 +84,7 @@ func setConfig(config *MuffinConfig) {
 	config.Bot = botConfig{
 		Prefix:  getRequiredValue("BOT_PREFIX"),
 		Token:   getRequiredValue("BOT_TOKEN"),
-		OwnerId: getRequiredValue("BOT_OWNER_ID"),
+		OwnerID: getRequiredValue("BOT_OWNER_ID"),
 	}
 
 	config.Database = databaseConfig{
@@ -113,7 +113,7 @@ func setConfig(config *MuffinConfig) {
 
 	config.Chatbot = chatbotConfig{
 		Gemini: geminiConfig{Token: getValue("CHATBOT_GEMINI_TOKEN"), PromptPath: getValue("CHATBOT_GEMINI_PROMPT_PATH"), Model: getValue("CHATBOT_GEMINI_MODEL")},
-		Train:  trainConfig{UserId: getValue("CHATBOT_TRAIN_USER_ID")},
+		Train:  trainConfig{UserID: getValue("CHATBOT_TRAIN_USER_ID")},
 	}
 
 	if config.Chatbot.Gemini.Model == "" {

@@ -47,7 +47,7 @@ func switchModeRun(m any, user *discordgo.User) error {
 	case databases.ChattingMuffinMode:
 		newMode = databases.ChattingMuffinMode
 	}
-	_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserId: user.ID}, bson.D{{
+	_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: user.ID}, bson.D{{
 		Key: "$set",
 		Value: databases.User{
 			ChattingMode: newMode,

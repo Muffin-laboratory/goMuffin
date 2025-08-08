@@ -178,7 +178,7 @@ func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, items []s
 	return containers
 }
 
-func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) error {
+func learnedDataListRun(m any, globalName, avatarURL string, filter bson.D, length int) error {
 	var data []databases.Learn
 
 	itemsMap := map[string]string{}
@@ -216,7 +216,7 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 
 		containers := getContainers(&discordgo.Thumbnail{
 			Media: discordgo.UnfurledMediaItem{
-				URL: avatarUrl,
+				URL: avatarURL,
 			},
 		}, fmt.Sprintf("### %s님이 알려주신 지식\n- **%s**\n", globalName, command)+"%s", items, length)
 
@@ -239,7 +239,7 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 
 	containers := getContainers(&discordgo.Thumbnail{
 		Media: discordgo.UnfurledMediaItem{
-			URL: avatarUrl,
+			URL: avatarURL,
 		},
 	}, fmt.Sprintf("### %s님이 알려주신 지식\n총 %d개에요.\n", globalName, len(items))+"%s", items, length)
 

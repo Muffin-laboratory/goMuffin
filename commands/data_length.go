@@ -36,7 +36,7 @@ var DataLengthCommand *Command = &Command{
 	},
 }
 
-func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
+func dataLengthRun(s *discordgo.Session, m any, username, userID string) error {
 	textLength, err := databases.GetDatabase().Texts.EstimatedDocumentCount(context.TODO())
 	if err != nil {
 		return err
@@ -49,7 +49,7 @@ func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
 	if err != nil {
 		return err
 	}
-	userLearnLength, err := databases.GetDatabase().Learns.CountDocuments(context.TODO(), databases.Learn{UserId: userId})
+	userLearnLength, err := databases.GetDatabase().Learns.CountDocuments(context.TODO(), databases.Learn{UserID: userID})
 	if err != nil {
 		return err
 	}

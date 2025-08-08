@@ -25,7 +25,7 @@ var DeregisterCommand *Command = &Command{
 	},
 }
 
-func deregisterRun(m any, userId, botName string) error {
+func deregisterRun(m any, userID, botName string) error {
 	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
@@ -35,12 +35,12 @@ func deregisterRun(m any, userId, botName string) error {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							CustomID: utils.MakeDeregisterAgree(userId),
+							CustomID: utils.MakeDeregisterAgree(userID),
 							Label:    "탈퇴",
 							Style:    discordgo.DangerButton,
 						},
 						discordgo.Button{
-							CustomID: utils.MakeDeregisterDisagree(userId),
+							CustomID: utils.MakeDeregisterDisagree(userID),
 							Label:    "취소",
 							Style:    discordgo.PrimaryButton,
 						},

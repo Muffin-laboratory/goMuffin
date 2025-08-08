@@ -18,7 +18,7 @@ func GetMemory(chatId bson.ObjectID) ([]*genai.Content, error) {
 
 	memory := []*genai.Content{}
 
-	cur, err := databases.GetDatabase().Memory.Find(context.TODO(), databases.User{ChatId: chatId})
+	cur, err := databases.GetDatabase().Memory.Find(context.TODO(), databases.User{ChatID: chatId})
 	if err != nil {
 		return memory, err
 	}

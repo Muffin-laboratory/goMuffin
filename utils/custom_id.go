@@ -28,19 +28,19 @@ const (
 	DeleteChatCancel = "#muffin/chat/delete/cancel@"
 )
 
-func MakeDeleteLearnedData(id string, number int, userId string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userId)
+func MakeDeleteLearnedData(id string, number int, userID string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userID)
 }
 
-func GetDeleteLearnedDataId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpId.FindAllString(customId, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "no=", "")
-	itemId, _ = strconv.Atoi(stringItemId)
+func GetDeleteLearnedDataID(customID string) (id bson.ObjectID, itemID int) {
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
+	itemID, _ = strconv.Atoi(stringItemId)
 	return
 }
 
-func GetDeleteLearnedDataUserId(customId string) string {
-	return strings.ReplaceAll(RegexpUserId.FindAllString(customId, 1)[0], "user_id=", "")
+func GetDeleteLearnedDataUserId(customID string) string {
+	return strings.ReplaceAll(RegexpUserID.FindAllString(customID, 1)[0], "user_id=", "")
 }
 
 func MakePaginationEmbedPrev(id string) string {
@@ -63,99 +63,99 @@ func MakePaginationEmbedSetPage(id string) string {
 	return fmt.Sprintf("%s%s", PaginationEmbedSetPage, id)
 }
 
-func GetPaginationEmbedId(customId string) string {
+func GetPaginationEmbedID(customID string) string {
 	switch {
-	case strings.HasPrefix(customId, PaginationEmbedPrev):
-		return customId[len(PaginationEmbedPrev):]
-	case strings.HasPrefix(customId, PaginationEmbedPages):
-		return customId[len(PaginationEmbedPages):]
-	case strings.HasPrefix(customId, PaginationEmbedNext):
-		return customId[len(PaginationEmbedNext):]
-	case strings.HasPrefix(customId, PaginationEmbedModal):
-		return customId[len(PaginationEmbedModal):]
-	case strings.HasPrefix(customId, PaginationEmbedSetPage):
-		return customId[len(PaginationEmbedSetPage):]
+	case strings.HasPrefix(customID, PaginationEmbedPrev):
+		return customID[len(PaginationEmbedPrev):]
+	case strings.HasPrefix(customID, PaginationEmbedPages):
+		return customID[len(PaginationEmbedPages):]
+	case strings.HasPrefix(customID, PaginationEmbedNext):
+		return customID[len(PaginationEmbedNext):]
+	case strings.HasPrefix(customID, PaginationEmbedModal):
+		return customID[len(PaginationEmbedModal):]
+	case strings.HasPrefix(customID, PaginationEmbedSetPage):
+		return customID[len(PaginationEmbedSetPage):]
 	default:
-		return customId
+		return customID
 	}
 }
 
-func GetPaginationEmbedUserId(id string) string {
-	return RegexpPaginationEmbedId.FindAllStringSubmatch(id, 1)[0][1]
+func GetPaginationEmbedUserID(id string) string {
+	return RegexpPaginationEmbedID.FindAllStringSubmatch(id, 1)[0][1]
 }
 
-func MakeServiceAgree(userId string) string {
-	return fmt.Sprintf("%s%s", ServiceAgree, userId)
+func MakeServiceAgree(userID string) string {
+	return fmt.Sprintf("%s%s", ServiceAgree, userID)
 }
 
-func MakeServiceDisagree(userId string) string {
-	return fmt.Sprintf("%s%s", ServiceDisagree, userId)
+func MakeServiceDisagree(userID string) string {
+	return fmt.Sprintf("%s%s", ServiceDisagree, userID)
 }
 
-func GetServiceUserId(customId string) string {
+func GetServiceUserID(customID string) string {
 	switch {
-	case strings.HasPrefix(customId, ServiceAgree):
-		return customId[len(ServiceAgree):]
-	case strings.HasPrefix(customId, ServiceDisagree):
-		return customId[len(ServiceDisagree):]
+	case strings.HasPrefix(customID, ServiceAgree):
+		return customID[len(ServiceAgree):]
+	case strings.HasPrefix(customID, ServiceDisagree):
+		return customID[len(ServiceDisagree):]
 	default:
-		return customId
+		return customID
 	}
 }
 
-func MakeDeregisterAgree(userId string) string {
-	return fmt.Sprintf("%s%s", DeregisterAgree, userId)
+func MakeDeregisterAgree(userID string) string {
+	return fmt.Sprintf("%s%s", DeregisterAgree, userID)
 }
 
-func MakeDeregisterDisagree(userId string) string {
-	return fmt.Sprintf("%s%s", DeregisterDisagree, userId)
+func MakeDeregisterDisagree(userID string) string {
+	return fmt.Sprintf("%s%s", DeregisterDisagree, userID)
 }
 
-func GetDeregisterUserId(customId string) string {
+func GetDeregisterUserID(customID string) string {
 	switch {
-	case strings.HasPrefix(customId, DeregisterAgree):
-		return customId[len(DeregisterAgree):]
-	case strings.HasPrefix(customId, DeregisterDisagree):
-		return customId[len(DeregisterDisagree):]
+	case strings.HasPrefix(customID, DeregisterAgree):
+		return customID[len(DeregisterAgree):]
+	case strings.HasPrefix(customID, DeregisterDisagree):
+		return customID[len(DeregisterDisagree):]
 	default:
-		return customId
+		return customID
 	}
 }
 
-func MakeSelectChat(id string, number int, userId string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", SelectChat, id, number, userId)
+func MakeSelectChat(id string, number int, userID string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", SelectChat, id, number, userID)
 }
 
-func GetSelectChatId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpId.FindAllString(customId, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "no=", "")
-	itemId, _ = strconv.Atoi(stringItemId)
+func GetSelectChatID(customID string) (id bson.ObjectID, itemID int) {
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
+	itemID, _ = strconv.Atoi(stringItemId)
 	return
 }
 
-func GetChatUserId(customId string) string {
+func GetChatUserID(customID string) string {
 	switch {
-	case strings.HasPrefix(customId, SelectChat),
-		strings.HasPrefix(customId, DeleteChat):
-		return strings.ReplaceAll(RegexpUserId.FindAllString(customId, 1)[0], "user_id=", "")
-	case strings.HasPrefix(customId, DeleteChatCancel):
-		return customId[len(DeleteChatCancel):]
+	case strings.HasPrefix(customID, SelectChat),
+		strings.HasPrefix(customID, DeleteChat):
+		return strings.ReplaceAll(RegexpUserID.FindAllString(customID, 1)[0], "user_id=", "")
+	case strings.HasPrefix(customID, DeleteChatCancel):
+		return customID[len(DeleteChatCancel):]
 	default:
 		return ""
 	}
 }
 
-func MakeDeleteChat(id string, number int, userId string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteChat, id, number, userId)
+func MakeDeleteChat(id string, number int, userID string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteChat, id, number, userID)
 }
 
-func GetDeleteChatId(customId string) (id bson.ObjectID, itemId int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpId.FindAllString(customId, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemId.FindAllString(customId, 1)[0], "no=", "")
-	itemId, _ = strconv.Atoi(stringItemId)
+func GetDeleteChatID(customID string) (id bson.ObjectID, itemID int) {
+	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
+	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
+	itemID, _ = strconv.Atoi(stringItemId)
 	return
 }
 
-func MakeDeleteChatCancel(userId string) string {
-	return fmt.Sprintf("%s%s", DeleteChatCancel, userId)
+func MakeDeleteChatCancel(userID string) string {
+	return fmt.Sprintf("%s%s", DeleteChatCancel, userID)
 }

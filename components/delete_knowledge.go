@@ -14,14 +14,14 @@ import (
 var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		i := ctx.Inter
-		customId := i.MessageComponentData().CustomID
+		customID := i.MessageComponentData().CustomID
 
-		if !strings.HasPrefix(customId, utils.DeleteLearnedData) {
+		if !strings.HasPrefix(customID, utils.DeleteLearnedData) {
 			return false
 		}
 
-		userId := utils.GetDeleteLearnedDataUserId(customId)
-		if i.Member.User.ID != userId {
+		userID := utils.GetDeleteLearnedDataUserId(customID)
+		if i.Member.User.ID != userID {
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
@@ -40,8 +40,8 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Learns.DeleteOne(context.TODO(), databases.Learn{Id: id})
+		id, itemID := utils.GetDeleteLearnedDataID(i.MessageComponentData().CustomID)
+		_, err = databases.GetDatabase().Learns.DeleteOne(context.TODO(), databases.Learn{ID: id})
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemId)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemID)}),
 			},
 		})
 	},

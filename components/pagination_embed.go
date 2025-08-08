@@ -15,13 +15,16 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 		if i.MessageComponentData().ComponentType == discordgo.ButtonComponent {
 			customId := i.MessageComponentData().CustomID
 
-			if !strings.HasPrefix(customId, utils.PaginationEmbedPrev) && !strings.HasPrefix(customId, utils.PaginationEmbedNext) && !strings.HasPrefix(customId, utils.PaginationEmbedPages) {
+			isPrev := strings.HasPrefix(customId, utils.PaginationEmbedPrev)
+			isNext := strings.HasPrefix(customId, utils.PaginationEmbedNext)
+			isSetPage := strings.HasPrefix(customId, utils.PaginationEmbedPages)
+			if !isPrev && !isNext && !isSetPage {
 				return false
 			}
 
-			id := utils.GetPaginationEmbedId(customId)
-			userId := utils.GetPaginationEmbedUserId(id)
-			if i.Member.User.ID != userId {
+			id := utils.GetPaginationEmbedID(customId)
+			userID := utils.GetPaginationEmbedUserID(id)
+			if i.Member.User.ID != userID {
 				return false
 			}
 
@@ -34,14 +37,14 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 		return true
 	},
 	Run: func(ctx *commands.ComponentContext) error {
-		customId := ctx.Inter.MessageComponentData().CustomID
-		id := utils.GetPaginationEmbedId(customId)
+		customID := ctx.Inter.MessageComponentData().CustomID
+		id := utils.GetPaginationEmbedID(customID)
 		p := utils.GetPaginationEmbed(id)
 
-		if strings.HasPrefix(customId, utils.PaginationEmbedPrev) {
+		if strings.HasPrefix(customID, utils.PaginationEmbedPrev) {
 			p.Prev(ctx.Inter)
 			return nil
-		} else if strings.HasPrefix(customId, utils.PaginationEmbedNext) {
+		} else if strings.HasPrefix(customID, utils.PaginationEmbedNext) {
 			p.Next(ctx.Inter)
 			return nil
 		} else {

@@ -39,7 +39,7 @@ func Delete(m any, user *discordgo.User, name string) error {
 				Accessory: discordgo.Button{
 					Label:    "삭제",
 					Style:    discordgo.DangerButton,
-					CustomID: utils.MakeDeleteChat(data.Id.Hex(), i+1, user.ID),
+					CustomID: utils.MakeDeleteChat(data.ID.Hex(), i+1, user.ID),
 				},
 				Components: []discordgo.MessageComponent{
 					discordgo.TextDisplay{
@@ -80,7 +80,7 @@ func Delete(m any, user *discordgo.User, name string) error {
 						discordgo.Button{
 							Label:    "삭제",
 							Style:    discordgo.DangerButton,
-							CustomID: utils.MakeDeleteChat(data[0].Id.Hex(), 0, user.ID),
+							CustomID: utils.MakeDeleteChat(data[0].ID.Hex(), 0, user.ID),
 						},
 						discordgo.Button{
 							Label:    "취소",

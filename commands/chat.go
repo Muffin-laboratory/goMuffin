@@ -83,8 +83,6 @@ var ChatCommand *Command = &Command{
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	ChatInputRun: func(ctx *ChatInputContext) error {
-		ctx.Inter.DeferReply(nil)
-
 		var cType chatCommandType
 		var str string
 

@@ -29,7 +29,7 @@ var InformationCommand *Command = &Command{
 }
 
 func informationRun(s *discordgo.Session, m any) error {
-	owner, err := s.User(configs.GetConfig().Bot.OwnerId)
+	owner, err := s.User(configs.GetConfig().Bot.OwnerID)
 	if err != nil {
 		return err
 	}

@@ -25,7 +25,7 @@ func List(m any, user *discordgo.User) error {
 		return err
 	}
 
-	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: user.ID}).Decode(&dbUser)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,7 @@ func List(m any, user *discordgo.User) error {
 		var isDisabled bool
 		var textDisplay discordgo.TextDisplay
 
-		if data.Id == dbUser.ChatId {
+		if data.ID == dbUser.ChatID {
 			textDisplay = discordgo.TextDisplay{
 				Content: fmt.Sprintf("**%d. %s\n (선택됨)**", i+1, data.Name),
 			}
@@ -61,7 +61,7 @@ func List(m any, user *discordgo.User) error {
 			Accessory: discordgo.Button{
 				Label:    "선택",
 				Style:    discordgo.SuccessButton,
-				CustomID: utils.MakeSelectChat(data.Id.Hex(), i+1, user.ID),
+				CustomID: utils.MakeSelectChat(data.ID.Hex(), i+1, user.ID),
 				Disabled: isDisabled,
 			},
 			Components: []discordgo.MessageComponent{textDisplay},

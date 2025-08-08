@@ -106,7 +106,7 @@ var LearnCommand *Command = &Command{
 	},
 }
 
-func learnRun(m any, userId, command, result string) error {
+func learnRun(m any, userID, command, result string) error {
 	igCommands := []string{}
 
 	for _, command := range instance.Commands {
@@ -120,7 +120,7 @@ func learnRun(m any, userId, command, result string) error {
 	disallows := []string{
 		"@everyone",
 		"@here",
-		fmt.Sprintf("<@%s>", configs.GetConfig().Bot.OwnerId),
+		fmt.Sprintf("<@%s>", configs.GetConfig().Bot.OwnerID),
 	}
 
 	for _, ig := range ignores {
@@ -157,7 +157,7 @@ func learnRun(m any, userId, command, result string) error {
 	_, err := databases.GetDatabase().Learns.InsertOne(context.TODO(), databases.Learn{
 		Command:   command,
 		Result:    result,
-		UserId:    userId,
+		UserID:    userID,
 		CreatedAt: time.Now(),
 	})
 	if err != nil {

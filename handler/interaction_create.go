@@ -31,7 +31,7 @@ func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	// 아 몰라 goto 쓸래
 ErrMsg:
-	owner, _ := s.User(configs.GetConfig().Bot.OwnerId)
+	owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 	utils.NewMessageSender(&utils.InteractionCreate{
 		InteractionCreate: i,
 		Session:           s,

@@ -7,9 +7,9 @@ import (
 )
 
 type Learn struct {
-	Id        bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Command   string        `bson:"command,omitempty"`
 	Result    string        `bson:"result,omitempty"`
-	UserId    string        `bson:"user_id,omitempty"`
+	UserID    string        `bson:"user_id,omitempty"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }

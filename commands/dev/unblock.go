@@ -41,7 +41,7 @@ var UnblockCommand *commands.Command = &commands.Command{
 		}
 
 		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(),
-			databases.User{UserId: userId},
+			databases.User{UserID: userId},
 			bson.D{{
 				Key:   "$set",
 				Value: databases.User{Blocked: false, BlockedReason: ""},

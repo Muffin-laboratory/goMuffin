@@ -15,12 +15,12 @@ import (
 
 var RegisterComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
-		customId := ctx.Inter.MessageComponentData().CustomID
-		if !strings.HasPrefix(customId, utils.ServiceAgree) && !strings.HasPrefix(customId, utils.ServiceDisagree) {
+		customID := ctx.Inter.MessageComponentData().CustomID
+		if !strings.HasPrefix(customID, utils.ServiceAgree) && !strings.HasPrefix(customID, utils.ServiceDisagree) {
 			return false
 		}
 
-		if ctx.Inter.User.ID != utils.GetServiceUserId(customId) {
+		if ctx.Inter.User.ID != utils.GetServiceUserID(customID) {
 			return false
 		}
 		return true
@@ -31,13 +31,13 @@ var RegisterComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		customId := ctx.Inter.MessageComponentData().CustomID
+		customID := ctx.Inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
-		case strings.HasPrefix(customId, utils.ServiceAgree):
+		case strings.HasPrefix(customID, utils.ServiceAgree):
 			_, err := databases.GetDatabase().Users.InsertOne(context.TODO(), databases.User{
-				UserId:    ctx.Inter.User.ID,
+				UserID:    ctx.Inter.User.ID,
 				CreatedAt: time.Now(),
 			})
 			if err != nil {
@@ -52,7 +52,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
-		case strings.HasPrefix(customId, utils.ServiceDisagree):
+		case strings.HasPrefix(customID, utils.ServiceDisagree):
 			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{

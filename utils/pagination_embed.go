@@ -13,26 +13,26 @@ type PaginationEmbed struct {
 	Containers []*discordgo.Container
 	Current    int
 	Total      int
-	Id         string
+	ID         string
 	m          any
 }
 
 var paginationEmbeds = make(map[string]*PaginationEmbed)
 
 func PaginationEmbedBuilder(m any) *PaginationEmbed {
-	var userId string
+	var userID string
 
 	switch m := m.(type) {
 	case *MessageCreate:
-		userId = m.Author.ID
+		userID = m.Author.ID
 	case *InteractionCreate:
-		userId = m.Member.User.ID
+		userID = m.Member.User.ID
 	}
 
-	id := fmt.Sprintf("%s/%d", userId, rand.Intn(100))
+	id := fmt.Sprintf("%s/%d", userID, rand.Intn(100))
 	return &PaginationEmbed{
 		Current: 1,
-		Id:      id,
+		ID:      id,
 		m:       m,
 	}
 }
@@ -96,9 +96,9 @@ func MakeDesc(desc, item string) string {
 
 func startPaginationEmbed(p *PaginationEmbed) error {
 	container := *p.Containers[0]
-	container.Components = append(container.Components, makeComponents(p.Id, p.Current, p.Total))
+	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
 
-	paginationEmbeds[p.Id] = p
+	paginationEmbeds[p.ID] = p
 
 	err := NewMessageSender(p.m).
 		AddComponents(container).
@@ -146,7 +146,7 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
 	}
 
 	container := *p.Containers[p.Current-1]
-	container.Components = append(container.Components, makeComponents(p.Id, p.Current, p.Total))
+	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
 
 	err := i.Update(&discordgo.InteractionResponseData{
 		Flags:      discordgo.MessageFlagsIsComponentsV2,
@@ -157,13 +157,13 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
 
 func (p *PaginationEmbed) ShowModal(i *InteractionCreate) {
 	i.ShowModal(&ModalData{
-		CustomId: MakePaginationEmbedModal(p.Id),
+		CustomId: MakePaginationEmbedModal(p.ID),
 		Title:    fmt.Sprintf("%s의 리스트", i.Session.State.User.Username),
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.TextInput{
-						CustomID:    MakePaginationEmbedSetPage(p.Id),
+						CustomID:    MakePaginationEmbedSetPage(p.ID),
 						Label:       "페이지",
 						Style:       discordgo.TextInputShort,
 						Placeholder: "이동할 페이지를 여기에 적어주세요.",

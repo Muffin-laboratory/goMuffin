@@ -72,12 +72,12 @@ var DeleteKnowledgeCommand *Command = &Command{
 	},
 }
 
-func deleteLearnedDataRun(m any, command, userId string) error {
+func deleteLearnedDataRun(m any, command, userID string) error {
 	var data []databases.Learn
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
-	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), databases.Learn{UserId: userId, Command: command})
+	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), databases.Learn{UserID: userID, Command: command})
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func deleteLearnedDataRun(m any, command, userId string) error {
 			Accessory: discordgo.Button{
 				Label:    "삭제",
 				Style:    discordgo.DangerButton,
-				CustomID: utils.MakeDeleteLearnedData(data.Id.Hex(), i+1, userId),
+				CustomID: utils.MakeDeleteLearnedData(data.ID.Hex(), i+1, userID),
 			},
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{

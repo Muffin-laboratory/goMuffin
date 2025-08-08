@@ -138,7 +138,7 @@ func (d *Discommand) MessageRun(name string, s *discordgo.Session, msg *discordg
 	}
 
 	if command, ok := d.Commands[name]; ok && command.RegisterMessageCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.GetConfig().Bot.OwnerId {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.GetConfig().Bot.OwnerID {
 			utils.NewMessageSender(m).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
 				SetComponentsV2(true).
@@ -182,7 +182,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.GetConfig().Bot.OwnerId {
+		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.GetConfig().Bot.OwnerID {
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
 				SetComponentsV2(true).

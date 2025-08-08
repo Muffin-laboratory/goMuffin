@@ -15,14 +15,14 @@ import (
 var SelectChatComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		i := ctx.Inter
-		customId := i.MessageComponentData().CustomID
+		customID := i.MessageComponentData().CustomID
 
-		if !strings.HasPrefix(customId, utils.SelectChat) {
+		if !strings.HasPrefix(customID, utils.SelectChat) {
 			return false
 		}
 
-		userId := utils.GetChatUserId(customId)
-		if i.User.ID != userId {
+		userID := utils.GetChatUserID(customID)
+		if i.User.ID != userID {
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
@@ -41,10 +41,10 @@ var SelectChatComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		id, itemId := utils.GetSelectChatId(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserId: i.User.ID}, bson.D{{
+		id, itemID := utils.GetSelectChatID(i.MessageComponentData().CustomID)
+		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
 			Key:   "$set",
-			Value: databases.User{ChatId: id},
+			Value: databases.User{ChatID: id},
 		}})
 		if err != nil {
 			return err
@@ -54,7 +54,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번으로 채팅을 변경했어요.", itemId)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번으로 채팅을 변경했어요.", itemID)}),
 			},
 		})
 	},

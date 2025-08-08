@@ -14,14 +14,14 @@ import (
 var DeleteChatComponent = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		i := ctx.Inter
-		customId := i.MessageComponentData().CustomID
+		customID := i.MessageComponentData().CustomID
 
-		if !strings.HasPrefix(customId, utils.DeleteChat) && !strings.HasPrefix(customId, utils.DeleteChatCancel) {
+		if !strings.HasPrefix(customID, utils.DeleteChat) && !strings.HasPrefix(customID, utils.DeleteChatCancel) {
 			return false
 		}
 
-		userId := utils.GetChatUserId(customId)
-		if i.Member.User.ID != userId {
+		userID := utils.GetChatUserID(customID)
+		if i.Member.User.ID != userID {
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
@@ -50,19 +50,19 @@ var DeleteChatComponent = &commands.Component{
 			return err
 		}
 
-		id, itemId := utils.GetDeleteLearnedDataId(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{Id: id})
+		id, itemID := utils.GetDeleteLearnedDataID(i.MessageComponentData().CustomID)
+		_, err = databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id})
 		if err != nil {
 			return err
 		}
 
-		_, err = databases.GetDatabase().Memory.DeleteMany(context.TODO(), databases.Memory{ChatId: id})
+		_, err = databases.GetDatabase().Memory.DeleteMany(context.TODO(), databases.Memory{ChatID: id})
 		if err != nil {
 			return err
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		if itemId == 0 {
+		if itemID == 0 {
 			return i.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
@@ -74,7 +74,7 @@ var DeleteChatComponent = &commands.Component{
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemId)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemID)}),
 			},
 		})
 	},
