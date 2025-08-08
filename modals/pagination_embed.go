@@ -38,14 +38,10 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 
 		if _, err := strconv.Atoi(cmp.Value); err != nil {
 			i.Reply(&discordgo.InteractionResponseData{
-				Embeds: []*discordgo.MessageEmbed{
-					{
-						Title:       "❌ 오류",
-						Description: "해당 값은 숫자여야해요.",
-						Color:       utils.EmbedFail,
-					},
+				Components: []discordgo.MessageComponent{
+					utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 값은 숫자여야해요."}),
 				},
-				Flags: discordgo.MessageFlagsEphemeral,
+				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 			})
 			return false
 		}
