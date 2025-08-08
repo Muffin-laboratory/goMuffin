@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -89,12 +90,13 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		err := commands.GetDiscommand().MessageRun(command, s, m, args[1:])
 		if err != nil {
+			owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 			log.Println(err)
 			utils.NewMessageSender(&utils.MessageCreate{
 				MessageCreate: m,
 				Session:       s,
 			}).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "오류가 발생하였어요. 만약 계속 발생한다면, `migan.`으로 연락해주세요."})).
+				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))})).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
