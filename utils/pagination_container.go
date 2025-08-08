@@ -7,8 +7,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// PaginationEmbed is embed with page
-type PaginationEmbed struct {
+// PaginationContainer is container with page
+type PaginationContainer struct {
 	Container  *discordgo.Container
 	Containers []*discordgo.Container
 	Current    int
@@ -17,9 +17,9 @@ type PaginationEmbed struct {
 	m          any
 }
 
-var paginationEmbeds = make(map[string]*PaginationEmbed)
+var paginationContainers = make(map[string]*PaginationContainer)
 
-func PaginationEmbedBuilder(m any) *PaginationEmbed {
+func PaginationContainerBuilder(m any) *PaginationContainer {
 	var userID string
 
 	switch m := m.(type) {
@@ -30,26 +30,26 @@ func PaginationEmbedBuilder(m any) *PaginationEmbed {
 	}
 
 	id := fmt.Sprintf("%s/%d", userID, rand.Intn(100))
-	return &PaginationEmbed{
+	return &PaginationContainer{
 		Current: 1,
 		ID:      id,
 		m:       m,
 	}
 }
 
-func (p *PaginationEmbed) SetContainer(container discordgo.Container) *PaginationEmbed {
+func (p *PaginationContainer) SetContainer(container discordgo.Container) *PaginationContainer {
 	p.Container = &container
 	return p
 }
 
-func (p *PaginationEmbed) AddContainers(container ...*discordgo.Container) *PaginationEmbed {
+func (p *PaginationContainer) AddContainers(container ...*discordgo.Container) *PaginationContainer {
 	p.Total += len(container)
 	p.Containers = append(p.Containers, container...)
 	return p
 }
 
-func (p *PaginationEmbed) Start() error {
-	return startPaginationEmbed(p)
+func (p *PaginationContainer) Start() error {
+	return startPaginationContainer(p)
 }
 
 func makeComponents(id string, current, total int) *discordgo.ActionsRow {
@@ -94,11 +94,11 @@ func MakeDesc(desc, item string) string {
 	return newDesc
 }
 
-func startPaginationEmbed(p *PaginationEmbed) error {
+func startPaginationContainer(p *PaginationContainer) error {
 	container := *p.Containers[0]
 	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
 
-	paginationEmbeds[p.ID] = p
+	paginationContainers[p.ID] = p
 
 	err := NewMessageSender(p.m).
 		AddComponents(container).
@@ -109,14 +109,14 @@ func startPaginationEmbed(p *PaginationEmbed) error {
 	return err
 }
 
-func GetPaginationEmbed(id string) *PaginationEmbed {
-	if p, ok := paginationEmbeds[id]; ok {
+func GetPaginationContainer(id string) *PaginationContainer {
+	if p, ok := paginationContainers[id]; ok {
 		return p
 	}
 	return nil
 }
 
-func (p *PaginationEmbed) Prev(i *InteractionCreate) error {
+func (p *PaginationContainer) Prev(i *InteractionCreate) error {
 	if p.Current == 1 {
 		p.Current = p.Total
 	} else {
@@ -126,7 +126,7 @@ func (p *PaginationEmbed) Prev(i *InteractionCreate) error {
 	return p.Set(i, p.Current)
 }
 
-func (p *PaginationEmbed) Next(i *InteractionCreate) error {
+func (p *PaginationContainer) Next(i *InteractionCreate) error {
 	if p.Current >= p.Total {
 		p.Current = 1
 	} else {
@@ -136,7 +136,7 @@ func (p *PaginationEmbed) Next(i *InteractionCreate) error {
 	return p.Set(i, p.Current)
 }
 
-func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
+func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
 	if page <= 0 {
 		p.Current = 1
 	} else if page > p.Total {
@@ -155,7 +155,7 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
 	return err
 }
 
-func (p *PaginationEmbed) ShowModal(i *InteractionCreate) {
+func (p *PaginationContainer) ShowModal(i *InteractionCreate) {
 	i.ShowModal(&ModalData{
 		CustomId: MakePaginationEmbedModal(p.ID),
 		Title:    fmt.Sprintf("%s의 리스트", i.Session.State.User.Username),

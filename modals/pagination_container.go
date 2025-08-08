@@ -9,7 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var PaginationEmbedModal *commands.Modal = &commands.Modal{
+var PaginationContainerModal *commands.Modal = &commands.Modal{
 	Parse: func(ctx *commands.ModalContext) bool {
 		i := ctx.Inter
 		data := i.ModalSubmitData()
@@ -30,7 +30,7 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 			return false
 		}
 
-		if utils.GetPaginationEmbed(id) == nil {
+		if utils.GetPaginationContainer(id) == nil {
 			return false
 		}
 
@@ -50,9 +50,9 @@ var PaginationEmbedModal *commands.Modal = &commands.Modal{
 	},
 	Run: func(ctx *commands.ModalContext) error {
 		data := ctx.Inter.ModalSubmitData()
-		customId := data.CustomID
-		id := utils.GetPaginationEmbedID(customId)
-		p := utils.GetPaginationEmbed(id)
+		customID := data.CustomID
+		id := utils.GetPaginationEmbedID(customID)
+		p := utils.GetPaginationContainer(id)
 		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
 
 		page, _ := strconv.Atoi(cmp.Value)

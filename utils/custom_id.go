@@ -81,7 +81,7 @@ func GetPaginationEmbedID(customID string) string {
 }
 
 func GetPaginationEmbedUserID(id string) string {
-	return RegexpPaginationEmbedID.FindAllStringSubmatch(id, 1)[0][1]
+	return RegexpPaginationContainerID.FindAllStringSubmatch(id, 1)[0][1]
 }
 
 func MakeServiceAgree(userID string) string {

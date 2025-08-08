@@ -84,7 +84,7 @@ func List(m any, user *discordgo.User) error {
 		containers = append(containers, container)
 	}
 
-	return utils.PaginationEmbedBuilder(m).
+	return utils.PaginationContainerBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

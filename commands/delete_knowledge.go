@@ -124,7 +124,7 @@ func deleteLearnedDataRun(m any, command, userID string) error {
 		containers = append(containers, container)
 	}
 
-	return utils.PaginationEmbedBuilder(m).
+	return utils.PaginationContainerBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

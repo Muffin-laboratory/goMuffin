@@ -8,7 +8,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var PaginationEmbedComponent *commands.Component = &commands.Component{
+var PaginationContainerComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
 		i := ctx.Inter
 
@@ -28,7 +28,7 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 				return false
 			}
 
-			if utils.GetPaginationEmbed(id) == nil {
+			if utils.GetPaginationContainer(id) == nil {
 				return false
 			}
 		} else {
@@ -39,7 +39,7 @@ var PaginationEmbedComponent *commands.Component = &commands.Component{
 	Run: func(ctx *commands.ComponentContext) error {
 		customID := ctx.Inter.MessageComponentData().CustomID
 		id := utils.GetPaginationEmbedID(customID)
-		p := utils.GetPaginationEmbed(id)
+		p := utils.GetPaginationContainer(id)
 
 		if strings.HasPrefix(customID, utils.PaginationEmbedPrev) {
 			p.Prev(ctx.Inter)

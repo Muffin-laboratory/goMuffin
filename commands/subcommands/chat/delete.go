@@ -65,7 +65,7 @@ func Delete(m any, user *discordgo.User, name string) error {
 			containers = append(containers, container)
 		}
 
-		return utils.PaginationEmbedBuilder(m).
+		return utils.PaginationContainerBuilder(m).
 			AddContainers(containers...).
 			Start()
 	}

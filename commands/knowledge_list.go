@@ -220,7 +220,7 @@ func learnedDataListRun(m any, globalName, avatarURL string, filter bson.D, leng
 			},
 		}, fmt.Sprintf("### %s님이 알려주신 지식\n- **%s**\n", globalName, command)+"%s", items, length)
 
-		return utils.PaginationEmbedBuilder(m).
+		return utils.PaginationContainerBuilder(m).
 			AddContainers(containers...).
 			Start()
 	}
@@ -243,7 +243,7 @@ func learnedDataListRun(m any, globalName, avatarURL string, filter bson.D, leng
 		},
 	}, fmt.Sprintf("### %s님이 알려주신 지식\n총 %d개에요.\n", globalName, len(items))+"%s", items, length)
 
-	return utils.PaginationEmbedBuilder(m).
+	return utils.PaginationContainerBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

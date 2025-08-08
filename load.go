@@ -29,12 +29,12 @@ func init() {
 
 	// Message component
 	go commands.GetDiscommand().LoadComponent(components.DeleteKnowledgeComponent)
-	go commands.GetDiscommand().LoadComponent(components.PaginationEmbedComponent)
+	go commands.GetDiscommand().LoadComponent(components.PaginationContainerComponent)
 	go commands.GetDiscommand().LoadComponent(components.RegisterComponent)
 	go commands.GetDiscommand().LoadComponent(components.DeregisterComponent)
 	go commands.GetDiscommand().LoadComponent(components.SelectChatComponent)
 	go commands.GetDiscommand().LoadComponent(components.DeleteChatComponent)
 
 	// Modal component
-	go commands.GetDiscommand().LoadModal(modals.PaginationEmbedModal)
+	go commands.GetDiscommand().LoadModal(modals.PaginationContainerModal)
 }
