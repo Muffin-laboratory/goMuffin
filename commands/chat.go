@@ -127,7 +127,7 @@ var ChatCommand *Command = &Command{
 					Send()
 			}
 
-			name := strings.Trim(strings.Join((*ctx.Args), " "), " ")
+			name := strings.Trim(strings.Join((*ctx.Args)[1:], " "), " ")
 			if len([]rune(name)) > 25 {
 				return utils.NewMessageSender(ctx.Msg).
 					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름은 25자를 초과할 수 없어요."})).
