@@ -5,6 +5,7 @@ WORKDIR /app
 
 COPY . .
 
+RUN make deps
 RUN make
 
 ENTRYPOINT [ "./build/goMuffin" ]
