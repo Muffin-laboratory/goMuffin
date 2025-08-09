@@ -1,6 +1,4 @@
-FROM golang:1.24.3
-
-ENV DATABASE_NAME=muffin_ai
+FROM golang:1.24.5
 
 RUN mkdir /app
 WORKDIR /app
