@@ -4,6 +4,6 @@
 .gitignore
 .dockerignore
 README.md
-scripts/
+update.sh
 compose.yml
 Dockerfile
