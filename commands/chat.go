@@ -181,7 +181,18 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 			Content: &result,
 		})
 	case chatCommandCreate:
-		_, err := databases.CreateChat(user.ID, contentOrName)
+		var dbUser databases.User
+
+		err := databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+		if err != nil {
+			return err
+		}
+
+		if dbUser.ChattingMode == databases.ChattingMuffinMode {
+			return chatSendErrorMessage(m)
+		}
+
+		_, err = databases.CreateChat(user.ID, contentOrName)
 		if err != nil {
 			return err
 		}
@@ -196,17 +207,21 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		var sections []discordgo.Section
 		var containers []*discordgo.Container
 
+		err := databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+		if err != nil {
+			return err
+		}
+
+		if dbUser.ChattingMode == databases.ChattingMuffinMode {
+			return chatSendErrorMessage(m)
+		}
+
 		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{UserId: user.ID})
 		if err != nil {
 			return err
 		}
 
 		err = cur.All(context.TODO(), &data)
-		if err != nil {
-			return err
-		}
-
-		err = databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
 		if err != nil {
 			return err
 		}
@@ -269,7 +284,17 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 			AddContainers(containers...).
 			Start()
 	case chatCommandDelete:
+		var dbUser databases.User
 		var data []databases.Chat
+
+		err := databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
+		if err != nil {
+			return err
+		}
+
+		if dbUser.ChattingMode == databases.ChattingMuffinMode {
+			return chatSendErrorMessage(m)
+		}
 
 		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{Name: contentOrName})
 		if err != nil {
@@ -355,4 +380,13 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 			Send()
 	}
 	return nil
+}
+
+func chatSendErrorMessage(m any) error {
+	return utils.NewMessageSender(m).
+		AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("채팅모드가 %s여야해요.", databases.ModeString(databases.ChattingAIMode))})).
+		SetComponentsV2(true).
+		SetReply(true).
+		SetEphemeral(true).
+		Send()
 }
