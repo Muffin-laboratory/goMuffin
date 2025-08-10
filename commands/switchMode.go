@@ -44,7 +44,7 @@ func switchModeRun(m any, user *discordgo.User) error {
 	switch mode {
 	default:
 		newMode = databases.ChattingAIMode
-	case databases.ChattingMuffinMode:
+	case databases.ChattingAIMode:
 		newMode = databases.ChattingMuffinMode
 	}
 	_, err = databases.Database.Users.UpdateOne(context.TODO(), databases.User{UserId: user.ID}, bson.D{{
