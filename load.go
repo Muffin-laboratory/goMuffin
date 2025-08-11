@@ -1,13 +1,26 @@
 package main
 
 import (
+	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/commands/dev"
 	"git.wh64.net/muffin/goMuffin/components"
+	"git.wh64.net/muffin/goMuffin/configs"
+	"git.wh64.net/muffin/goMuffin/handler"
 	"git.wh64.net/muffin/goMuffin/modals"
+	"github.com/bwmarrin/discordgo"
 )
 
+var dg *discordgo.Session
+
 func init() {
+	dg, _ = discordgo.New("Bot " + configs.GetConfig().Bot.Token)
+	go chatbot.New(dg)
+
+	// Handler
+	go dg.AddHandler(handler.MessageCreate)
+	go dg.AddHandler(handler.InteractionCreate)
+
 	// General command
 	go commands.GetDiscommand().LoadCommand(commands.HelpCommand)
 	go commands.GetDiscommand().LoadCommand(commands.DataLengthCommand)

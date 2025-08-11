@@ -1,62 +1,24 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/chatbot"
-	"git.wh64.net/muffin/goMuffin/cmd"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/handler"
 	"github.com/bwmarrin/discordgo"
-	"github.com/devproje/commando"
-	"github.com/devproje/commando/types"
 )
 
 func main() {
-	command := commando.NewCommando(os.Args[1:])
-	config := configs.GetConfig()
-
-	if len(os.Args) > 1 {
-		command.Root("delete-all-commands", "봇의 모든 슬래시 커맨드를 삭제합니다.", cmd.DeleteAllCommands,
-			types.OptionData{
-				Name: "id",
-				Desc: "봇의 디스코드 아이디",
-				Type: types.STRING,
-			},
-			types.OptionData{
-				Name:  "isYes",
-				Short: []string{"y"},
-				Type:  types.BOOLEAN,
-			},
-		)
-
-		err := command.Execute()
-		if err != nil {
-			_, _ = fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		return
-	}
-
-	dg, _ := discordgo.New("Bot " + config.Bot.Token)
-
-	go dg.AddHandler(handler.MessageCreate)
-	go dg.AddHandler(handler.InteractionCreate)
-
 	err := dg.Open()
 	if err != nil {
 		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
 		log.Fatalln(err)
 	}
-
-	chatbot.New(dg)
 
 	defer dg.Close()
 
@@ -68,6 +30,7 @@ func main() {
 		}
 	}()
 
+	cmds := []*discordgo.ApplicationCommand{}
 	for _, cmd := range commands.GetDiscommand().Commands {
 		if cmd.Name == commands.HelpCommand.Name {
 			// 극한의 성능 똥망 코드 탄생!
@@ -84,8 +47,10 @@ func main() {
 			continue
 		}
 
-		go dg.ApplicationCommandCreate(dg.State.User.ID, "", cmd.ApplicationCommand)
+		cmds = append(cmds, cmd.ApplicationCommand)
 	}
+
+	go dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", cmds)
 
 	defer databases.Disconnect()
 
