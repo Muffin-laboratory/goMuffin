@@ -9,7 +9,7 @@ import (
 )
 
 func Create(m any, user *discordgo.User, name string) error {
-	_, err := databases.CreateChat(user.ID, name)
+	_, err := databases.GetDatabase().Chats.CreateChat(user.ID, name)
 	if err != nil {
 		return err
 	}

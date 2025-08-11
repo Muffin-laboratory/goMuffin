@@ -52,7 +52,7 @@ func main() {
 
 	go dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", cmds)
 
-	defer databases.Disconnect()
+	defer databases.GetDatabase().Disconnect()
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
 	sc := make(chan os.Signal, 1)

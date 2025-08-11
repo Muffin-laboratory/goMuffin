@@ -13,9 +13,9 @@ type MuffinDatabase struct {
 	Client *mongo.Client
 	Learns *mongo.Collection
 	Texts  *mongo.Collection
-	Memory *mongo.Collection
-	Users  *mongo.Collection
-	Chats  *mongo.Collection
+	Memory *MemoryCollection
+	Users  *UserCollection
+	Chats  *ChatCollection
 }
 
 var instance *MuffinDatabase
@@ -29,9 +29,9 @@ func init() {
 		Client: client,
 		Learns: client.Database(configs.GetConfig().Database.Name).Collection("learn"),
 		Texts:  client.Database(configs.GetConfig().Database.Name).Collection("text"),
-		Memory: client.Database(configs.GetConfig().Database.Name).Collection("memory"),
-		Users:  client.Database(configs.GetConfig().Database.Name).Collection("user"),
-		Chats:  client.Database(configs.GetConfig().Database.Name).Collection("chat"),
+		Memory: &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory")},
+		Users:  &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user")},
+		Chats:  &ChatCollection{client.Database(configs.GetConfig().Database.Name).Collection("chat")},
 	}
 }
 
@@ -39,6 +39,6 @@ func GetDatabase() *MuffinDatabase {
 	return instance
 }
 
-func Disconnect() {
+func (d *MuffinDatabase) Disconnect() {
 	GetDatabase().Client.Disconnect(context.TODO())
 }

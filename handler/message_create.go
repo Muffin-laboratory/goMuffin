@@ -39,7 +39,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command := commands.GetDiscommand().Aliases[args[0]]
 
 		if command == "" {
-			if !databases.GetDatabase().IsUser(m.Author.ID) {
+			if !databases.GetDatabase().Users.IsUser(m.Author.ID) {
 				utils.NewMessageSender(&utils.MessageCreate{
 					MessageCreate: m,
 					Session:       s,
@@ -51,7 +51,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 
-			blocked, reason := databases.GetDatabase().IsUserBlocked(m.Author.ID)
+			blocked, reason := databases.GetDatabase().Users.IsUserBlocked(m.Author.ID)
 			if blocked {
 				user, _ := s.User(m.Author.ID)
 				utils.NewMessageSender(m).

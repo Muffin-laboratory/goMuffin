@@ -147,7 +147,7 @@ func (d *Discommand) MessageRun(name string, s *discordgo.Session, msg *discordg
 			return nil
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().IsUser(m.Author.ID) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(m.Author.ID) {
 			utils.NewMessageSender(m).
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
 				SetComponentsV2(true).
@@ -156,7 +156,7 @@ func (d *Discommand) MessageRun(name string, s *discordgo.Session, msg *discordg
 			return nil
 		}
 
-		blocked, reason := databases.GetDatabase().IsUserBlocked(m.Author.ID)
+		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(m.Author.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(m.Author.ID)
 			utils.NewMessageSender(m).
@@ -192,7 +192,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 			return nil
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().IsUser(i.User.ID) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
 				SetComponentsV2(true).
@@ -202,7 +202,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 			return nil
 		}
 
-		blocked, reason := databases.GetDatabase().IsUserBlocked(i.User.ID)
+		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
 			utils.NewMessageSender(i).

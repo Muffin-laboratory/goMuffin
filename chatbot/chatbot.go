@@ -124,7 +124,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	err = databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserId: user.ID}).Err()
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			_, err = databases.CreateChat(user.ID, "새로운 채팅")
+			_, err = databases.GetDatabase().Chats.CreateChat(user.ID, "새로운 채팅")
 			fmt.Println(err)
 			if err != nil {
 				return "살려주ㅅ세요", err
@@ -134,7 +134,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 		}
 	}
 
-	contents, err := GetMemory(dbUser.ChatID)
+	contents, err := databases.GetDatabase().Memory.Get(dbUser.ChatID)
 	if err != nil {
 		return "AI에 문제가 생겼ㅇ어요.", err
 	}
@@ -148,7 +148,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	}
 
 	resultText := result.Text()
-	err = SaveMemory(&databases.Memory{
+	err = databases.GetDatabase().Memory.Save(&databases.Memory{
 		UserID:  user.ID,
 		Content: question,
 		Answer:  resultText,
@@ -164,7 +164,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 }
 
 func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, error) {
-	mode, err := databases.GetDatabase().GetUserChattingMode(user.ID)
+	mode, err := databases.GetDatabase().Users.GetUserChattingMode(user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}

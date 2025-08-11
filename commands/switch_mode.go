@@ -36,7 +36,7 @@ var SwitchModeCommand *Command = &Command{
 
 func switchModeRun(m any, user *discordgo.User) error {
 	var newMode databases.ChattingMode
-	mode, err := databases.GetDatabase().GetUserChattingMode(user.ID)
+	mode, err := databases.GetDatabase().Users.GetUserChattingMode(user.ID)
 	if err != nil {
 		return err
 	}

@@ -21,20 +21,24 @@ type User struct {
 	ChattingMode  ChattingMode  `bson:"chatting_mode,omitempty"`
 }
 
+type UserCollection struct {
+	*mongo.Collection
+}
+
 const (
 	ChattingAIMode ChattingMode = iota
 	ChattingMuffinMode
 )
 
-func (d *MuffinDatabase) IsUser(userId string) bool {
+func (c *UserCollection) IsUser(userId string) bool {
 	var user *User
-	d.Users.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
+	c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
 	return user != nil
 }
 
-func (d *MuffinDatabase) IsUserBlocked(userId string) (bool, string) {
+func (c *UserCollection) IsUserBlocked(userId string) (bool, string) {
 	var user User
-	err := d.Users.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
+	err := c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return false, ""
@@ -46,9 +50,9 @@ func (d *MuffinDatabase) IsUserBlocked(userId string) (bool, string) {
 	return user.Blocked, user.BlockedReason
 }
 
-func (d *MuffinDatabase) GetUserChattingMode(userId string) (ChattingMode, error) {
+func (c *UserCollection) GetUserChattingMode(userId string) (ChattingMode, error) {
 	var user User
-	err := d.Users.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
+	err := c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
 	if err != nil {
 		return ChattingMuffinMode, err
 	}

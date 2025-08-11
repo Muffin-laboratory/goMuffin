@@ -15,8 +15,12 @@ type Chat struct {
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }
 
-func CreateChat(userId, name string) (*mongo.InsertOneResult, error) {
-	createdChat, err := GetDatabase().Chats.InsertOne(context.TODO(), Chat{UserId: userId, Name: name, CreatedAt: time.Now()})
+type ChatCollection struct {
+	*mongo.Collection
+}
+
+func (c *ChatCollection) CreateChat(userId, name string) (*mongo.InsertOneResult, error) {
+	createdChat, err := c.InsertOne(context.TODO(), Chat{UserId: userId, Name: name, CreatedAt: time.Now()})
 	if err != nil {
 		return nil, err
 	}
