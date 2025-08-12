@@ -11,10 +11,10 @@ import (
 var InformationCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "정보",
-		Description: "해당 봇의 정보를 알ㄹ려줘요.",
+		Description: "해당 봇의 정보를 알려줘요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s정보", configs.Config.Bot.Prefix),
+		Usage: "/정보",
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,

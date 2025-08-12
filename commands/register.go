@@ -15,7 +15,7 @@ var RegisterCommand *Command = &Command{
 		Description: "이 봇에 가입해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s가입", configs.Config.Bot.Prefix),
+		Usage: "/가입",
 	},
 	Category:                   General,
 	RegisterMessageCommand:     true,

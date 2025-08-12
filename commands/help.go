@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -18,15 +17,15 @@ var HelpCommand *Command = &Command{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "명령어",
-				Description: "해당 명령어에 대ㅎ한 도움말을 볼 수 있어요.",
+				Description: "도움말을 볼 명령어",
 				Choices:     []*discordgo.ApplicationCommandOptionChoice{},
 			},
 		},
 	},
 	Aliases: []string{"도움", "명령어", "help"},
 	DetailedDescription: &DetailedDescription{
-		Usage:    fmt.Sprintf("%s도움말 [명령어]", configs.Config.Bot.Prefix),
-		Examples: []string{fmt.Sprintf("%s도움말", configs.Config.Bot.Prefix), fmt.Sprintf("%s도움말 배워", configs.Config.Bot.Prefix)},
+		Usage:    "/도움말 [명령어:문자(머핀봇의 명령어)]",
+		Examples: []string{"/도움말", "/도움말 명령어:배워"},
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,

@@ -163,6 +163,20 @@ func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *di
 			return nil
 		}
 
+		utils.NewMessageSender(m).
+			AddComponents(discordgo.Container{
+				Components: []discordgo.MessageComponent{
+					discordgo.TextDisplay{Content: "### ⚠️ 고지"},
+					discordgo.TextDisplay{
+						Content: "메세지 기반 명령어는 머핀봇 7.0.0 (MadeleineV2)부터 지원이 종료될 예정이에요. " +
+							"따라서 앞으로는 빗금 기반 명령어를 사용해주세요.",
+					},
+				},
+			}).
+			SetReply(true).
+			SetComponentsV2(true).
+			Send()
+
 		return command.MessageRun(&MsgContext{m, &args, command})
 	}
 	return nil

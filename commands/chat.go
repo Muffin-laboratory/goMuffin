@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -21,6 +20,8 @@ var (
 	chatCommandCreate   chatCommandType = "생성"
 	chatCommandDelete   chatCommandType = "삭제"
 )
+
+const chatNameMaxLength = 25
 
 var ChatCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
@@ -40,8 +41,8 @@ var ChatCommand *Command = &Command{
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
 						Name:        "이름",
-						Description: "채팅의 이름을 정해요. (25자 이내)",
-						MaxLength:   25,
+						Description: "채팅방의 이름 (25자 이내)",
+						MaxLength:   chatNameMaxLength,
 						Required:    true,
 					},
 				},
@@ -66,8 +67,9 @@ var ChatCommand *Command = &Command{
 				Options: []*discordgo.ApplicationCommandOption{
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
-						Name:        "제목",
-						Description: "채팅의 제목",
+						Name:        "이름",
+						Description: "지울 채팅방의 이름",
+						MaxLength:   chatNameMaxLength,
 						Required:    true,
 					},
 				},
@@ -76,10 +78,11 @@ var ChatCommand *Command = &Command{
 	},
 	Aliases: []string{"채팅"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s대화 (목록/생성) [채팅 이름]", configs.Config.Bot.Prefix),
+		Usage: "/대화 (목록/생성/삭제) (이름:숫자(최대 25자, 목록에선 사용 불가능))",
 		Examples: []string{
-			fmt.Sprintf("%s대화 목록", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s대화 생성 머핀 냠냠", configs.Config.Bot.Prefix),
+			"/대화 목록",
+			"/대화 생성 이름:머핀 냠냠",
+			"/대화 삭제 이름:뷁",
 		},
 	},
 	Category:                   Chatting,

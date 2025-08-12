@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -17,7 +16,7 @@ var SwitchModeCommand *Command = &Command{
 		Description: "봇의 대답 방법을 전환해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s모드전환", configs.Config.Bot.Prefix),
+		Usage: "/모드전환",
 	},
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,

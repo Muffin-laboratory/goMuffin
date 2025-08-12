@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -18,7 +17,7 @@ var DataLengthCommand *Command = &Command{
 	},
 	Aliases: []string{"학습데이터량", "데이터량", "학습량"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s학습데이터량", configs.Config.Bot.Prefix),
+		Usage: "/데이터학습량",
 	},
 	Category:                   General,
 	RegisterApplicationCommand: true,

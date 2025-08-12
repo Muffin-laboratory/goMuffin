@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -23,18 +22,18 @@ var LearnedDataListCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
 		Name:        "리스트",
-		Description: "당신이 가ㄹ르쳐준 지식을 나열해요.",
+		Description: "당신이 가르쳐준 지식을 나열해요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "단어",
-				Description: "해당 단어에 대한 결과를 찾아요.",
+				Description: "해당 단어가 포함된 결과",
 				Required:    false,
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionInteger,
 				Name:        "개수",
-				Description: "한 페이지당 보여줄 지식 데이터 양을 정해요.",
+				Description: "한 페이지당 보여줄 지식 양",
 				MinValue:    &LIST_MIN_VALUE,
 				MaxValue:    LIST_MAX_VALUE,
 				Required:    false,
@@ -43,11 +42,12 @@ var LearnedDataListCommand *Command = &Command{
 	},
 	Aliases: []string{"list", "목록", "지식목록"},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s리스트 [단어]", configs.Config.Bot.Prefix),
+		Usage: "/리스트 [단어:문자] [개수:숫자(범위: 10-100)]",
 		Examples: []string{
-			fmt.Sprintf("%s리스트", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 안녕", configs.Config.Bot.Prefix),
-			fmt.Sprintf("%s리스트 개수:10", configs.Config.Bot.Prefix),
+			"/리스트",
+			"/리스트 단어:안녕",
+			"/리스트 개수:10",
+			"/리스트 단어: 머핀 개수:100",
 		},
 	},
 	Category:                   Chatting,

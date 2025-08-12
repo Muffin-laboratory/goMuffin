@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -14,19 +13,19 @@ import (
 var DeleteLearnedDataCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "삭제",
-		Description: "당신이 가르쳐준 단ㅇ어를 삭제해요.",
+		Description: "당신이 가르쳐준 단어를 삭제해요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Name:        "단어",
-				Description: "삭제할 단어를 입ㄹ력해주세요.",
+				Description: "삭제할 단어",
 				Required:    true,
 			},
 		},
 	},
 	Aliases: []string{"잊어", "지워"},
 	DetailedDescription: &DetailedDescription{
-		Usage:    fmt.Sprintf("%s삭제 (삭제할 단어)", configs.Config.Bot.Prefix),
-		Examples: []string{fmt.Sprintf("%s삭제 머핀", configs.Config.Bot.Prefix)},
+		Usage:    "/삭제 (단어:문자)",
+		Examples: []string{"/삭제 단어:뷁"},
 	},
 	Category:                   Chatting,
 	RegisterApplicationCommand: true,

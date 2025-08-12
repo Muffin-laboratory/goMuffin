@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 
-	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -14,7 +13,7 @@ var DeregisterCommand *Command = &Command{
 		Description: "이 봇에서 탈퇴해요.",
 	},
 	DetailedDescription: &DetailedDescription{
-		Usage: fmt.Sprintf("%s탈퇴", configs.Config.Bot.Prefix),
+		Usage: "/탈퇴",
 	},
 	Category:                   General,
 	RegisterMessageCommand:     true,
