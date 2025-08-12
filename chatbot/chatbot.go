@@ -21,9 +21,9 @@ type Chatbot struct {
 	s            *discordgo.Session
 }
 
-var ChatBot *Chatbot
+var instance *Chatbot
 
-func New(s *discordgo.Session) error {
+func Make(s *discordgo.Session) error {
 	gemini, err := genai.NewClient(context.TODO(), &genai.ClientConfig{
 		APIKey:  configs.GetConfig().Chatbot.Gemini.Token,
 		Backend: genai.BackendGeminiAPI,
@@ -32,7 +32,7 @@ func New(s *discordgo.Session) error {
 		return err
 	}
 
-	ChatBot = &Chatbot{
+	instance = &Chatbot{
 		Gemini: gemini,
 		s:      s,
 	}
@@ -42,8 +42,12 @@ func New(s *discordgo.Session) error {
 		return err
 	}
 
-	ChatBot.systemPrompt = prompt
+	instance.systemPrompt = prompt
 	return nil
+}
+
+func GetChatBot() *Chatbot {
+	return instance
 }
 
 func (c *Chatbot) ReloadPrompt() error {
@@ -140,7 +144,7 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	}
 
 	contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
-	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
+	result, err := c.Gemini.Models.GenerateContent(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(makePrompt(c.systemPrompt, user), genai.RoleUser),
 	})
 	if err != nil {

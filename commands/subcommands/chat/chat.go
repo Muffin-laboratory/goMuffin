@@ -12,7 +12,7 @@ func Chat(m any, user *discordgo.User, content string) error {
 	// 채팅하기는 슬래시 커맨드만 가능
 	i := m.(*utils.InteractionCreate)
 
-	str, err := chatbot.ChatBot.GetResponse(user, content)
+	str, err := chatbot.GetChatBot().GetResponse(user, content)
 	if err != nil {
 		log.Println(err)
 		i.EditReply(&utils.InteractionEdit{

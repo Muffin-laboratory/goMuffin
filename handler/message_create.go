@@ -64,7 +64,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 			s.ChannelTyping(m.ChannelID)
 
-			str, err := chatbot.ChatBot.GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))
+			str, err := chatbot.GetChatBot().GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))
 			if err != nil {
 				log.Println(err)
 				utils.NewMessageSender(&utils.MessageCreate{

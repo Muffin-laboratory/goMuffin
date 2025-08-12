@@ -21,7 +21,7 @@ var ReloadPromptCommand *commands.Command = &commands.Command{
 	RegisterMessageCommand:     true,
 	Flags:                      commands.CommandFlagsIsDeveloper,
 	MessageRun: func(ctx *commands.MsgContext) error {
-		err := chatbot.ChatBot.ReloadPrompt()
+		err := chatbot.GetChatBot().ReloadPrompt()
 		if err != nil {
 			return err
 		}

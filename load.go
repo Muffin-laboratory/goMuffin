@@ -15,7 +15,7 @@ var dg *discordgo.Session
 
 func init() {
 	dg, _ = discordgo.New("Bot " + configs.GetConfig().Bot.Token)
-	go chatbot.New(dg)
+	go chatbot.Make(dg)
 
 	// Handler
 	go dg.AddHandler(handler.MessageCreate)
