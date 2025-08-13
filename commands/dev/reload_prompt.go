@@ -13,13 +13,11 @@ var ReloadPromptCommand *commands.Command = &commands.Command{
 		Name:        "프롬프트재설정",
 		Description: "프롬프트를 다시 불러와요.",
 	},
-	DetailedDescription: &commands.DetailedDescription{
+	DetailedDescription: commands.DetailedDescription{
 		Usage: configs.AddPrefix("%s프롬프트재설정"),
 	},
-	Category:                   commands.DeveloperOnly,
-	RegisterApplicationCommand: false,
-	RegisterMessageCommand:     true,
-	Flags:                      commands.CommandFlagsIsDeveloper,
+	Category: commands.DeveloperOnly,
+	Flags:    commands.CommandFlagsIsDeveloper,
 	MessageRun: func(ctx *commands.MsgContext) error {
 		err := chatbot.GetChatBot().ReloadPrompt()
 		if err != nil {

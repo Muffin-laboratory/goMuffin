@@ -13,17 +13,12 @@ var InformationCommand *Command = &Command{
 		Name:        "정보",
 		Description: "해당 봇의 정보를 알ㄹ려줘요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s정보"),
 	},
-	Category:                   General,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return informationRun(ctx.Msg.Session, ctx.Msg)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: General,
+	Flags:    CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		return informationRun(ctx.Inter.Session, ctx.Inter)
 	},
 }
@@ -50,7 +45,7 @@ func informationRun(s *discordgo.Session, m any) error {
 							Content: fmt.Sprintf("- **제작자**\n> %s", owner.Username),
 						},
 						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **버전**\n> %s", configs.MUFFIN_VERSION),
+							Content: fmt.Sprintf("- **버전**\n> %s", configs.MuffinVersion),
 						},
 					},
 				},

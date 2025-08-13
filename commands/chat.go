@@ -70,19 +70,16 @@ var ChatCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"채팅"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s대화 (목록/생성) [채팅 이름]"),
 		Examples: []string{
 			configs.AddPrefix("%s대화 목록"),
 			configs.AddPrefix("%s대화 생성 머핀 냠냠"),
 		},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		var cType chatCommandType
 		var str string
 

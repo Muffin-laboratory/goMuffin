@@ -18,23 +18,13 @@ var BlockCommand *commands.Command = &commands.Command{
 		Name:        "차단",
 		Description: "유저를 차단해요.",
 	},
-	DetailedDescription: &commands.DetailedDescription{
+	DetailedDescription: commands.DetailedDescription{
 		Usage: configs.AddPrefix("%s차단 (유저의 ID) [사유]"),
 	},
-	Category:                   commands.DeveloperOnly,
-	RegisterApplicationCommand: false,
-	RegisterMessageCommand:     true,
-	Flags:                      commands.CommandFlagsIsDeveloper,
+	Category: commands.DeveloperOnly,
+	Flags:    commands.CommandFlagsIsDeveloper,
 	MessageRun: func(ctx *commands.MsgContext) error {
 		var reason string
-		if len(*ctx.Args) < 1 {
-			utils.NewMessageSender(ctx.Msg).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "유저 ID는 필수에요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
 
 		userId := (*ctx.Args)[0]
 		if len(*ctx.Args) >= 2 {

@@ -27,14 +27,11 @@ type DetailedDescription struct {
 
 type Command struct {
 	*discordgo.ApplicationCommand
-	Aliases                    []string
-	DetailedDescription        *DetailedDescription
-	Category                   Category
-	RegisterApplicationCommand bool
-	RegisterMessageCommand     bool
-	Flags                      CommandFlags
-	MessageRun                 messageRun
-	ChatInputRun               chatInputRun
+	DetailedDescription DetailedDescription
+	Category            Category
+	Flags               CommandFlags
+	MessageRun          messageRun
+	Run                 chatInputRun
 }
 
 type Discommand struct {
@@ -113,10 +110,6 @@ func (d *Discommand) LoadCommand(c *Command) {
 	commandMutex.Lock()
 	d.Commands[c.Name] = c
 	d.Aliases[c.Name] = c.Name
-
-	for _, alias := range c.Aliases {
-		d.Aliases[alias] = c.Name
-	}
 }
 
 func (d *Discommand) LoadComponent(c *Component) {
@@ -137,30 +130,14 @@ func (d *Discommand) MessageRun(name string, s *discordgo.Session, msg *discordg
 		Session:       s,
 	}
 
-	if command, ok := d.Commands[name]; ok && command.RegisterMessageCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.GetConfig().Bot.OwnerID {
+	if command, ok := d.Commands[name]; ok {
+		if command.Flags&CommandFlagsIsDeveloper == 0 {
+			return nil
+		}
+
+		if m.Author.ID != configs.GetConfig().Bot.OwnerID {
 			utils.NewMessageSender(m).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(m.Author.ID) {
-			utils.NewMessageSender(m).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(m.Author.ID)
-		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
-			user, _ := s.User(m.Author.ID)
-			utils.NewMessageSender(m).
-				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
@@ -181,7 +158,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 
 	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 
-	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
+	if command, ok := d.Commands[name]; ok {
 		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.GetConfig().Bot.OwnerID {
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
@@ -213,7 +190,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 			return nil
 		}
 
-		return command.ChatInputRun(&ChatInputContext{i, command})
+		return command.Run(&ChatInputContext{i, command})
 	}
 	return nil
 }

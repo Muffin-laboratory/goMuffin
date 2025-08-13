@@ -13,13 +13,11 @@ var DeregisterCommand *Command = &Command{
 		Name:        "탈퇴",
 		Description: "이 봇에서 탈퇴해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s탈퇴"),
 	},
-	Category:                   General,
-	RegisterMessageCommand:     true,
-	RegisterApplicationCommand: true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Category: General,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return deregisterRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
 	},

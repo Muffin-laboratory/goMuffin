@@ -23,19 +23,13 @@ var HelpCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"도움", "명령어", "help"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage:    configs.AddPrefix("%s도움말 [명령어]"),
 		Examples: []string{configs.AddPrefix("%s도움말"), configs.AddPrefix("%s도움말 배워")},
 	},
-	Category:                   General,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: General,
+	Flags:    CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		var command string
 
 		if opt, ok := ctx.Inter.Options["명령어"]; ok {
@@ -103,16 +97,6 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 			Content: fmt.Sprintf("- **사용법**\n> %s", command.DetailedDescription.Usage),
 		},
 	)
-
-	if command.Aliases != nil {
-		aliases = discordgo.TextDisplay{
-			Content: fmt.Sprintf("- **별칭**\n%s", strings.Join(utils.AddPrefix("> ", command.Aliases), "\n")),
-		}
-	} else {
-		aliases = discordgo.TextDisplay{
-			Content: "- **별칭**\n> 없음",
-		}
-	}
 
 	if command.DetailedDescription.Examples != nil {
 		examples = discordgo.TextDisplay{

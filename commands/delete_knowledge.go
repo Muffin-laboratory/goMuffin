@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -23,38 +22,13 @@ var DeleteKnowledgeCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"잊어", "지워"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage:    configs.AddPrefix("%s삭제 (삭제할 단어)"),
 		Examples: []string{configs.AddPrefix("%s삭제 머핀")},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		command := strings.Join(*ctx.Args, " ")
-		if command == "" {
-			utils.NewMessageSender(ctx.Msg).
-				AddComponents(utils.GetErrorContainer(
-					discordgo.TextDisplay{
-						Content: "올바르지 않ㅇ은 용법이에요.",
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
-					},
-				)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-		return deleteLearnedDataRun(ctx.Msg, strings.Join(*ctx.Args, " "), ctx.Msg.Author.ID)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})

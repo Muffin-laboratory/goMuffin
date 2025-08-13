@@ -16,17 +16,15 @@ var SwitchModeCommand *Command = &Command{
 		Name:        "모드전환",
 		Description: "봇의 대답 방법을 전환해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s모드전환"),
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	MessageRun: func(ctx *MsgContext) error {
 		return switchModeRun(ctx.Msg, ctx.Msg.Author)
 	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Run: func(ctx *ChatInputContext) error {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})

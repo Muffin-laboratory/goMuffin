@@ -17,13 +17,11 @@ var UnblockCommand *commands.Command = &commands.Command{
 		Name:        "차단해제",
 		Description: "유저의 차단을 해제해요.",
 	},
-	DetailedDescription: &commands.DetailedDescription{
+	DetailedDescription: commands.DetailedDescription{
 		Usage: configs.AddPrefix("%s차단해제 (유저의 ID)"),
 	},
-	Category:                   commands.DeveloperOnly,
-	RegisterApplicationCommand: false,
-	RegisterMessageCommand:     true,
-	Flags:                      commands.CommandFlagsIsDeveloper,
+	Category: commands.DeveloperOnly,
+	Flags:    commands.CommandFlagsIsDeveloper,
 	MessageRun: func(ctx *commands.MsgContext) error {
 		if len(*ctx.Args) < 1 {
 			utils.NewMessageSender(ctx.Msg).

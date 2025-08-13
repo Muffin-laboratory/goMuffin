@@ -14,17 +14,12 @@ var RegisterCommand *Command = &Command{
 		Name:        "가입",
 		Description: "이 봇에 가입해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s가입"),
 	},
-	Category:                   General,
-	RegisterMessageCommand:     true,
-	RegisterApplicationCommand: true,
-	Flags:                      CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return registerRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: General,
+	Flags:    CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		return registerRun(ctx.Inter, ctx.Inter.User.ID, ctx.Inter.Session.State.User.Username)
 	},
 }

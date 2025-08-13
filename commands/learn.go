@@ -45,8 +45,7 @@ var LearnCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"공부"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s배워 (등록할 단어) (대답)"),
 		Examples: []string{
 			configs.AddPrefix("%s배워 안녕 안녕!"),
@@ -55,36 +54,9 @@ var LearnCommand *Command = &Command{
 			configs.AddPrefix("%s배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\""),
 		},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		if len(*ctx.Args) < 2 {
-			utils.NewMessageSender(ctx.Msg).
-				AddComponents(utils.GetErrorContainer(
-					discordgo.TextDisplay{
-						Content: "올바르지 않ㅇ은 용법이에요.",
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **사용 가능한 인자**\n%s", learnArguments),
-					},
-				)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		return learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
@@ -111,7 +83,6 @@ func learnRun(m any, userID, command, result string) error {
 
 	for _, command := range instance.Commands {
 		igCommands = append(igCommands, command.Name)
-		igCommands = append(igCommands, command.Aliases...)
 	}
 
 	ignores := []string{"미간", "Migan", "migan", "간미"}

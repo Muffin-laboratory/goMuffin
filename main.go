@@ -43,10 +43,6 @@ func main() {
 			}
 		}
 
-		if !cmd.RegisterApplicationCommand {
-			continue
-		}
-
 		cmds = append(cmds, cmd.ApplicationCommand)
 	}
 
@@ -54,7 +50,7 @@ func main() {
 
 	defer databases.GetDatabase().Disconnect()
 
-	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MUFFIN_VERSION)
+	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MuffinVersion)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc

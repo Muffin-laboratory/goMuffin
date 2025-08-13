@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -41,8 +40,7 @@ var KnowledgeListCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"list", "목록", "지식목록"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: configs.AddPrefix("%s리스트 [단어]"),
 		Examples: []string{
 			configs.AddPrefix("%s리스트"),
@@ -50,49 +48,9 @@ var KnowledgeListCommand *Command = &Command{
 			configs.AddPrefix("%s리스트 개수:10"),
 		},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		var length int
-
-		filter := bson.D{{Key: "user_id", Value: ctx.Msg.Author.ID}}
-		query := strings.Join(*ctx.Args, " ")
-
-		command := utils.RegexpLearnQueryLength.ReplaceAllString(query, "")
-		command = strings.Join(strings.Fields(command), " ")
-		if command != "" {
-			filter = append(filter, bson.E{
-				Key:   "command",
-				Value: command,
-			})
-		}
-
-		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
-			length, _ = strconv.Atoi(match[1])
-
-			if float64(length) < LIST_MIN_VALUE {
-				utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE))})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-				return nil
-			}
-
-			if float64(length) > LIST_MAX_VALUE {
-				utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE))})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-				return nil
-			}
-		}
-		return learnedDataListRun(ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})

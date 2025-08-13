@@ -33,7 +33,7 @@ func ParseResult(content string, s *discordgo.Session, m any) string {
 	result = strings.ReplaceAll(result, "{user.createdAt}", utils.Time(&userCreatedAt, utils.RelativeTime))
 	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(joinedAt, utils.RelativeTime))
 
-	result = strings.ReplaceAll(result, "{muffin.version}", configs.MUFFIN_VERSION)
+	result = strings.ReplaceAll(result, "{muffin.version}", configs.MuffinVersion)
 	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt, utils.RelativeTime))
 	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.Time(configs.StartedAt, utils.RelativeTime))
 	result = strings.ReplaceAll(result, "{muffin.name}", s.State.User.Username)
