@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -80,7 +81,29 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 		)
 		return utils.NewMessageSender(m).
 			AddComponents(&discordgo.Container{
-				Components: []discordgo.MessageComponent{section},
+				Components: []discordgo.MessageComponent{
+					section,
+					discordgo.ActionsRow{
+						Components: []discordgo.MessageComponent{
+							discordgo.Button{
+								Label: "개인정보처리방침",
+								URL:   configs.Config.Service.PrivacyPolicyURL,
+								Style: discordgo.LinkButton,
+								Emoji: &discordgo.ComponentEmoji{
+									Name: "🔗",
+								},
+							},
+							discordgo.Button{
+								Label: "서비스 이용약관",
+								URL:   configs.Config.Service.TermOfServiceURL,
+								Style: discordgo.LinkButton,
+								Emoji: &discordgo.ComponentEmoji{
+									Name: "🔗",
+								},
+							},
+						},
+					},
+				},
 			}).
 			SetComponentsV2(true).
 			SetReply(true).

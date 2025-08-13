@@ -60,6 +60,26 @@ func informationRun(s *discordgo.Session, m any) error {
 				discordgo.TextDisplay{
 					Content: fmt.Sprintf("- **봇이 시작한 시각**\n> %s", utils.Time(configs.StartedAt, utils.RelativeTime)),
 				},
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label: "개인정보처리방침",
+							URL:   configs.Config.Service.PrivacyPolicyURL,
+							Style: discordgo.LinkButton,
+							Emoji: &discordgo.ComponentEmoji{
+								Name: "🔗",
+							},
+						},
+						discordgo.Button{
+							Label: "서비스 이용약관",
+							URL:   configs.Config.Service.TermOfServiceURL,
+							Style: discordgo.LinkButton,
+							Emoji: &discordgo.ComponentEmoji{
+								Name: "🔗",
+							},
+						},
+					},
+				},
 			},
 		}).
 		SetComponentsV2(true).
