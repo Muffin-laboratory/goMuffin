@@ -12,12 +12,12 @@ import (
 
 var DeregisterComponent *commands.Component = &commands.Component{
 	Parse: func(ctx *commands.ComponentContext) bool {
-		customId := ctx.Inter.MessageComponentData().CustomID
-		if !strings.HasPrefix(customId, utils.DeregisterAgree) && !strings.HasPrefix(customId, utils.DeregisterDisagree) {
+		customID := ctx.Inter.MessageComponentData().CustomID
+		if !strings.HasPrefix(customID, utils.DeregisterAgree) && !strings.HasPrefix(customID, utils.DeregisterDisagree) {
 			return false
 		}
 
-		if ctx.Inter.User.ID != utils.GetDeregisterUserId(customId) {
+		if ctx.Inter.User.ID != utils.GetDeregisterUserID(customID) {
 			return false
 		}
 		return true
@@ -28,23 +28,23 @@ var DeregisterComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		customId := ctx.Inter.MessageComponentData().CustomID
+		customID := ctx.Inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
-		case strings.HasPrefix(customId, utils.DeregisterAgree):
-			filter := databases.User{UserId: ctx.Inter.User.ID}
-			_, err := databases.Database.Users.DeleteOne(context.TODO(), filter)
+		case strings.HasPrefix(customID, utils.DeregisterAgree):
+			filter := databases.User{UserID: ctx.Inter.User.ID}
+			_, err := databases.GetDatabase().Users.DeleteOne(context.TODO(), filter)
 			if err != nil {
 				return err
 			}
 
-			_, err = databases.Database.Learns.DeleteMany(context.TODO(), filter)
+			_, err = databases.GetDatabase().Learns.DeleteMany(context.TODO(), filter)
 			if err != nil {
 				return err
 			}
 
-			_, err = databases.Database.Memory.DeleteMany(context.TODO(), filter)
+			_, err = databases.GetDatabase().Memory.DeleteMany(context.TODO(), filter)
 			if err != nil {
 				return err
 			}
@@ -57,7 +57,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
-		case strings.HasPrefix(customId, utils.DeregisterDisagree):
+		case strings.HasPrefix(customID, utils.DeregisterDisagree):
 			return ctx.Inter.EditReply(&utils.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{

@@ -7,9 +7,9 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 )
 
-const MUFFIN_VERSION = "6.1.5-madeleine_release.250813a"
+const MuffinVersion = "7.0.0-madeleine_v_two_develop.250816a"
 
-var updatedString string = utils.RegexpDecimals.FindAllStringSubmatch(MUFFIN_VERSION, -1)[3][0]
+var updatedString string = utils.RegexpDecimals.FindAllStringSubmatch(MuffinVersion, -1)[3][0]
 
 var UpdatedAt *time.Time = func() *time.Time {
 	year, _ := strconv.Atoi("20" + updatedString[0:2])

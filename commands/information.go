@@ -13,23 +13,18 @@ var InformationCommand *Command = &Command{
 		Name:        "정보",
 		Description: "해당 봇의 정보를 알려줘요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: "/정보",
 	},
-	Category:                   General,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return informationRun(ctx.Msg.Session, ctx.Msg)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: General,
+	Flags:    CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		return informationRun(ctx.Inter.Session, ctx.Inter)
 	},
 }
 
 func informationRun(s *discordgo.Session, m any) error {
-	owner, err := s.User(configs.Config.Bot.OwnerId)
+	owner, err := s.User(configs.GetConfig().Bot.OwnerID)
 	if err != nil {
 		return err
 	}
@@ -50,7 +45,7 @@ func informationRun(s *discordgo.Session, m any) error {
 							Content: fmt.Sprintf("- **제작자**\n> %s", owner.Username),
 						},
 						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **버전**\n> %s", configs.MUFFIN_VERSION),
+							Content: fmt.Sprintf("- **버전**\n> %s", configs.MuffinVersion),
 						},
 					},
 				},
@@ -64,7 +59,7 @@ func informationRun(s *discordgo.Session, m any) error {
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
 							Label: "개인정보처리방침",
-							URL:   configs.Config.Service.PrivacyPolicyURL,
+							URL:   configs.GetConfig().Service.PrivacyPolicyURL,
 							Style: discordgo.LinkButton,
 							Emoji: &discordgo.ComponentEmoji{
 								Name: "🔗",
@@ -72,7 +67,7 @@ func informationRun(s *discordgo.Session, m any) error {
 						},
 						discordgo.Button{
 							Label: "서비스 이용약관",
-							URL:   configs.Config.Service.TermOfServiceURL,
+							URL:   configs.GetConfig().Service.TermOfServiceURL,
 							Style: discordgo.LinkButton,
 							Emoji: &discordgo.ComponentEmoji{
 								Name: "🔗",

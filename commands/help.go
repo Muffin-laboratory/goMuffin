@@ -13,7 +13,7 @@ var HelpCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
 		Name:        "도움말",
-		Description: "기본적인 사용ㅂ법이에요.",
+		Description: "기본적인 사용법이에요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
@@ -23,19 +23,13 @@ var HelpCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"도움", "명령어", "help"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage:    "/도움말 [명령어:문자(머핀봇의 명령어)]",
 		Examples: []string{"/도움말", "/도움말 명령어:배워"},
 	},
-	Category:                   General,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return helpRun(ctx.Msg.Session, ctx.Msg, strings.Join(*ctx.Args, " "))
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: General,
+	Flags:    CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		var command string
 
 		if opt, ok := ctx.Inter.Options["명령어"]; ok {
@@ -46,7 +40,7 @@ var HelpCommand *Command = &Command{
 	},
 }
 
-func getCommandsByCategory(d *DiscommandStruct, category Category) []string {
+func getCommandsByCategory(d *Discommand, category Category) []string {
 	commands := []string{}
 	for _, command := range d.Commands {
 		if command.Category == category {
@@ -65,18 +59,18 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 		},
 	}
 
-	commandName = Discommand.Aliases[commandName]
+	command := GetDiscommand().Commands[commandName]
 
-	if commandName == "" || Discommand.Commands[commandName] == nil {
+	if instance.Commands[commandName] == nil {
 		section.Components = append(section.Components,
 			discordgo.TextDisplay{
 				Content: fmt.Sprintf("### %s의 도움말", s.State.User.Username),
 			},
 			discordgo.TextDisplay{
-				Content: fmt.Sprintf("- **일반**\n%s", strings.Join(getCommandsByCategory(Discommand, General), "\n")),
+				Content: fmt.Sprintf("- **일반**\n%s", strings.Join(getCommandsByCategory(instance, General), "\n")),
 			},
 			discordgo.TextDisplay{
-				Content: fmt.Sprintf("- **채팅**\n%s", strings.Join(getCommandsByCategory(Discommand, Chatting), "\n")),
+				Content: fmt.Sprintf("- **채팅**\n%s", strings.Join(getCommandsByCategory(instance, Chatting), "\n")),
 			},
 		)
 		return utils.NewMessageSender(m).
@@ -87,7 +81,7 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 						Components: []discordgo.MessageComponent{
 							discordgo.Button{
 								Label: "개인정보처리방침",
-								URL:   configs.Config.Service.PrivacyPolicyURL,
+								URL:   configs.GetConfig().Service.PrivacyPolicyURL,
 								Style: discordgo.LinkButton,
 								Emoji: &discordgo.ComponentEmoji{
 									Name: "🔗",
@@ -95,7 +89,7 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 							},
 							discordgo.Button{
 								Label: "서비스 이용약관",
-								URL:   configs.Config.Service.TermOfServiceURL,
+								URL:   configs.GetConfig().Service.TermOfServiceURL,
 								Style: discordgo.LinkButton,
 								Emoji: &discordgo.ComponentEmoji{
 									Name: "🔗",
@@ -112,8 +106,6 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 
 	var aliases, examples discordgo.TextDisplay
 
-	command := Discommand.Commands[commandName]
-
 	section.Components = append(section.Components,
 		discordgo.TextDisplay{
 			Content: fmt.Sprintf("### %s의 %s 명령어의 도움말", s.State.User.Username, command.Name),
@@ -125,16 +117,6 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 			Content: fmt.Sprintf("- **사용법**\n> %s", command.DetailedDescription.Usage),
 		},
 	)
-
-	if command.Aliases != nil {
-		aliases = discordgo.TextDisplay{
-			Content: fmt.Sprintf("- **별칭**\n%s", strings.Join(utils.AddPrefix("> ", command.Aliases), "\n")),
-		}
-	} else {
-		aliases = discordgo.TextDisplay{
-			Content: "- **별칭**\n> 없음",
-		}
-	}
 
 	if command.DetailedDescription.Examples != nil {
 		examples = discordgo.TextDisplay{

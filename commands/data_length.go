@@ -15,18 +15,12 @@ var DataLengthCommand *Command = &Command{
 		Name:        "데이터학습량",
 		Description: "봇이 학습한 데ㅇ이터량을 보여줘요.",
 	},
-	Aliases: []string{"학습데이터량", "데이터량", "학습량"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: "/데이터학습량",
 	},
-	Category:                   General,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return dataLengthRun(ctx.Msg.Session, ctx.Msg, ctx.Msg.Author.Username, ctx.Msg.Author.ID)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: General,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
@@ -35,20 +29,20 @@ var DataLengthCommand *Command = &Command{
 	},
 }
 
-func dataLengthRun(s *discordgo.Session, m any, username, userId string) error {
-	textLength, err := databases.Database.Texts.EstimatedDocumentCount(context.TODO())
+func dataLengthRun(s *discordgo.Session, m any, username, userID string) error {
+	textLength, err := databases.GetDatabase().Texts.EstimatedDocumentCount(context.TODO())
 	if err != nil {
 		return err
 	}
-	muffinLength, err := databases.Database.Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
+	muffinLength, err := databases.GetDatabase().Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
 	if err != nil {
 		return err
 	}
-	learnLength, err := databases.Database.Learns.EstimatedDocumentCount(context.TODO())
+	learnLength, err := databases.GetDatabase().Learns.EstimatedDocumentCount(context.TODO())
 	if err != nil {
 		return err
 	}
-	userLearnLength, err := databases.Database.Learns.CountDocuments(context.TODO(), databases.Learn{UserId: userId})
+	userLearnLength, err := databases.GetDatabase().Learns.CountDocuments(context.TODO(), databases.Learn{UserID: userID})
 	if err != nil {
 		return err
 	}

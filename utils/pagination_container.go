@@ -7,49 +7,49 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-// PaginationEmbed is embed with page
-type PaginationEmbed struct {
+// PaginationContainer is container with page
+type PaginationContainer struct {
 	Container  *discordgo.Container
 	Containers []*discordgo.Container
 	Current    int
 	Total      int
-	Id         string
+	ID         string
 	m          any
 }
 
-var paginationEmbeds = make(map[string]*PaginationEmbed)
+var paginationContainers = make(map[string]*PaginationContainer)
 
-func PaginationEmbedBuilder(m any) *PaginationEmbed {
-	var userId string
+func PaginationContainerBuilder(m any) *PaginationContainer {
+	var userID string
 
 	switch m := m.(type) {
 	case *MessageCreate:
-		userId = m.Author.ID
+		userID = m.Author.ID
 	case *InteractionCreate:
-		userId = m.Member.User.ID
+		userID = m.Member.User.ID
 	}
 
-	id := fmt.Sprintf("%s/%d", userId, rand.Intn(100))
-	return &PaginationEmbed{
+	id := fmt.Sprintf("%s/%d", userID, rand.Intn(100))
+	return &PaginationContainer{
 		Current: 1,
-		Id:      id,
+		ID:      id,
 		m:       m,
 	}
 }
 
-func (p *PaginationEmbed) SetContainer(container discordgo.Container) *PaginationEmbed {
+func (p *PaginationContainer) SetContainer(container discordgo.Container) *PaginationContainer {
 	p.Container = &container
 	return p
 }
 
-func (p *PaginationEmbed) AddContainers(container ...*discordgo.Container) *PaginationEmbed {
+func (p *PaginationContainer) AddContainers(container ...*discordgo.Container) *PaginationContainer {
 	p.Total += len(container)
 	p.Containers = append(p.Containers, container...)
 	return p
 }
 
-func (p *PaginationEmbed) Start() error {
-	return startPaginationEmbed(p)
+func (p *PaginationContainer) Start() error {
+	return startPaginationContainer(p)
 }
 
 func makeComponents(id string, current, total int) *discordgo.ActionsRow {
@@ -94,11 +94,11 @@ func MakeDesc(desc, item string) string {
 	return newDesc
 }
 
-func startPaginationEmbed(p *PaginationEmbed) error {
+func startPaginationContainer(p *PaginationContainer) error {
 	container := *p.Containers[0]
-	container.Components = append(container.Components, makeComponents(p.Id, p.Current, p.Total))
+	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
 
-	paginationEmbeds[p.Id] = p
+	paginationContainers[p.ID] = p
 
 	err := NewMessageSender(p.m).
 		AddComponents(container).
@@ -109,14 +109,14 @@ func startPaginationEmbed(p *PaginationEmbed) error {
 	return err
 }
 
-func GetPaginationEmbed(id string) *PaginationEmbed {
-	if p, ok := paginationEmbeds[id]; ok {
+func GetPaginationContainer(id string) *PaginationContainer {
+	if p, ok := paginationContainers[id]; ok {
 		return p
 	}
 	return nil
 }
 
-func (p *PaginationEmbed) Prev(i *InteractionCreate) error {
+func (p *PaginationContainer) Prev(i *InteractionCreate) error {
 	if p.Current == 1 {
 		p.Current = p.Total
 	} else {
@@ -126,7 +126,7 @@ func (p *PaginationEmbed) Prev(i *InteractionCreate) error {
 	return p.Set(i, p.Current)
 }
 
-func (p *PaginationEmbed) Next(i *InteractionCreate) error {
+func (p *PaginationContainer) Next(i *InteractionCreate) error {
 	if p.Current >= p.Total {
 		p.Current = 1
 	} else {
@@ -136,7 +136,7 @@ func (p *PaginationEmbed) Next(i *InteractionCreate) error {
 	return p.Set(i, p.Current)
 }
 
-func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
+func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
 	if page <= 0 {
 		p.Current = 1
 	} else if page > p.Total {
@@ -146,7 +146,7 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
 	}
 
 	container := *p.Containers[p.Current-1]
-	container.Components = append(container.Components, makeComponents(p.Id, p.Current, p.Total))
+	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
 
 	err := i.Update(&discordgo.InteractionResponseData{
 		Flags:      discordgo.MessageFlagsIsComponentsV2,
@@ -155,15 +155,15 @@ func (p *PaginationEmbed) Set(i *InteractionCreate, page int) error {
 	return err
 }
 
-func (p *PaginationEmbed) ShowModal(i *InteractionCreate) {
+func (p *PaginationContainer) ShowModal(i *InteractionCreate) {
 	i.ShowModal(&ModalData{
-		CustomId: MakePaginationEmbedModal(p.Id),
+		CustomId: MakePaginationEmbedModal(p.ID),
 		Title:    fmt.Sprintf("%s의 리스트", i.Session.State.User.Username),
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.TextInput{
-						CustomID:    MakePaginationEmbedSetPage(p.Id),
+						CustomID:    MakePaginationEmbedSetPage(p.ID),
 						Label:       "페이지",
 						Style:       discordgo.TextInputShort,
 						Placeholder: "이동할 페이지를 여기에 적어주세요.",

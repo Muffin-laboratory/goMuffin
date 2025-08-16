@@ -3,14 +3,13 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var DeleteLearnedDataCommand *Command = &Command{
+var DeleteKnowledgeCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "삭제",
 		Description: "당신이 가르쳐준 단어를 삭제해요.",
@@ -22,38 +21,13 @@ var DeleteLearnedDataCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"잊어", "지워"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage:    "/삭제 (단어:문자)",
 		Examples: []string{"/삭제 단어:뷁"},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		command := strings.Join(*ctx.Args, " ")
-		if command == "" {
-			utils.NewMessageSender(ctx.Msg).
-				AddComponents(utils.GetErrorContainer(
-					discordgo.TextDisplay{
-						Content: "올바르지 않ㅇ은 용법이에요.",
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
-					},
-				)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-		return deleteLearnedDataRun(ctx.Msg, strings.Join(*ctx.Args, " "), ctx.Msg.Author.ID)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
@@ -71,12 +45,12 @@ var DeleteLearnedDataCommand *Command = &Command{
 	},
 }
 
-func deleteLearnedDataRun(m any, command, userId string) error {
+func deleteLearnedDataRun(m any, command, userID string) error {
 	var data []databases.Learn
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), databases.Learn{UserId: userId, Command: command})
+	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), databases.Learn{UserID: userID, Command: command})
 	if err != nil {
 		return err
 	}
@@ -97,7 +71,7 @@ func deleteLearnedDataRun(m any, command, userId string) error {
 			Accessory: discordgo.Button{
 				Label:    "삭제",
 				Style:    discordgo.DangerButton,
-				CustomID: utils.MakeDeleteLearnedData(data.Id.Hex(), i+1, userId),
+				CustomID: utils.MakeDeleteLearnedData(data.ID.Hex(), i+1, userID),
 			},
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{
@@ -123,7 +97,7 @@ func deleteLearnedDataRun(m any, command, userId string) error {
 		containers = append(containers, container)
 	}
 
-	return utils.PaginationEmbedBuilder(m).
+	return utils.PaginationContainerBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

@@ -3,7 +3,6 @@ package commands
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -18,7 +17,7 @@ var (
 	LIST_MAX_VALUE float64 = 100.0
 )
 
-var LearnedDataListCommand *Command = &Command{
+var KnowledgeListCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
 		Name:        "리스트",
@@ -40,8 +39,7 @@ var LearnedDataListCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"list", "목록", "지식목록"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: "/리스트 [단어:문자] [개수:숫자(범위: 10-100)]",
 		Examples: []string{
 			"/리스트",
@@ -50,49 +48,9 @@ var LearnedDataListCommand *Command = &Command{
 			"/리스트 단어: 머핀 개수:100",
 		},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		var length int
-
-		filter := bson.D{{Key: "user_id", Value: ctx.Msg.Author.ID}}
-		query := strings.Join(*ctx.Args, " ")
-
-		command := utils.RegexpLearnQueryLength.ReplaceAllString(query, "")
-		command = strings.Join(strings.Fields(command), " ")
-		if command != "" {
-			filter = append(filter, bson.E{
-				Key:   "command",
-				Value: command,
-			})
-		}
-
-		if match := utils.RegexpLearnQueryLength.FindStringSubmatch(query); match != nil {
-			length, _ = strconv.Atoi(match[1])
-
-			if float64(length) < LIST_MIN_VALUE {
-				utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 커야해요.", int(LIST_MIN_VALUE))})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-				return nil
-			}
-
-			if float64(length) > LIST_MAX_VALUE {
-				utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("개수의 값은 %d보다 작아야해요.", int(LIST_MAX_VALUE))})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-				return nil
-			}
-		}
-		return learnedDataListRun(ctx.Msg, ctx.Msg.Author.GlobalName, ctx.Msg.Author.AvatarURL("512"), filter, length)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
@@ -178,13 +136,13 @@ func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, items []s
 	return containers
 }
 
-func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, length int) error {
+func learnedDataListRun(m any, globalName, avatarURL string, filter bson.D, length int) error {
 	var data []databases.Learn
 
 	itemsMap := map[string]string{}
 	items := []string{}
 
-	cur, err := databases.Database.Learns.Find(context.TODO(), filter)
+	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			utils.NewMessageSender(m).
@@ -216,11 +174,11 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 
 		containers := getContainers(&discordgo.Thumbnail{
 			Media: discordgo.UnfurledMediaItem{
-				URL: avatarUrl,
+				URL: avatarURL,
 			},
 		}, fmt.Sprintf("### %s님이 알려주신 지식\n- **%s**\n", globalName, command)+"%s", items, length)
 
-		return utils.PaginationEmbedBuilder(m).
+		return utils.PaginationContainerBuilder(m).
 			AddContainers(containers...).
 			Start()
 	}
@@ -239,11 +197,11 @@ func learnedDataListRun(m any, globalName, avatarUrl string, filter bson.D, leng
 
 	containers := getContainers(&discordgo.Thumbnail{
 		Media: discordgo.UnfurledMediaItem{
-			URL: avatarUrl,
+			URL: avatarURL,
 		},
 	}, fmt.Sprintf("### %s님이 알려주신 지식\n총 %d개에요.\n", globalName, len(items))+"%s", items, length)
 
-	return utils.PaginationEmbedBuilder(m).
+	return utils.PaginationContainerBuilder(m).
 		AddContainers(containers...).
 		Start()
 }

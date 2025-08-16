@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log"
 
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -10,28 +11,27 @@ import (
 )
 
 func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var err error
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
-		err = commands.Discommand.ChatInputRun(i.ApplicationCommandData().Name, s, i)
+		err := commands.GetDiscommand().ChatInputRun(i.ApplicationCommandData().Name, s, i)
 		if err != nil {
-			goto ErrMsg
+			returnErr(s, i, err)
 		}
 	case discordgo.InteractionMessageComponent:
-		err = commands.Discommand.ComponentRun(s, i)
+		err := commands.GetDiscommand().ComponentRun(s, i)
 		if err != nil {
-			goto ErrMsg
+			returnErr(s, i, err)
 		}
 	case discordgo.InteractionModalSubmit:
-		err = commands.Discommand.ModalRun(s, i)
+		err := commands.GetDiscommand().ModalRun(s, i)
 		if err != nil {
-			goto ErrMsg
+			returnErr(s, i, err)
 		}
 	}
+}
 
-	// 아 몰라 goto 쓸래
-ErrMsg:
-	owner, _ := s.User(configs.Config.Bot.OwnerId)
+func returnErr(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
+	owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 	utils.NewMessageSender(&utils.InteractionCreate{
 		InteractionCreate: i,
 		Session:           s,
@@ -40,4 +40,5 @@ ErrMsg:
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()
+	log.Println(err)
 }

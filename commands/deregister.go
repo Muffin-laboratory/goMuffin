@@ -12,19 +12,17 @@ var DeregisterCommand *Command = &Command{
 		Name:        "탈퇴",
 		Description: "이 봇에서 탈퇴해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: "/탈퇴",
 	},
-	Category:                   General,
-	RegisterMessageCommand:     true,
-	RegisterApplicationCommand: true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return deregisterRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
+	Category: General,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
+		return deregisterRun(ctx.Inter, ctx.Inter.User.ID, ctx.Inter.Session.State.User.Username)
 	},
 }
 
-func deregisterRun(m any, userId, botName string) error {
+func deregisterRun(m any, userID, botName string) error {
 	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
@@ -34,12 +32,12 @@ func deregisterRun(m any, userId, botName string) error {
 				discordgo.ActionsRow{
 					Components: []discordgo.MessageComponent{
 						discordgo.Button{
-							CustomID: utils.MakeDeregisterAgree(userId),
+							CustomID: utils.MakeDeregisterAgree(userID),
 							Label:    "탈퇴",
 							Style:    discordgo.DangerButton,
 						},
 						discordgo.Button{
-							CustomID: utils.MakeDeregisterDisagree(userId),
+							CustomID: utils.MakeDeregisterDisagree(userID),
 							Label:    "취소",
 							Style:    discordgo.PrimaryButton,
 						},

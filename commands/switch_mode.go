@@ -15,17 +15,12 @@ var SwitchModeCommand *Command = &Command{
 		Name:        "모드전환",
 		Description: "봇의 대답 방법을 전환해요.",
 	},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: "/모드전환",
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return switchModeRun(ctx.Msg, ctx.Msg.Author)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
@@ -35,7 +30,7 @@ var SwitchModeCommand *Command = &Command{
 
 func switchModeRun(m any, user *discordgo.User) error {
 	var newMode databases.ChattingMode
-	mode, err := databases.Database.GetUserChattingMode(user.ID)
+	mode, err := databases.GetDatabase().Users.GetUserChattingMode(user.ID)
 	if err != nil {
 		return err
 	}
@@ -47,7 +42,7 @@ func switchModeRun(m any, user *discordgo.User) error {
 		newMode = databases.ChattingMuffinMode
 	}
 
-	_, err = databases.Database.Users.UpdateOne(context.TODO(), databases.User{UserId: user.ID}, bson.D{{
+	_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: user.ID}, bson.D{{
 		Key: "$set",
 		Value: databases.User{
 			ChattingMode: newMode,

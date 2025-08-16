@@ -7,7 +7,7 @@ import (
 )
 
 type Text struct {
-	Id        bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
 	Text      string        `bson:"text,omitempty" json:"text"`
 	Persona   string        `bson:"persona,omitempty" json:"persona"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`

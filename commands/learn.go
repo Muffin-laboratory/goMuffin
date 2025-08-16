@@ -45,8 +45,7 @@ var LearnCommand *Command = &Command{
 			},
 		},
 	},
-	Aliases: []string{"공부"},
-	DetailedDescription: &DetailedDescription{
+	DetailedDescription: DetailedDescription{
 		Usage: "/배워 (단어:문자) (단어:문자)",
 		Examples: []string{
 			"/배워 안녕 안녕!",
@@ -55,36 +54,9 @@ var LearnCommand *Command = &Command{
 			"/배워 \"나의 아이디를 알려줘\" \"너의 아이디는 {user.id}야.\"",
 		},
 	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		if len(*ctx.Args) < 2 {
-			utils.NewMessageSender(ctx.Msg).
-				AddComponents(utils.GetErrorContainer(
-					discordgo.TextDisplay{
-						Content: "올바르지 않ㅇ은 용법이에요.",
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **사용법**\n> %s", ctx.Command.DetailedDescription.Usage),
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **예시**\n%s", strings.Join(utils.AddPrefix("> ", ctx.Command.DetailedDescription.Examples), "\n")),
-					},
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **사용 가능한 인자**\n%s", learnArguments),
-					},
-				)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		return learnRun(ctx.Msg, ctx.Msg.Author.ID, strings.ReplaceAll((*ctx.Args)[0], "_", " "), strings.ReplaceAll((*ctx.Args)[1], "_", " "))
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
+	Category: Chatting,
+	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(ctx *ChatInputContext) error {
 		err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		})
@@ -106,12 +78,11 @@ var LearnCommand *Command = &Command{
 	},
 }
 
-func learnRun(m any, userId, command, result string) error {
+func learnRun(m any, userID, command, result string) error {
 	igCommands := []string{}
 
-	for _, command := range Discommand.Commands {
+	for _, command := range instance.Commands {
 		igCommands = append(igCommands, command.Name)
-		igCommands = append(igCommands, command.Aliases...)
 	}
 
 	ignores := []string{"미간", "Migan", "migan", "간미"}
@@ -120,7 +91,7 @@ func learnRun(m any, userId, command, result string) error {
 	disallows := []string{
 		"@everyone",
 		"@here",
-		fmt.Sprintf("<@%s>", configs.Config.Bot.OwnerId),
+		fmt.Sprintf("<@%s>", configs.GetConfig().Bot.OwnerID),
 	}
 
 	for _, ig := range ignores {
@@ -154,10 +125,10 @@ func learnRun(m any, userId, command, result string) error {
 		return nil
 	}
 
-	_, err := databases.Database.Learns.InsertOne(context.TODO(), databases.Learn{
+	_, err := databases.GetDatabase().Learns.InsertOne(context.TODO(), databases.Learn{
 		Command:   command,
 		Result:    result,
-		UserId:    userId,
+		UserID:    userID,
 		CreatedAt: time.Now(),
 	})
 	if err != nil {
