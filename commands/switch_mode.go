@@ -21,9 +21,6 @@ var SwitchModeCommand *Command = &Command{
 	},
 	Category: Chatting,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return switchModeRun(ctx.Msg, ctx.Msg.Author)
-	},
 	Run: func(ctx *ChatInputContext) error {
 		ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,

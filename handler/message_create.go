@@ -21,14 +21,15 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, config.Bot.Prefix) {
+		m := &utils.MessageCreate{
+			MessageCreate: m,
+			Session:       s,
+		}
 		content := strings.TrimPrefix(m.Content, config.Bot.Prefix)
 
 		if !databases.GetDatabase().Users.IsUser(m.Author.ID) {
-			utils.NewMessageSender(&utils.MessageCreate{
-				MessageCreate: m,
-				Session:       s,
-			}).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
+			utils.NewMessageSender(m).
+				AddComponents(utils.GetUserIsNotRegisteredErrContainer(config.Bot.Prefix)).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
@@ -51,10 +52,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		str, err := chatbot.GetChatBot().GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))
 		if err != nil {
 			log.Println(err)
-			utils.NewMessageSender(&utils.MessageCreate{
-				MessageCreate: m,
-				Session:       s,
-			}).
+			utils.NewMessageSender(m).
 				SetContent(str).
 				SetReply(true).
 				Send()
@@ -62,10 +60,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		result := chatbot.ParseResult(str, s, m)
-		utils.NewMessageSender(&utils.MessageCreate{
-			MessageCreate: m,
-			Session:       s,
-		}).
+		utils.NewMessageSender(m).
 			SetContent(result).
 			SetReply(true).
 			Send()

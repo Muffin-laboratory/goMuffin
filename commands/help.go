@@ -13,12 +13,12 @@ var HelpCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Type:        discordgo.ChatApplicationCommand,
 		Name:        "도움말",
-		Description: "기본적인 사용ㅂ법이에요.",
+		Description: "기본적인 사용법이에요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "명령어",
-				Description: "해당 명령어에 대ㅎ한 도움말을 볼 수 있어요.",
+				Description: "도움말을 볼 명령어",
 				Choices:     []*discordgo.ApplicationCommandOptionChoice{},
 			},
 		},
@@ -59,9 +59,9 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 		},
 	}
 
-	commandName = instance.Aliases[commandName]
+	command := GetDiscommand().Commands[commandName]
 
-	if commandName == "" || instance.Commands[commandName] == nil {
+	if instance.Commands[commandName] == nil {
 		section.Components = append(section.Components,
 			discordgo.TextDisplay{
 				Content: fmt.Sprintf("### %s의 도움말", s.State.User.Username),
@@ -83,8 +83,6 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 	}
 
 	var aliases, examples discordgo.TextDisplay
-
-	command := instance.Commands[commandName]
 
 	section.Components = append(section.Components,
 		discordgo.TextDisplay{

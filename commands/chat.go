@@ -1,11 +1,8 @@
 package commands
 
 import (
-	"strings"
-
 	subcommand "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -102,53 +99,6 @@ var ChatCommand *Command = &Command{
 			str = opt.Options[0].StringValue()
 		}
 		return chatCommandRun(cType, ctx.Inter, ctx.Inter.User, str)
-	},
-	MessageRun: func(ctx *MsgContext) error {
-		if len((*ctx.Args)) < 1 {
-			goto RequiredValue
-		}
-
-		switch (*ctx.Args)[0] {
-		case string(chatCommandCreate):
-			if len((*ctx.Args)) < 2 {
-				return utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름을 정해야해요."})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-			}
-
-			name := strings.Trim(strings.Join((*ctx.Args)[1:], " "), " ")
-			if len([]rune(name)) > 25 {
-				return utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름은 25자를 초과할 수 없어요."})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-			}
-
-			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, name)
-		case string(chatCommandList):
-			return chatCommandRun(chatCommandList, ctx.Msg, ctx.Msg.Author, "")
-		case string(chatCommandDelete):
-			if len((*ctx.Args)) < 2 {
-				return utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름을 적어야해요."})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
-			}
-			return chatCommandRun(chatCommandDelete, ctx.Msg, ctx.Msg.Author, strings.Join((*ctx.Args)[1:], " "))
-		default:
-			goto RequiredValue
-		}
-
-	RequiredValue:
-		return utils.NewMessageSender(ctx.Msg).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "명령어의 첫번째 인자는 `생성`, `목록`중에 하나여야 해요."})).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
 	},
 }
 

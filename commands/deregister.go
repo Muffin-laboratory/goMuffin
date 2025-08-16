@@ -18,8 +18,8 @@ var DeregisterCommand *Command = &Command{
 	},
 	Category: General,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return deregisterRun(ctx.Msg, ctx.Msg.Author.ID, ctx.Msg.Session.State.User.Username)
+	Run: func(ctx *ChatInputContext) error {
+		return deregisterRun(ctx.Inter, ctx.Inter.User.ID, ctx.Inter.Session.State.User.Username)
 	},
 }
 

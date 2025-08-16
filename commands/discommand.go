@@ -10,7 +10,6 @@ import (
 )
 
 type modalRun func(ctx *ModalContext) error
-type messageRun func(ctx *MsgContext) error
 type chatInputRun func(ctx *ChatInputContext) error
 type componentRun func(ctx *ComponentContext) error
 
@@ -30,21 +29,13 @@ type Command struct {
 	DetailedDescription DetailedDescription
 	Category            Category
 	Flags               CommandFlags
-	MessageRun          messageRun
 	Run                 chatInputRun
 }
 
 type Discommand struct {
 	Commands   map[string]*Command
 	Components []*Component
-	Aliases    map[string]string
 	Modals     []*Modal
-}
-
-type MsgContext struct {
-	Msg     *utils.MessageCreate
-	Args    *[]string
-	Command *Command
 }
 
 type ChatInputContext struct {
@@ -73,14 +64,12 @@ type Modal struct {
 }
 
 const (
-	Chatting      Category = "채팅"
-	General       Category = "일반"
-	DeveloperOnly Category = "개발자 전용"
+	Chatting Category = "채팅"
+	General  Category = "일반"
 )
 
 const (
-	CommandFlagsIsDeveloper CommandFlags = 1 << iota
-	CommandFlagsIsRegistered
+	CommandFlagsIsRegistered CommandFlags = 1 << iota
 	CommandFlagsIsBlocked
 )
 
@@ -95,7 +84,6 @@ var instance *Discommand
 func init() {
 	instance = &Discommand{
 		Commands:   map[string]*Command{},
-		Aliases:    map[string]string{},
 		Components: []*Component{},
 		Modals:     []*Modal{},
 	}
@@ -109,7 +97,6 @@ func (d *Discommand) LoadCommand(c *Command) {
 	defer commandMutex.Unlock()
 	commandMutex.Lock()
 	d.Commands[c.Name] = c
-	d.Aliases[c.Name] = c.Name
 }
 
 func (d *Discommand) LoadComponent(c *Component) {
@@ -124,31 +111,6 @@ func (d *Discommand) LoadModal(m *Modal) {
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *Discommand) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) error {
-	m := &utils.MessageCreate{
-		MessageCreate: msg,
-		Session:       s,
-	}
-
-	if command, ok := d.Commands[name]; ok {
-		if command.Flags&CommandFlagsIsDeveloper == 0 {
-			return nil
-		}
-
-		if m.Author.ID != configs.GetConfig().Bot.OwnerID {
-			utils.NewMessageSender(m).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		return command.MessageRun(&MsgContext{m, &args, command})
-	}
-	return nil
-}
-
 func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	i := &utils.InteractionCreate{
 		InteractionCreate: inter,
@@ -159,16 +121,6 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.GetConfig().Bot.OwnerID {
-			utils.NewMessageSender(i).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
-				SetComponentsV2(true).
-				SetEphemeral(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
 		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
 			utils.NewMessageSender(i).
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).

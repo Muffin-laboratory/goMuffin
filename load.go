@@ -3,7 +3,6 @@ package main
 import (
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/commands/dev"
 	"git.wh64.net/muffin/goMuffin/components"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/handler"
@@ -34,11 +33,6 @@ func init() {
 	go commands.GetDiscommand().LoadCommand(commands.KnowledgeListCommand)
 	go commands.GetDiscommand().LoadCommand(commands.DeleteKnowledgeCommand)
 	go commands.GetDiscommand().LoadCommand(commands.ChatCommand)
-
-	// Developer only command
-	go commands.GetDiscommand().LoadCommand(dev.BlockCommand)
-	go commands.GetDiscommand().LoadCommand(dev.ReloadPromptCommand)
-	go commands.GetDiscommand().LoadCommand(dev.UnblockCommand)
 
 	// Message component
 	go commands.GetDiscommand().LoadComponent(components.DeleteKnowledgeComponent)
