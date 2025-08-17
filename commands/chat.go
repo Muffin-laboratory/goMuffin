@@ -8,10 +8,11 @@ import (
 type chatCommandType string
 
 var (
-	chatCommandChatting chatCommandType = "하기"
-	chatCommandList     chatCommandType = "목록"
-	chatCommandCreate   chatCommandType = "생성"
-	chatCommandDelete   chatCommandType = "삭제"
+	chatCommandChatting   chatCommandType = "하기"
+	chatCommandList       chatCommandType = "목록"
+	chatCommandCreate     chatCommandType = "생성"
+	chatCommandDelete     chatCommandType = "삭제"
+	chatCommandSwitchMode chatCommandType = "모드전환"
 )
 
 const chatNameMaxLength = 25
@@ -67,6 +68,11 @@ var ChatCommand *Command = &Command{
 					},
 				},
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        string(chatCommandSwitchMode),
+				Description: "채팅 방식을 변경해요. (일반 <-> AI)",
+			},
 		},
 	},
 	DetailedDescription: DetailedDescription{
@@ -80,41 +86,31 @@ var ChatCommand *Command = &Command{
 	Category: Chatting,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {
-		var cType chatCommandType
-		var str string
-
 		if opt, ok := ctx.Inter.Options[string(chatCommandChatting)]; ok {
 			ctx.Inter.DeferReply(nil)
-			cType = chatCommandChatting
-			str = opt.Options[0].StringValue()
+			return subcommand.Chat(ctx.Inter, opt.Options[0].StringValue())
 		} else if opt, ok := ctx.Inter.Options[string(chatCommandCreate)]; ok {
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			cType = chatCommandCreate
-			str = opt.Options[0].StringValue()
+			return subcommand.Create(ctx.Inter, opt.Options[0].StringValue())
 		} else if _, ok := ctx.Inter.Options[string(chatCommandList)]; ok {
-			ctx.Inter.DeferReply(nil)
-			cType = chatCommandList
+			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			})
+			return subcommand.List(ctx.Inter)
 		} else if _, ok := ctx.Inter.Options[string(chatCommandDelete)]; ok {
-			ctx.Inter.DeferReply(nil)
-			cType = chatCommandDelete
-			str = opt.Options[0].StringValue()
+			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			})
+			return subcommand.Delete(ctx.Inter, opt.Options[0].StringValue())
+		} else if _, ok := ctx.Inter.Options[string(chatCommandSwitchMode)]; ok {
+			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			})
+			return subcommand.SwitchMode(ctx.Inter)
 		}
-		return chatCommandRun(cType, ctx.Inter, ctx.Inter.User, str)
-	},
-}
 
-func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentOrName string) error {
-	switch cType {
-	case chatCommandChatting:
-		return subcommand.Chat(m, user, contentOrName)
-	case chatCommandCreate:
-		return subcommand.Create(m, user, contentOrName)
-	case chatCommandList:
-		return subcommand.List(m, user)
-	case chatCommandDelete:
-		return subcommand.Delete(m, user, contentOrName)
-	}
-	return nil
+		return nil
+	},
 }

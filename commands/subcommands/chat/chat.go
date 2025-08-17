@@ -5,14 +5,10 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/utils"
-	"github.com/bwmarrin/discordgo"
 )
 
-func Chat(m any, user *discordgo.User, content string) error {
-	// 채팅하기는 슬래시 커맨드만 가능
-	i := m.(*utils.InteractionCreate)
-
-	str, err := chatbot.GetChatBot().GetResponse(user, content)
+func Chat(i *utils.InteractionCreate, content string) error {
+	str, err := chatbot.GetChatBot().GetResponse(i.User, content)
 	if err != nil {
 		log.Println(err)
 		i.EditReply(&utils.InteractionEdit{

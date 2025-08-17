@@ -24,7 +24,6 @@ func init() {
 	go commands.GetDiscommand().LoadCommand(commands.HelpCommand)
 	go commands.GetDiscommand().LoadCommand(commands.DataLengthCommand)
 	go commands.GetDiscommand().LoadCommand(commands.InformationCommand)
-	go commands.GetDiscommand().LoadCommand(commands.SwitchModeCommand)
 	go commands.GetDiscommand().LoadCommand(commands.DeregisterCommand)
 
 	// Chatting command

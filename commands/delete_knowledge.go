@@ -15,6 +15,7 @@ var DeleteKnowledgeCommand *Command = &Command{
 		Description: "당신이 가르쳐준 단어를 삭제해요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
+				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "단어",
 				Description: "삭제할 단어",
 				Required:    true,

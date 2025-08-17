@@ -9,22 +9,22 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func List(m any, user *discordgo.User) error {
+func List(i *utils.InteractionCreate) error {
 	var dbUser databases.User
 	var data []databases.Chat
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
-	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: user.ID}).Decode(&dbUser)
+	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
 	if err != nil {
 		return err
 	}
 
 	if dbUser.ChattingMode == databases.ChattingMuffinMode {
-		return chatSendErrorMessage(m)
+		return chatSendErrorMessage(i)
 	}
 
-	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{UserId: user.ID})
+	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{UserId: i.User.ID})
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func List(m any, user *discordgo.User) error {
 	}
 
 	if len(data) == 0 {
-		return utils.NewMessageSender(m).
+		return utils.NewMessageSender(i).
 			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅이 단 하나도 없어요. 새로운 채팅을 만들거나, 대화를 시작해 채팅을 만들어주세요."})).
 			SetComponentsV2(true).
 			SetReply(true).
@@ -43,19 +43,20 @@ func List(m any, user *discordgo.User) error {
 			Send()
 	}
 
-	for i, data := range data {
+	// x는 원래 i인데 함수 인자의 i와 충돌나 x로 하였음.
+	for x, data := range data {
 		var isDisabled bool
 		var textDisplay discordgo.TextDisplay
 
 		if data.ID == dbUser.ChatID {
 			textDisplay = discordgo.TextDisplay{
-				Content: fmt.Sprintf("**%d. %s\n (선택됨)**", i+1, data.Name),
+				Content: fmt.Sprintf("**%d. %s\n (선택됨)**", x+1, data.Name),
 			}
 
 			isDisabled = true
 		} else {
 			textDisplay = discordgo.TextDisplay{
-				Content: fmt.Sprintf("%d. %s\n", i+1, data.Name),
+				Content: fmt.Sprintf("%d. %s\n", x+1, data.Name),
 			}
 
 			isDisabled = false
@@ -65,14 +66,14 @@ func List(m any, user *discordgo.User) error {
 			Accessory: discordgo.Button{
 				Label:    "선택",
 				Style:    discordgo.SuccessButton,
-				CustomID: utils.MakeSelectChat(data.ID.Hex(), i+1, user.ID),
+				CustomID: utils.MakeSelectChat(data.ID.Hex(), x+1, i.User.ID),
 				Disabled: isDisabled,
 			},
 			Components: []discordgo.MessageComponent{textDisplay},
 		})
 	}
 
-	textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록", user.GlobalName)}
+	textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록", i.User.GlobalName)}
 	container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
 	for i, section := range sections {
 		container.Components = append(container.Components, section, discordgo.Separator{})
@@ -88,7 +89,7 @@ func List(m any, user *discordgo.User) error {
 		containers = append(containers, container)
 	}
 
-	return utils.PaginationContainerBuilder(m).
+	return utils.PaginationContainerBuilder(i).
 		AddContainers(containers...).
 		Start()
 }
