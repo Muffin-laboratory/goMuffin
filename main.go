@@ -46,7 +46,10 @@ func main() {
 		cmds = append(cmds, cmd.ApplicationCommand)
 	}
 
-	go dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", cmds)
+	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", cmds)
+	if err != nil {
+		log.Println(err)
+	}
 
 	defer databases.GetDatabase().Disconnect()
 
