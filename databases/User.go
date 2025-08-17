@@ -22,7 +22,7 @@ type User struct {
 }
 
 const (
-	ChattingAIMode ChattingMode = iota
+	ChattingAIMode ChattingMode = iota + 1
 	ChattingMuffinMode
 )
 
