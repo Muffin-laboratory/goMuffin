@@ -18,35 +18,33 @@ var DeregisterCommand *Command = &Command{
 	Category: General,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {
-		return deregisterRun(ctx.Inter, ctx.Inter.User.ID, ctx.Inter.Session.State.User.Username)
-	},
-}
+		userID := ctx.Inter.User.ID
 
-func deregisterRun(m any, userID, botName string) error {
-	return utils.NewMessageSender(m).
-		AddComponents(discordgo.Container{
-			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("### %s 탈퇴\n- 정말로 해당 서비스에서 탈퇴하시겠어요?\n> 주의: **모든 데이터는 삭제되어요.**", botName),
-				},
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							CustomID: utils.MakeDeregisterAgree(userID),
-							Label:    "탈퇴",
-							Style:    discordgo.DangerButton,
-						},
-						discordgo.Button{
-							CustomID: utils.MakeDeregisterDisagree(userID),
-							Label:    "취소",
-							Style:    discordgo.PrimaryButton,
+		return utils.NewMessageSender(ctx.Inter).
+			AddComponents(discordgo.Container{
+				Components: []discordgo.MessageComponent{
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("### %s 탈퇴\n- 정말로 해당 서비스에서 탈퇴하시겠어요?\n> 주의: **모든 데이터는 삭제되어요.**", ctx.Inter.Session.State.User.Username),
+					},
+					discordgo.ActionsRow{
+						Components: []discordgo.MessageComponent{
+							discordgo.Button{
+								CustomID: utils.MakeDeregisterAgree(userID),
+								Label:    "탈퇴",
+								Style:    discordgo.DangerButton,
+							},
+							discordgo.Button{
+								CustomID: utils.MakeDeregisterDisagree(userID),
+								Label:    "취소",
+								Style:    discordgo.PrimaryButton,
+							},
 						},
 					},
 				},
-			},
-		}).
-		SetComponentsV2(true).
-		SetEphemeral(true).
-		SetReply(true).
-		Send()
+			}).
+			SetComponentsV2(true).
+			SetEphemeral(true).
+			SetReply(true).
+			Send()
+	},
 }
