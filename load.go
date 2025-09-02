@@ -40,6 +40,7 @@ func init() {
 	go commands.GetDiscommand().LoadComponent(components.DeregisterComponent)
 	go commands.GetDiscommand().LoadComponent(components.SelectChatComponent)
 	go commands.GetDiscommand().LoadComponent(components.DeleteChatComponent)
+	go commands.GetDiscommand().LoadComponent(components.UserInformationDeregisterComponent)
 
 	// Modal component
 	go commands.GetDiscommand().LoadModal(modals.PaginationContainerModal)

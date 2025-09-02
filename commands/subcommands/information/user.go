@@ -80,8 +80,18 @@ func InfoUser(i *utils.InteractionCreate) error {
 						},
 					},
 				},
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							CustomID: utils.MakeUserInformationDeregister(i.User.ID),
+							Label:    "탈퇴",
+							Style:    discordgo.DangerButton,
+						},
+					},
+				},
 			},
 		}).
 		SetComponentsV2(true).
+		SetEphemeral(true).
 		Send()
 }
