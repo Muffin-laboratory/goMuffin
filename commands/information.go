@@ -44,6 +44,8 @@ var InformationCommand *Command = &Command{
 			return subcommands.InfoBot(ctx.Inter)
 		case informationCommandUser:
 			return subcommands.InfoUser(ctx.Inter)
+		case informationCommandPatchNotes:
+			return subcommands.InfoPatchLogs(ctx.Inter)
 		default:
 			return nil
 		}

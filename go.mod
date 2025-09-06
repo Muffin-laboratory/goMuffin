@@ -5,6 +5,7 @@ go 1.24.5
 require (
 	github.com/LoperLee/golang-hangul-toolkit v1.1.0
 	github.com/bwmarrin/discordgo v0.29.0
+	github.com/google/go-github/v74 v74.0.0
 	github.com/joho/godotenv v1.5.1
 	go.mongodb.org/mongo-driver/v2 v2.2.3
 	google.golang.org/genai v1.19.0
@@ -19,6 +20,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
