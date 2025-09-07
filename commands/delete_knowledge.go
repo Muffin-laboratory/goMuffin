@@ -102,3 +102,7 @@ func deleteLearnedDataRun(m any, command, userID string) error {
 		AddContainers(containers...).
 		Start()
 }
+
+func init() {
+	GetDiscommand().LoadCommand(DeleteKnowledgeCommand)
+}

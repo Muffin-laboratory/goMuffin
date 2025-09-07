@@ -36,3 +36,7 @@ var UserInformationDeregisterComponent = &commands.Component{
 		})
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(UserInformationDeregisterComponent)
+}

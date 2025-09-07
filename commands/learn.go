@@ -150,3 +150,7 @@ func learnRun(m any, userID, command, result string) error {
 		SetReply(true).
 		Send()
 }
+
+func init() {
+	GetDiscommand().LoadCommand(LearnCommand)
+}

@@ -81,15 +81,15 @@ var (
 
 var instance *Discommand
 
-func init() {
-	instance = &Discommand{
-		Commands:   map[string]*Command{},
-		Components: []*Component{},
-		Modals:     []*Modal{},
-	}
-}
-
 func GetDiscommand() *Discommand {
+	if instance == nil {
+		instance = &Discommand{
+			Commands:   map[string]*Command{},
+			Components: []*Component{},
+			Modals:     []*Modal{},
+		}
+	}
+
 	return instance
 }
 

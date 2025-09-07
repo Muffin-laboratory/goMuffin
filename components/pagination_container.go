@@ -53,3 +53,7 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 		}
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(PaginationContainerComponent)
+}

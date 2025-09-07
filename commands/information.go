@@ -51,3 +51,7 @@ var InformationCommand *Command = &Command{
 		}
 	},
 }
+
+func init() {
+	GetDiscommand().LoadCommand(InformationCommand)
+}

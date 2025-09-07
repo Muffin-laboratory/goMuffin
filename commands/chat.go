@@ -114,3 +114,7 @@ var ChatCommand *Command = &Command{
 		return nil
 	},
 }
+
+func init() {
+	GetDiscommand().LoadCommand(ChatCommand)
+}

@@ -149,3 +149,7 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 		SetReply(true).
 		Send()
 }
+
+func init() {
+	GetDiscommand().LoadCommand(HelpCommand)
+}

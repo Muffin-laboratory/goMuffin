@@ -60,3 +60,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 		return p.Set(ctx.Inter, page)
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadModal(PaginationContainerModal)
+}

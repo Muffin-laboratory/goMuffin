@@ -55,3 +55,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		})
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(DeleteKnowledgeComponent)
+}

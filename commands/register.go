@@ -63,3 +63,7 @@ var RegisterCommand *Command = &Command{
 			Send()
 	},
 }
+
+func init() {
+	GetDiscommand().LoadCommand(RegisterCommand)
+}
