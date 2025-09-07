@@ -142,6 +142,11 @@ func getAIResponse(s *discordgo.Session, c *Chatbot, user *discordgo.User, quest
 	contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
 	result, err := ChatBot.Gemini.Models.GenerateContent(context.TODO(), configs.Config.Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(makePrompt(c.systemPrompt, user), genai.RoleUser),
+		Tools: []*genai.Tool{
+			{
+				GoogleSearch: &genai.GoogleSearch{},
+			},
+		},
 	})
 	if err != nil {
 		return "AI에 문제가 생겼ㅇ어요.", err
