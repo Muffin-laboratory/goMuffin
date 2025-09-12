@@ -1,7 +1,7 @@
 package commands
 
 import (
-	subcommand "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
+	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -84,32 +84,33 @@ var ChatCommand *Command = &Command{
 	Category: Chatting,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {
-		if opt, ok := ctx.Inter.Options[chatCommandChatting]; ok {
+		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
+		case chatCommandChatting:
 			ctx.Inter.DeferReply(nil)
-			return subcommand.Chat(ctx.Inter, opt.Options[0].StringValue())
-		} else if opt, ok := ctx.Inter.Options[chatCommandCreate]; ok {
+			return subcommands.Chat(ctx.Inter, opt.Options[0].StringValue())
+		case chatCommandSwitchMode:
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			return subcommand.Create(ctx.Inter, opt.Options[0].StringValue())
-		} else if _, ok := ctx.Inter.Options[chatCommandList]; ok {
+			return subcommands.SwitchMode(ctx.Inter)
+		case chatCommandCreate:
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			return subcommand.List(ctx.Inter)
-		} else if _, ok := ctx.Inter.Options[chatCommandDelete]; ok {
+			return subcommands.Create(ctx.Inter, opt.Options[0].StringValue())
+		case chatCommandList:
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			return subcommand.Delete(ctx.Inter, opt.Options[0].StringValue())
-		} else if _, ok := ctx.Inter.Options[chatCommandSwitchMode]; ok {
+			return subcommands.List(ctx.Inter)
+		case chatCommandDelete:
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			return subcommand.SwitchMode(ctx.Inter)
+			return subcommands.Delete(ctx.Inter, opt.Options[0].StringValue())
+		default:
+			return nil
 		}
-
-		return nil
 	},
 }
 
