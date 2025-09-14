@@ -48,3 +48,7 @@ var DeregisterCommand *Command = &Command{
 			Send()
 	},
 }
+
+func init() {
+	GetDiscommand().LoadCommand(DeregisterCommand)
+}

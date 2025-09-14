@@ -70,3 +70,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		return nil
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(DeregisterComponent)
+}

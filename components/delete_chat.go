@@ -79,3 +79,7 @@ var DeleteChatComponent = &commands.Component{
 		})
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(DeleteChatComponent)
+}

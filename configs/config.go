@@ -45,15 +45,18 @@ type serviceConfig struct {
 	TermOfServiceURL string
 }
 
+type githubConfig struct {
+	Owner      string
+	Repository string
+}
+
 // MuffinConfig for Muffin bot
 type MuffinConfig struct {
 	Bot      botConfig
 	Database databaseConfig
 	Chatbot  chatbotConfig
 	Service  serviceConfig
-
-	// Deprecated: Use Chatbot.Train
-	Train trainConfig
+	GitHub   githubConfig
 }
 
 var instance *MuffinConfig
@@ -120,10 +123,13 @@ func setConfig(config *MuffinConfig) {
 		config.Chatbot.Gemini.Model = "gemini-2.0-flash"
 	}
 
-	config.Train = config.Chatbot.Train
-
 	config.Service = serviceConfig{
 		PrivacyPolicyURL: getRequiredValue("SERVICE_PRIVACY_POLICY_URL"),
 		TermOfServiceURL: getRequiredValue("SERVICE_TERM_OF_SERVICE_URL"),
+	}
+
+	config.GitHub = githubConfig{
+		Owner:      getValue("GITHUB_OWNER"),
+		Repository: getValue("GITHUB_REPO"),
 	}
 }

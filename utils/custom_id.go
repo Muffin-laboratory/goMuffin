@@ -26,6 +26,8 @@ const (
 	SelectChat       = "#muffin/chat/select$"
 	DeleteChat       = "#muffin/chat/delete$"
 	DeleteChatCancel = "#muffin/chat/delete/cancel@"
+
+	UserInformationDeregister = "#muffin/info/user/deregister@"
 )
 
 func MakeDeleteLearnedData(id string, number int, userID string) string {
@@ -158,4 +160,12 @@ func GetDeleteChatID(customID string) (id bson.ObjectID, itemID int) {
 
 func MakeDeleteChatCancel(userID string) string {
 	return fmt.Sprintf("%s%s", DeleteChatCancel, userID)
+}
+
+func MakeUserInformationDeregister(userID string) string {
+	return fmt.Sprintf("%s%s", UserInformationDeregister, userID)
+}
+
+func GetUserInformationDeregisterUserID(customID string) string {
+	return customID[len(UserInformationDeregister):]
 }

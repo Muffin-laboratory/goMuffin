@@ -205,3 +205,7 @@ func learnedDataListRun(m any, globalName, avatarURL string, filter bson.D, leng
 		AddContainers(containers...).
 		Start()
 }
+
+func init() {
+	GetDiscommand().LoadCommand(KnowledgeListCommand)
+}

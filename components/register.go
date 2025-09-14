@@ -65,3 +65,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 		return nil
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(RegisterComponent)
+}

@@ -59,3 +59,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		})
 	},
 }
+
+func init() {
+	commands.GetDiscommand().LoadComponent(SelectChatComponent)
+}
