@@ -13,16 +13,16 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 		i := ctx.Inter
 
 		if i.MessageComponentData().ComponentType == discordgo.ButtonComponent {
-			customId := i.MessageComponentData().CustomID
+			customID := i.MessageComponentData().CustomID
 
-			isPrev := strings.HasPrefix(customId, utils.PaginationEmbedPrev)
-			isNext := strings.HasPrefix(customId, utils.PaginationEmbedNext)
-			isSetPage := strings.HasPrefix(customId, utils.PaginationEmbedPages)
+			isPrev := strings.HasPrefix(customID, utils.PaginationEmbedPrev)
+			isNext := strings.HasPrefix(customID, utils.PaginationEmbedNext)
+			isSetPage := strings.HasPrefix(customID, utils.PaginationEmbedPages)
 			if !isPrev && !isNext && !isSetPage {
 				return false
 			}
 
-			id := utils.GetPaginationEmbedID(customId)
+			id := utils.GetPaginationEmbedID(customID)
 			userID := utils.GetPaginationEmbedUserID(id)
 			if i.Member.User.ID != userID {
 				return false
@@ -42,14 +42,11 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 		p := utils.GetPaginationContainer(id)
 
 		if strings.HasPrefix(customID, utils.PaginationEmbedPrev) {
-			p.Prev(ctx.Inter)
-			return nil
+			return p.Prev(ctx.Inter)
 		} else if strings.HasPrefix(customID, utils.PaginationEmbedNext) {
-			p.Next(ctx.Inter)
-			return nil
+			return p.Next(ctx.Inter)
 		} else {
-			p.ShowModal(ctx.Inter)
-			return nil
+			return p.ShowModal(ctx.Inter)
 		}
 	},
 }
