@@ -57,9 +57,6 @@ type MuffinConfig struct {
 	Chatbot  chatbotConfig
 	Service  serviceConfig
 	GitHub   githubConfig
-
-	// Deprecated: Use Chatbot.Train
-	Train trainConfig
 }
 
 var instance *MuffinConfig
@@ -125,8 +122,6 @@ func setConfig(config *MuffinConfig) {
 	if config.Chatbot.Gemini.Model == "" {
 		config.Chatbot.Gemini.Model = "gemini-2.0-flash"
 	}
-
-	config.Train = config.Chatbot.Train
 
 	config.Service = serviceConfig{
 		PrivacyPolicyURL: getRequiredValue("SERVICE_PRIVACY_POLICY_URL"),
