@@ -49,7 +49,17 @@ func (p *PaginationContainer) AddContainers(container ...*discordgo.Container) *
 }
 
 func (p *PaginationContainer) Start() error {
-	return startPaginationContainer(p)
+	container := *p.Containers[0]
+	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
+
+	paginationContainers[p.ID] = p
+
+	return NewMessageSender(p.m).
+		AddComponents(container).
+		SetReply(true).
+		SetEphemeral(true).
+		SetComponentsV2(true).
+		Send()
 }
 
 func makeComponents(id string, current, total int) *discordgo.ActionsRow {
@@ -94,21 +104,6 @@ func MakeDesc(desc, item string) string {
 	return newDesc
 }
 
-func startPaginationContainer(p *PaginationContainer) error {
-	container := *p.Containers[0]
-	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
-
-	paginationContainers[p.ID] = p
-
-	err := NewMessageSender(p.m).
-		AddComponents(container).
-		SetReply(true).
-		SetEphemeral(true).
-		SetComponentsV2(true).
-		Send()
-	return err
-}
-
 func GetPaginationContainer(id string) *PaginationContainer {
 	if p, ok := paginationContainers[id]; ok {
 		return p
@@ -148,15 +143,14 @@ func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
 	container := *p.Containers[p.Current-1]
 	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
 
-	err := i.Update(&discordgo.InteractionResponseData{
+	return i.Update(&discordgo.InteractionResponseData{
 		Flags:      discordgo.MessageFlagsIsComponentsV2,
 		Components: []discordgo.MessageComponent{container},
 	})
-	return err
 }
 
-func (p *PaginationContainer) ShowModal(i *InteractionCreate) {
-	i.ShowModal(&ModalData{
+func (p *PaginationContainer) ShowModal(i *InteractionCreate) error {
+	return i.ShowModal(&ModalData{
 		CustomId: MakePaginationEmbedModal(p.ID),
 		Title:    fmt.Sprintf("%s의 리스트", i.Session.State.User.Username),
 		Components: []discordgo.MessageComponent{
