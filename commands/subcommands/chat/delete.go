@@ -9,9 +9,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func Delete(i *utils.InteractionCreate, name string) error {
+func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
 	var dbUser databases.User
 	var data []databases.Chat
+
+	name := opts["이름"].StringValue()
 
 	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
 	if err != nil {

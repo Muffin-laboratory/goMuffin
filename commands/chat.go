@@ -2,6 +2,7 @@ package commands
 
 import (
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
+	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -87,7 +88,7 @@ var ChatCommand *Command = &Command{
 		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
 		case chatCommandChatting:
 			ctx.Inter.DeferReply(nil)
-			return subcommands.Chat(ctx.Inter, opt.Options[0].StringValue())
+			return subcommands.Chat(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandSwitchMode:
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -97,7 +98,7 @@ var ChatCommand *Command = &Command{
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			return subcommands.Create(ctx.Inter, opt.Options[0].StringValue())
+			return subcommands.Create(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandList:
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -107,7 +108,7 @@ var ChatCommand *Command = &Command{
 			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			})
-			return subcommands.Delete(ctx.Inter, opt.Options[0].StringValue())
+			return subcommands.Delete(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}

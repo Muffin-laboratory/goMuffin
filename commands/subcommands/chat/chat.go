@@ -7,8 +7,8 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 )
 
-func Chat(i *utils.InteractionCreate, content string) error {
-	str, err := chatbot.GetChatBot().GetResponse(i.User, content)
+func Chat(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
+	str, err := chatbot.GetChatBot().GetResponse(i.User, opts["내용"].StringValue())
 	if err != nil {
 		log.Println(err)
 		i.EditReply(&utils.InteractionEdit{

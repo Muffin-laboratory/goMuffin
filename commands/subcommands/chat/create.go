@@ -9,8 +9,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func Create(i *utils.InteractionCreate, name string) error {
+func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
 	var dbUser databases.User
+
+	name := opts["이름"].StringValue()
 
 	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
 	if err != nil {

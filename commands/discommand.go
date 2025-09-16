@@ -115,31 +115,29 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 	i := &utils.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
-		Options:           utils.GetInteractionOptions(inter),
+		Options:           utils.MakeCommandInteractionOptionsMap(inter.ApplicationCommandData().Options),
 	}
 
 	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
 		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
-			utils.NewMessageSender(i).
+			return utils.NewMessageSender(i).
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				SetReply(true).
 				Send()
-			return nil
 		}
 
 		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
-			utils.NewMessageSender(i).
+			return utils.NewMessageSender(i).
 				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return nil
 		}
 
 		return command.Run(&ChatInputContext{i, command})
