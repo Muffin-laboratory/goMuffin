@@ -1,13 +1,16 @@
 package configs
 
 import (
+	"fmt"
+	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"git.wh64.net/muffin/goMuffin/utils"
 )
 
-const MuffinVersion = "7.0.0-madeleine_v_two_develop.250915a"
+var MuffinVersion = fmt.Sprintf("7.0.0-madeleine_v_two_%s.250917a", CurrentBranch)
 
 var updatedString string = utils.RegexpDecimals.FindAllStringSubmatch(MuffinVersion, -1)[3][0]
 
@@ -18,4 +21,17 @@ var UpdatedAt *time.Time = func() *time.Time {
 	day, _ := strconv.Atoi(updatedString[4:6])
 	time := time.Date(year, month, day, 0, 0, 0, 0, &time.Location{})
 	return &time
+}()
+
+var CurrentBranch = func() string {
+	var out strings.Builder
+
+	cmd := exec.Command("git", "branch", "--show-current")
+	cmd.Stdout = &out
+
+	if err := cmd.Run(); err != nil {
+		return "main"
+	}
+
+	return strings.Trim(out.String(), "\n")
 }()
