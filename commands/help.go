@@ -128,19 +128,6 @@ func helpRun(s *discordgo.Session, m any, commandName string) error {
 		}
 	}
 
-	if command.Name == LearnCommand.Name {
-		learnArgs := discordgo.TextDisplay{
-			Content: fmt.Sprintf("- **대답에 쓸 수 있는 인자**\n%s", learnArguments),
-		}
-		return utils.NewMessageSender(m).
-			AddComponents(discordgo.Container{
-				Components: []discordgo.MessageComponent{section, aliases, examples, learnArgs},
-			}).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
-	}
-
 	return utils.NewMessageSender(m).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{section, aliases, examples},

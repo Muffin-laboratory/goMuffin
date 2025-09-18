@@ -2,6 +2,7 @@ package commands
 
 import (
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/knowledge"
+	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -68,9 +69,15 @@ var KnowledgeCommand = &Command{
 	Run: func(ctx *ChatInputContext) error {
 		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
 		case knowledgeLearn:
-			return subcommands.Learn(ctx.Inter)
+			igCommands := []string{}
+
+			for _, command := range instance.Commands {
+				igCommands = append(igCommands, command.Name)
+			}
+
+			return subcommands.Learn(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
 		case knowledgeList:
-			return subcommands.Learn(ctx.Inter)
+			return subcommands.List(ctx.Inter)
 		case knowledgeDelete:
 			return subcommands.Delete(ctx.Inter)
 		default:
