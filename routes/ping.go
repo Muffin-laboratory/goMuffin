@@ -9,10 +9,12 @@ import (
 )
 
 func Ping(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]any{
-		"happy":   "hacking!",
-		"date":    time.Now(),
-		"version": configs.MuffinVersion,
-		"branch":  configs.CurrentBranch,
-	})
+	return c.JSON(http.StatusOK, Response{
+		Data: map[string]any{
+			"happy":   "hacking!",
+			"date":    time.Now(),
+			"version": configs.MuffinVersion,
+			"branch":  configs.CurrentBranch,
+		}},
+	)
 }
