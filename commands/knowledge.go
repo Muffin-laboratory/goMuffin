@@ -13,7 +13,8 @@ const (
 
 var KnowledgeCommand = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
-		Name: "지식",
+		Name:        "지식",
+		Description: "이 봇이 사용자와 대화할 때 알면 좋은 지식을 관리하는 명령어에요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
