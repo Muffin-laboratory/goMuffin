@@ -41,10 +41,24 @@ var InformationCommand *Command = &Command{
 	Run: func(ctx *ChatInputContext) error {
 		switch ctx.Inter.ApplicationCommandData().Options[0].Name {
 		case informationCommandBot:
+			if err := ctx.Inter.DeferReply(nil); err != nil {
+				return err
+			}
+
 			return subcommands.InfoBot(ctx.Inter)
 		case informationCommandUser:
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
 			return subcommands.InfoUser(ctx.Inter)
 		case informationCommandPatchNotes:
+			if err := ctx.Inter.DeferReply(nil); err != nil {
+				return err
+			}
+
 			return subcommands.InfoPatchLogs(ctx.Inter)
 		default:
 			return nil
