@@ -69,6 +69,12 @@ var KnowledgeCommand = &Command{
 	Run: func(ctx *ChatInputContext) error {
 		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
 		case knowledgeLearn:
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
 			igCommands := []string{}
 
 			for _, command := range instance.Commands {
