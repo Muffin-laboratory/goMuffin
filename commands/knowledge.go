@@ -85,7 +85,13 @@ var KnowledgeCommand = &Command{
 		case knowledgeList:
 			return subcommands.List(ctx.Inter)
 		case knowledgeDelete:
-			return subcommands.Delete(ctx.Inter)
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.Delete(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}
