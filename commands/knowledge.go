@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	knowledgeLearn  = "배워"
+	knowledgeLearn  = "추가"
 	knowledgeList   = "리스트"
 	knowledgeDelete = "삭제"
 )
