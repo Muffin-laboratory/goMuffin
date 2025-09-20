@@ -60,6 +60,10 @@ func (c *Chatbot) ReloadPrompt() error {
 	return nil
 }
 
+func (c *Chatbot) GetPrompt() string {
+	return c.systemPrompt
+}
+
 func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	var learnData []databases.Learn
 	var data []databases.Text

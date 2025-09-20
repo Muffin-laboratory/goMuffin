@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -52,6 +54,14 @@ func main() {
 	}
 
 	defer databases.GetDatabase().Disconnect()
+
+	go func() {
+		if err := server.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalln(err)
+		}
+	}()
+
+	defer server.Close()
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MuffinVersion)
 	sc := make(chan os.Signal, 1)
