@@ -15,6 +15,6 @@ func ReloadPrompt(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, Response{
-		Message: "Reload prompt is success.",
+		Message: "Reloading prompt is success.",
 	})
 }
