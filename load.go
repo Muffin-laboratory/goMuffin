@@ -34,5 +34,7 @@ func init() {
 	server.Use(middleware.Logger())
 
 	server.GET("/", routes.Ping)
+
 	server.GET("/prompt/reload", routes.ReloadPrompt)
+	server.GET("/prompt", routes.GetPrompt)
 }

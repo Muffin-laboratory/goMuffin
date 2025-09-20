@@ -18,3 +18,11 @@ func ReloadPrompt(c echo.Context) error {
 		Message: "Reloading prompt is success.",
 	})
 }
+
+func GetPrompt(c echo.Context) error {
+	prompt := chatbot.GetChatBot().GetPrompt()
+
+	return c.JSON(http.StatusOK, Response{
+		Data: prompt,
+	})
+}
