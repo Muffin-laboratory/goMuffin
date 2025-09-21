@@ -1,9 +1,13 @@
 package commands
 
 import (
+	"context"
+
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/knowledge"
+	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -43,10 +47,11 @@ var KnowledgeCommand = &Command{
 				Description: "당신이 가르쳐준 지식을 나열해요.",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
-						Type:        discordgo.ApplicationCommandOptionString,
-						Name:        "단어",
-						Description: "해당 단어가 포함된 결과",
-						Required:    false,
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "단어",
+						Description:  "해당 단어가 포함된 결과",
+						Required:     false,
+						Autocomplete: true,
 					},
 				},
 			},
@@ -56,10 +61,11 @@ var KnowledgeCommand = &Command{
 				Description: "당신이 가르쳐준 단어를 삭제해요.",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
-						Type:        discordgo.ApplicationCommandOptionString,
-						Name:        "단어",
-						Description: "삭제할 단어",
-						Required:    true,
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "단어",
+						Description:  "삭제할 단어",
+						Required:     true,
+						Autocomplete: true,
 					},
 				},
 			},
@@ -102,6 +108,43 @@ var KnowledgeCommand = &Command{
 		default:
 			return nil
 		}
+	},
+	Autocomplete: func(ctx *ChatInputContext) error {
+		var choices []*discordgo.ApplicationCommandOptionChoice
+		var focusedValue string
+		var data []*databases.Knowledge
+
+		for _, opt := range ctx.Inter.ApplicationCommandData().Options[0].Options {
+			if opt.Focused {
+				focusedValue = opt.StringValue()
+				break
+			}
+		}
+
+		cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), bson.M{
+			"user_id": ctx.Inter.User.ID,
+			"command": bson.M{
+				"$regex": focusedValue,
+			},
+		})
+		if err != nil {
+			return err
+		}
+
+		defer cur.Close(context.TODO())
+
+		if err = cur.All(context.TODO(), &data); err != nil {
+			return err
+		}
+
+		for _, data := range data {
+			choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+				Name:  data.Command,
+				Value: data.Command,
+			})
+		}
+
+		return ctx.Inter.Autocomplete(choices)
 	},
 }
 

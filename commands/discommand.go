@@ -30,6 +30,7 @@ type Command struct {
 	Category            Category
 	Flags               CommandFlags
 	Run                 chatInputRun
+	Autocomplete        chatInputRun
 }
 
 type Discommand struct {
@@ -142,6 +143,21 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 
 		return command.Run(&ChatInputContext{i, command})
 	}
+	return nil
+}
+
+func (d *Discommand) ChatInputAutocomplete(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	i := &utils.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
+	}
+
+	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+
+	if command, ok := d.Commands[name]; ok {
+		return command.Autocomplete(&ChatInputContext{i, command})
+	}
+
 	return nil
 }
 
