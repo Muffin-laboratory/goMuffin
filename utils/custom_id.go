@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	DeleteLearnedData = "#muffin/deleteLearnedData$"
+	DeleteKnowledge = "#muffin/knowledge/delete$"
+	SelectKnowledge = "#muffin/knowledge$"
 
 	PaginationEmbedPrev    = "#muffin-pages/prev$"
 	PaginationEmbedPages   = "#muffin-pages/pages$"
@@ -30,19 +31,27 @@ const (
 	UserInformationDeregister = "#muffin/info/user/deregister@"
 )
 
-func MakeDeleteLearnedData(id string, number int, userID string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteLearnedData, id, number, userID)
+func MakeDeleteKnowledge(id string, number int, userID string) string {
+	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteKnowledge, id, number, userID)
 }
 
-func GetDeleteLearnedDataID(customID string) (id bson.ObjectID, itemID int) {
+func GetDeleteKnowledgeID(customID string) (id bson.ObjectID, itemID int) {
 	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
 	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
 	itemID, _ = strconv.Atoi(stringItemId)
 	return
 }
 
-func GetDeleteLearnedDataUserId(customID string) string {
+func GetDeleteKnowledgeUserID(customID string) string {
 	return strings.ReplaceAll(RegexpUserID.FindAllString(customID, 1)[0], "user_id=", "")
+}
+
+func MakeSelectKnowledge(command string) string {
+	return fmt.Sprintf("%s%s", SelectKnowledge, command)
+}
+
+func GetSelectKnowledgeCommand(customID string) string {
+	return customID[len(SelectKnowledge):]
 }
 
 func MakePaginationEmbedPrev(id string) string {

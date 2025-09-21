@@ -37,7 +37,7 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 			Accessory: discordgo.Button{
 				Label:    "삭제",
 				Style:    discordgo.DangerButton,
-				CustomID: utils.MakeDeleteLearnedData(data.ID.Hex(), x+1, i.User.ID),
+				CustomID: utils.MakeDeleteKnowledge(data.ID.Hex(), x+1, i.User.ID),
 			},
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{

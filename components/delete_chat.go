@@ -50,7 +50,7 @@ var DeleteChatComponent = &commands.Component{
 			return err
 		}
 
-		id, itemID := utils.GetDeleteLearnedDataID(i.MessageComponentData().CustomID)
+		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
 		_, err = databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id})
 		if err != nil {
 			return err
