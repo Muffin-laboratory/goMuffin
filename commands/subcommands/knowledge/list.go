@@ -13,8 +13,8 @@ import (
 
 func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
 	var command string
-	var data []databases.Learn
 	var items []string
+	var data []databases.Knowledge
 	var sections []*discordgo.Section
 	var containers []*discordgo.Container
 
@@ -30,7 +30,7 @@ func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 		command = "전체"
 	}
 
-	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), filter)
+	cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), filter)
 	if err != nil {
 		return err
 	}

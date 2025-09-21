@@ -41,7 +41,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Learns.DeleteOne(context.TODO(), databases.Learn{ID: id})
+		_, err = databases.GetDatabase().Knowledge.DeleteOne(context.TODO(), databases.Knowledge{ID: id})
 		if err != nil {
 			return err
 		}

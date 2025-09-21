@@ -16,7 +16,7 @@ var SelectKnowledgeComponent = &commands.Component{
 		return strings.HasPrefix(ctx.Inter.MessageComponentData().CustomID, utils.SelectKnowledge)
 	},
 	Run: func(ctx *commands.ComponentContext) error {
-		var data []*databases.Learn
+		var data []*databases.Knowledge
 		var sections []*discordgo.Section
 		var containers []*discordgo.Container
 
@@ -30,7 +30,7 @@ var SelectKnowledgeComponent = &commands.Component{
 
 		command := utils.GetSelectKnowledgeCommand(i.MessageComponentData().CustomID)
 
-		cur, err := databases.GetDatabase().Learns.Find(context.TODO(), databases.Learn{UserID: i.User.ID, Command: command})
+		cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), databases.Knowledge{UserID: i.User.ID, Command: command})
 		if err != nil {
 			return err
 		}

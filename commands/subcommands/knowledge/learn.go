@@ -53,7 +53,7 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 		}
 	}
 
-	_, err = databases.GetDatabase().Learns.InsertOne(context.TODO(), databases.Learn{
+	_, err = databases.GetDatabase().Knowledge.InsertOne(context.TODO(), databases.Knowledge{
 		Command:   command,
 		Result:    result,
 		UserID:    i.User.ID,

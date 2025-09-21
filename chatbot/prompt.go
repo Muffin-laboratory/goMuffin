@@ -20,7 +20,7 @@ func loadPrompt() (string, error) {
 }
 
 func makePrompt(systemPrompt string, user *discordgo.User) (string, error) {
-	var knowledge []databases.Learn
+	var knowledge []databases.Knowledge
 	var userPrompt string
 
 	knowledgePrompt := "## Knowledge of the user\n"
@@ -39,7 +39,7 @@ func makePrompt(systemPrompt string, user *discordgo.User) (string, error) {
 		)
 	}
 
-	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), databases.Learn{UserID: user.ID})
+	cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), databases.Knowledge{UserID: user.ID})
 	if err != nil {
 		return "", err
 	}
