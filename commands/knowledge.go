@@ -27,6 +27,7 @@ var KnowledgeCommand = &Command{
 						Name:        "단어",
 						Description: "등록할 단어",
 						Required:    true,
+						MaxLength:   100,
 					},
 					{
 						Type:        discordgo.ApplicationCommandOptionString,
@@ -83,7 +84,13 @@ var KnowledgeCommand = &Command{
 
 			return subcommands.Learn(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
 		case knowledgeList:
-			return subcommands.List(ctx.Inter)
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.List(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case knowledgeDelete:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
