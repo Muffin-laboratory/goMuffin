@@ -19,18 +19,12 @@ type componentParse func(ctx *ComponentContext) bool
 type Category string
 type CommandFlags uint8
 
-type DetailedDescription struct {
-	Usage    string
-	Examples []string
-}
-
 type Command struct {
 	*discordgo.ApplicationCommand
-	DetailedDescription DetailedDescription
-	Category            Category
-	Flags               CommandFlags
-	Run                 chatInputRun
-	Autocomplete        chatInputRun
+	Category     Category
+	Flags        CommandFlags
+	Run          chatInputRun
+	Autocomplete chatInputRun
 }
 
 type Discommand struct {

@@ -74,14 +74,6 @@ var ChatCommand *Command = &Command{
 			},
 		},
 	},
-	DetailedDescription: DetailedDescription{
-		Usage: "/대화 (목록/생성/삭제) (이름:숫자(최대 25자, 목록에선 사용 불가능))",
-		Examples: []string{
-			"/대화 목록",
-			"/대화 생성 이름:머핀 냠냠",
-			"/대화 삭제 이름:뷁",
-		},
-	},
 	Category: Chatting,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {

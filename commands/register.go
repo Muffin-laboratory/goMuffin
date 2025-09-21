@@ -14,9 +14,6 @@ var RegisterCommand *Command = &Command{
 		Name:        "가입",
 		Description: "이 봇에 가입해요.",
 	},
-	DetailedDescription: DetailedDescription{
-		Usage: "/가입",
-	},
 	Category: General,
 	Flags:    CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {

@@ -12,9 +12,6 @@ var DeregisterCommand *Command = &Command{
 		Name:        "탈퇴",
 		Description: "이 봇에서 탈퇴해요.",
 	},
-	DetailedDescription: DetailedDescription{
-		Usage: "/탈퇴",
-	},
 	Category: General,
 	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {

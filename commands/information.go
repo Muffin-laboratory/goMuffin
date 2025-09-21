@@ -33,9 +33,6 @@ var InformationCommand *Command = &Command{
 			},
 		},
 	},
-	DetailedDescription: DetailedDescription{
-		Usage: "/정보 (봇/유저/패치내역)",
-	},
 	Category: General,
 	Flags:    CommandFlagsIsBlocked,
 	Run: func(ctx *ChatInputContext) error {
