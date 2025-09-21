@@ -65,7 +65,7 @@ func (c *Chatbot) GetPrompt() string {
 }
 
 func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
-	var learnData []databases.Learn
+	var learnData []databases.Knowledge
 	var data []databases.Text
 	var result string
 	x := rand.Intn(10)
@@ -74,7 +74,7 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
-	learnCur, err := databases.GetDatabase().Learns.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+	learnCur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}

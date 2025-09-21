@@ -16,11 +16,11 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		i := ctx.Inter
 		customID := i.MessageComponentData().CustomID
 
-		if !strings.HasPrefix(customID, utils.DeleteLearnedData) {
+		if !strings.HasPrefix(customID, utils.DeleteKnowledge) {
 			return false
 		}
 
-		userID := utils.GetDeleteLearnedDataUserId(customID)
+		userID := utils.GetDeleteKnowledgeUserID(customID)
 		if i.Member.User.ID != userID {
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
@@ -40,8 +40,8 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		id, itemID := utils.GetDeleteLearnedDataID(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Learns.DeleteOne(context.TODO(), databases.Learn{ID: id})
+		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
+		_, err = databases.GetDatabase().Knowledge.DeleteOne(context.TODO(), databases.Knowledge{ID: id})
 		if err != nil {
 			return err
 		}

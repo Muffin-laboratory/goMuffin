@@ -27,6 +27,10 @@ func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if err != nil {
 			returnErr(s, i, err)
 		}
+	case discordgo.InteractionApplicationCommandAutocomplete:
+		if err := commands.GetDiscommand().ChatInputAutocomplete(i.ApplicationCommandData().Name, s, i); err != nil {
+			returnErr(s, i, err)
+		}
 	}
 }
 

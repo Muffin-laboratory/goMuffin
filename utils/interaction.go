@@ -118,6 +118,7 @@ func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) erro
 	return err
 }
 
+// ShowModal shows modal to this interaction.
 func (i *InteractionCreate) ShowModal(data *ModalData) error {
 	var reqData struct {
 		Type discordgo.InteractionResponseType `json:"type"`
@@ -130,4 +131,17 @@ func (i *InteractionCreate) ShowModal(data *ModalData) error {
 	endpoint := discordgo.EndpointInteractionResponse(i.ID, i.Token)
 	_, err := i.Session.RequestWithBucketID("POST", endpoint, reqData, endpoint)
 	return err
+}
+
+func (i *InteractionCreate) Autocomplete(options []*discordgo.ApplicationCommandOptionChoice) error {
+	if err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionApplicationCommandAutocompleteResult,
+		Data: &discordgo.InteractionResponseData{
+			Choices: options,
+		},
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }

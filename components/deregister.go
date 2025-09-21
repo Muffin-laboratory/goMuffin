@@ -39,7 +39,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 				return err
 			}
 
-			_, err = databases.GetDatabase().Learns.DeleteMany(context.TODO(), filter)
+			_, err = databases.GetDatabase().Knowledge.DeleteMany(context.TODO(), filter)
 			if err != nil {
 				return err
 			}

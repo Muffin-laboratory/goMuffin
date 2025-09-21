@@ -137,12 +137,12 @@ func getContainers(accessory *discordgo.Thumbnail, defaultDesc string, items []s
 }
 
 func learnedDataListRun(m any, globalName, avatarURL string, filter bson.D, length int) error {
-	var data []databases.Learn
+	var data []databases.Knowledge
 
 	itemsMap := map[string]string{}
 	items := []string{}
 
-	cur, err := databases.GetDatabase().Learns.Find(context.TODO(), filter)
+	cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), filter)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			utils.NewMessageSender(m).

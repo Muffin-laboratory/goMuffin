@@ -10,12 +10,12 @@ import (
 )
 
 type MuffinDatabase struct {
-	Client *mongo.Client
-	Learns *mongo.Collection
-	Texts  *mongo.Collection
-	Memory *MemoryCollection
-	Users  *UserCollection
-	Chats  *ChatCollection
+	Client    *mongo.Client
+	Knowledge *mongo.Collection
+	Texts     *mongo.Collection
+	Memory    *MemoryCollection
+	Users     *UserCollection
+	Chats     *ChatCollection
 }
 
 var instance *MuffinDatabase
@@ -26,12 +26,12 @@ func init() {
 		log.Panicln(err)
 	}
 	instance = &MuffinDatabase{
-		Client: client,
-		Learns: client.Database(configs.GetConfig().Database.Name).Collection("learn"),
-		Texts:  client.Database(configs.GetConfig().Database.Name).Collection("text"),
-		Memory: &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory")},
-		Users:  &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user")},
-		Chats:  &ChatCollection{client.Database(configs.GetConfig().Database.Name).Collection("chat")},
+		Client:    client,
+		Knowledge: client.Database(configs.GetConfig().Database.Name).Collection("learn"),
+		Texts:     client.Database(configs.GetConfig().Database.Name).Collection("text"),
+		Memory:    &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory")},
+		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user")},
+		Chats:     &ChatCollection{client.Database(configs.GetConfig().Database.Name).Collection("chat")},
 	}
 }
 
