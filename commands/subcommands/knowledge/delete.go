@@ -23,13 +23,12 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 
 	cur.All(context.TODO(), &data)
 
-	if len(data) < 1 {
-		utils.NewMessageSender(i).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 하는 지식을 찾을 수 없어요."})).
+	if len(data) == 0 {
+		return utils.NewMessageSender(i).
+			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 결과를 찾을 수 없어요."})).
 			SetComponentsV2(true).
-			SetReply(true).
+			SetEphemeral(true).
 			Send()
-		return nil
 	}
 
 	for x, data := range data {
