@@ -14,8 +14,9 @@ func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 
 	name := opts["이름"].StringValue()
 
-	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
-	if err != nil {
+	if err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{
+		UserID: i.User.ID,
+	}).Decode(&dbUser); err != nil {
 		return err
 	}
 
@@ -23,8 +24,7 @@ func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 		return chatSendErrorMessage(i)
 	}
 
-	_, err = databases.GetDatabase().Chats.CreateChat(i.User.ID, name)
-	if err != nil {
+	if _, err := databases.GetDatabase().Chats.CreateChat(i.User.ID, name); err != nil {
 		return err
 	}
 

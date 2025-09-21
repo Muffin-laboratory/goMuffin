@@ -46,13 +46,12 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 		}
 	}
 
-	_, err := databases.GetDatabase().Knowledge.InsertOne(context.TODO(), databases.Knowledge{
+	if _, err := databases.GetDatabase().Knowledge.InsertOne(context.TODO(), databases.Knowledge{
 		Command:   command,
 		Result:    result,
 		UserID:    i.User.ID,
 		CreatedAt: time.Now(),
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 

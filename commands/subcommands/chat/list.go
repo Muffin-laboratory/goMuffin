@@ -29,8 +29,7 @@ func List(i *utils.InteractionCreate) error {
 		return err
 	}
 
-	err = cur.All(context.TODO(), &data)
-	if err != nil {
+	if err = cur.All(context.TODO(), &data); err != nil {
 		return err
 	}
 

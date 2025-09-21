@@ -52,8 +52,8 @@ func (c *UserCollection) IsUserBlocked(userId string) (bool, string) {
 
 func (c *UserCollection) GetUserChattingMode(userId string) (ChattingMode, error) {
 	var user User
-	err := c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
-	if err != nil {
+
+	if err := c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user); err != nil {
 		return ChattingMuffinMode, err
 	}
 	return user.ChattingMode, nil

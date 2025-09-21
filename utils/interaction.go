@@ -33,11 +33,10 @@ type InteractionCreate struct {
 
 // Reply to this interaction.
 func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) error {
-	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: data,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
@@ -49,9 +48,11 @@ func (i *InteractionCreate) Reply(data *discordgo.InteractionResponseData) error
 // NOTE: It's only can ApplicationCommand
 func MakeCommandInteractionOptionsMap(opts []*discordgo.ApplicationCommandInteractionDataOption) CommandInteractionOptionsMap {
 	optsMap := CommandInteractionOptionsMap{}
+
 	for _, opt := range opts {
 		optsMap[opt.Name] = opt
 	}
+
 	return optsMap
 }
 
@@ -64,34 +65,35 @@ func GetInteractionUser(i *discordgo.InteractionCreate) *discordgo.User {
 	if i.User != nil {
 		return i.User
 	}
+
 	return nil
 }
 
 // DeferReply to this interaction.
 func (i *InteractionCreate) DeferReply(data *discordgo.InteractionResponseData) error {
-	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
 		Data: data,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
 	i.Deferred = true
-	return err
+
+	return nil
 }
 
 // DeferUpdate to this interaction.
 func (i *InteractionCreate) DeferUpdate() error {
-	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseDeferredMessageUpdate,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
 	i.Deferred = true
-	return err
+
+	return nil
 }
 
 // EditReply to this interaction.
@@ -101,21 +103,22 @@ func (i *InteractionCreate) EditReply(data *InteractionEdit) error {
 	_, err := i.Session.RequestWithBucketID("PATCH", endpoint, *data, discordgo.EndpointWebhookToken("", ""))
 
 	i.Replied = true
+
 	return err
 }
 
 // Update to this interaction.
 func (i *InteractionCreate) Update(data *discordgo.InteractionResponseData) error {
-	err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseUpdateMessage,
 		Data: data,
-	})
-	if err != nil {
+	}); err != nil {
 		return err
 	}
 
 	i.Replied = true
-	return err
+
+	return nil
 }
 
 // ShowModal shows modal to this interaction.
@@ -130,6 +133,7 @@ func (i *InteractionCreate) ShowModal(data *ModalData) error {
 
 	endpoint := discordgo.EndpointInteractionResponse(i.ID, i.Token)
 	_, err := i.Session.RequestWithBucketID("POST", endpoint, reqData, endpoint)
+
 	return err
 }
 

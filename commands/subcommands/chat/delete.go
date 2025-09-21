@@ -15,8 +15,9 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 
 	name := opts["이름"].StringValue()
 
-	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
-	if err != nil {
+	if err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{
+		UserID: i.User.ID,
+	}).Decode(&dbUser); err != nil {
 		return err
 	}
 

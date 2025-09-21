@@ -35,14 +35,12 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 	Run: func(ctx *commands.ComponentContext) error {
 		i := ctx.Inter
 
-		err := i.DeferUpdate()
-		if err != nil {
+		if err := i.DeferUpdate(); err != nil {
 			return err
 		}
 
 		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Knowledge.DeleteOne(context.TODO(), databases.Knowledge{ID: id})
-		if err != nil {
+		if _, err := databases.GetDatabase().Knowledge.DeleteOne(context.TODO(), databases.Knowledge{ID: id}); err != nil {
 			return err
 		}
 
@@ -50,7 +48,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭ㅈ제했어요.", itemID)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemID)}),
 			},
 		})
 	},

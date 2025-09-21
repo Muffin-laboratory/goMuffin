@@ -25,12 +25,12 @@ func (c *ChatCollection) CreateChat(userId, name string) (*mongo.InsertOneResult
 		return nil, err
 	}
 
-	_, err = GetDatabase().Users.UpdateOne(context.TODO(), User{UserID: userId}, bson.D{{
+	if _, err := GetDatabase().Users.UpdateOne(context.TODO(), User{UserID: userId}, bson.D{{
 		Key:   "$set",
 		Value: User{ChatID: createdChat.InsertedID.(bson.ObjectID)},
-	}})
-	if err != nil {
+	}}); err != nil {
 		return nil, err
 	}
+
 	return createdChat, nil
 }

@@ -13,18 +13,15 @@ import (
 func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	switch i.Type {
 	case discordgo.InteractionApplicationCommand:
-		err := commands.GetDiscommand().ChatInputRun(i.ApplicationCommandData().Name, s, i)
-		if err != nil {
+		if err := commands.GetDiscommand().ChatInputRun(i.ApplicationCommandData().Name, s, i); err != nil {
 			returnErr(s, i, err)
 		}
 	case discordgo.InteractionMessageComponent:
-		err := commands.GetDiscommand().ComponentRun(s, i)
-		if err != nil {
+		if err := commands.GetDiscommand().ComponentRun(s, i); err != nil {
 			returnErr(s, i, err)
 		}
 	case discordgo.InteractionModalSubmit:
-		err := commands.GetDiscommand().ModalRun(s, i)
-		if err != nil {
+		if err := commands.GetDiscommand().ModalRun(s, i); err != nil {
 			returnErr(s, i, err)
 		}
 	case discordgo.InteractionApplicationCommandAutocomplete:

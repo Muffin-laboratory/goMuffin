@@ -26,8 +26,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 		return true
 	},
 	Run: func(ctx *commands.ComponentContext) error {
-		err := ctx.Inter.DeferUpdate()
-		if err != nil {
+		if err := ctx.Inter.DeferUpdate(); err != nil {
 			return err
 		}
 
@@ -36,11 +35,10 @@ var RegisterComponent *commands.Component = &commands.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.ServiceAgree):
-			_, err := databases.GetDatabase().Users.InsertOne(context.TODO(), databases.User{
+			if _, err := databases.GetDatabase().Users.InsertOne(context.TODO(), databases.User{
 				UserID:    ctx.Inter.User.ID,
 				CreatedAt: time.Now(),
-			})
-			if err != nil {
+			}); err != nil {
 				return err
 			}
 
@@ -61,8 +59,9 @@ var RegisterComponent *commands.Component = &commands.Component{
 					}),
 				},
 			})
+		default:
+			return nil
 		}
-		return nil
 	},
 }
 

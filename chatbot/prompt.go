@@ -44,8 +44,7 @@ func makePrompt(systemPrompt string, user *discordgo.User) (string, error) {
 		return "", err
 	}
 
-	err = cur.All(context.TODO(), &knowledge)
-	if err != nil {
+	if err = cur.All(context.TODO(), &knowledge); err != nil {
 		return "", err
 	}
 

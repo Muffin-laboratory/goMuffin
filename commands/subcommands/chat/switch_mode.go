@@ -25,13 +25,12 @@ func SwitchMode(i *utils.InteractionCreate) error {
 		newMode = databases.ChattingMuffinMode
 	}
 
-	_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
+	if _, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
 		Key: "$set",
 		Value: databases.User{
 			ChattingMode: databases.ChattingAIMode,
 		},
-	}})
-	if err != nil {
+	}}); err != nil {
 		return err
 	}
 

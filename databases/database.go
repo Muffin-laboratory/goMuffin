@@ -25,6 +25,7 @@ func init() {
 	if err != nil {
 		log.Panicln(err)
 	}
+
 	instance = &MuffinDatabase{
 		Client:    client,
 		Knowledge: client.Database(configs.GetConfig().Database.Name).Collection("learn"),

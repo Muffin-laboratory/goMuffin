@@ -49,13 +49,14 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.ChannelTyping(m.ChannelID)
 
-		str, err := chatbot.GetChatBot().GetResponse(m.Author, strings.TrimPrefix(content, "대화 "))
+		str, err := chatbot.GetChatBot().GetResponse(m.Author, content)
 		if err != nil {
 			log.Println(err)
 			utils.NewMessageSender(m).
 				SetContent(str).
 				SetReply(true).
 				Send()
+
 			return
 		}
 
@@ -64,6 +65,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			SetContent(result).
 			SetReply(true).
 			Send()
+
 		return
 	} else {
 		if m.Author.ID == config.Chatbot.Train.UserID {
@@ -75,6 +77,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				log.Fatalln(err)
 			}
 		}
+
 		return
 	}
 }

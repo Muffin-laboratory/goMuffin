@@ -89,22 +89,20 @@ func (s *MessageSender) Send() error {
 		}
 
 		if m.Replied || m.Deferred {
-			err := m.EditReply(&InteractionEdit{
+			return m.EditReply(&InteractionEdit{
 				Content:    &s.Content,
 				Embeds:     &s.Embeds,
 				Components: &s.Components,
 				Flags:      &flags,
 			})
-			return err
 		}
 
-		err := m.Reply(&discordgo.InteractionResponseData{
+		return m.Reply(&discordgo.InteractionResponseData{
 			Content:    s.Content,
 			Embeds:     s.Embeds,
 			Components: s.Components,
 			Flags:      flags,
 		})
-		return err
 	}
 	return nil
 }

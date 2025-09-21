@@ -45,19 +45,17 @@ var DeleteChatComponent = &commands.Component{
 			})
 		}
 
-		err := i.DeferUpdate()
-		if err != nil {
+		if err := i.DeferUpdate(); err != nil {
 			return err
 		}
 
 		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id})
-		if err != nil {
+
+		if _, err := databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id}); err != nil {
 			return err
 		}
 
-		_, err = databases.GetDatabase().Memory.DeleteMany(context.TODO(), databases.Memory{ChatID: id})
-		if err != nil {
+		if _, err := databases.GetDatabase().Memory.DeleteMany(context.TODO(), databases.Memory{ChatID: id}); err != nil {
 			return err
 		}
 

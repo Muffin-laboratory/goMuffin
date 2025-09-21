@@ -21,7 +21,11 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 		return err
 	}
 
-	cur.All(context.TODO(), &data)
+	defer cur.Close(context.TODO())
+
+	if err = cur.All(context.TODO(), &data); err != nil {
+		return err
+	}
 
 	if len(data) == 0 {
 		return utils.NewMessageSender(i).

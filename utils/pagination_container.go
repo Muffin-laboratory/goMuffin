@@ -9,7 +9,6 @@ import (
 
 // PaginationContainer is container with page
 type PaginationContainer struct {
-	Container  *discordgo.Container
 	Containers []*discordgo.Container
 	Current    int
 	Total      int
@@ -35,11 +34,6 @@ func PaginationContainerBuilder(m any) *PaginationContainer {
 		ID:      id,
 		m:       m,
 	}
-}
-
-func (p *PaginationContainer) SetContainer(container discordgo.Container) *PaginationContainer {
-	p.Container = &container
-	return p
 }
 
 func (p *PaginationContainer) AddContainers(container ...*discordgo.Container) *PaginationContainer {
@@ -91,17 +85,6 @@ func makeComponents(id string, current, total int) *discordgo.ActionsRow {
 			},
 		},
 	}
-}
-
-func MakeDesc(desc, item string) string {
-	var newDesc string
-
-	if desc == "" {
-		newDesc = item
-	} else {
-		newDesc = fmt.Sprintf(desc, item)
-	}
-	return newDesc
 }
 
 func GetPaginationContainer(id string) *PaginationContainer {

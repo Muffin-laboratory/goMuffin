@@ -23,12 +23,11 @@ var RegisterCommand *Command = &Command{
 		userID := ctx.Inter.User.ID
 
 		if databases.GetDatabase().Users.IsUser(userID) {
-			utils.NewMessageSender(ctx.Inter).
+			return utils.NewMessageSender(ctx.Inter).
 				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 /탈퇴를 이용해주세요."})).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return nil
 		}
 
 		return utils.NewMessageSender(ctx.Inter).

@@ -36,17 +36,15 @@ var SelectChatComponent *commands.Component = &commands.Component{
 	Run: func(ctx *commands.ComponentContext) error {
 		i := ctx.Inter
 
-		err := i.DeferUpdate()
-		if err != nil {
+		if err := i.DeferUpdate(); err != nil {
 			return err
 		}
 
 		id, itemID := utils.GetSelectChatID(i.MessageComponentData().CustomID)
-		_, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
+		if _, err := databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
 			Key:   "$set",
 			Value: databases.User{ChatID: id},
-		}})
-		if err != nil {
+		}}); err != nil {
 			return err
 		}
 

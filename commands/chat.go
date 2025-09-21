@@ -87,27 +87,42 @@ var ChatCommand *Command = &Command{
 	Run: func(ctx *ChatInputContext) error {
 		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
 		case chatCommandChatting:
-			ctx.Inter.DeferReply(nil)
+			if err := ctx.Inter.DeferReply(nil); err != nil {
+				return err
+			}
+
 			return subcommands.Chat(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandSwitchMode:
-			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
-			})
+			}); err != nil {
+				return err
+			}
+
 			return subcommands.SwitchMode(ctx.Inter)
 		case chatCommandCreate:
-			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
-			})
+			}); err != nil {
+				return err
+			}
+
 			return subcommands.Create(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandList:
-			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
-			})
+			}); err != nil {
+				return err
+			}
+
 			return subcommands.List(ctx.Inter)
 		case chatCommandDelete:
-			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
-			})
+			}); err != nil {
+				return err
+			}
+
 			return subcommands.Delete(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil

@@ -35,8 +35,9 @@ func (c *MemoryCollection) Get(chatId bson.ObjectID) ([]*genai.Content, error) {
 		return memory, err
 	}
 
-	err = cur.All(context.TODO(), &data)
-	if err != nil {
+	defer cur.Close(context.TODO())
+
+	if err = cur.All(context.TODO(), &data); err != nil {
 		return memory, err
 	}
 

@@ -16,16 +16,17 @@ func InfoUser(i *utils.InteractionCreate) error {
 		return err
 	}
 
-	var mufUser databases.User
+	var dbUser databases.User
 	var currentChat databases.Chat
 
-	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&mufUser)
+	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
 	if err != nil {
 		return err
 	}
 
-	err = databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{ID: mufUser.ChatID}).Decode(&currentChat)
-	if err != nil {
+	if err = databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{
+		ID: dbUser.ChatID,
+	}).Decode(&currentChat); err != nil {
 		return err
 	}
 
@@ -47,12 +48,12 @@ func InfoUser(i *utils.InteractionCreate) error {
 							Content: fmt.Sprintf("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime)),
 						},
 						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **머핀봇 가입일**\n> %s", utils.Time(&mufUser.CreatedAt, utils.RelativeTime)),
+							Content: fmt.Sprintf("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime)),
 						},
 					},
 				},
 				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **현재 모드**\n> %s", mufUser.ModeString()),
+					Content: fmt.Sprintf("- **현재 모드**\n> %s", dbUser.ModeString()),
 				},
 				discordgo.TextDisplay{
 					Content: fmt.Sprintf("- **현재 채팅**\n> %s", currentChat.Name),

@@ -82,13 +82,11 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	defer muffinCur.Close(context.TODO())
 	defer learnCur.Close(context.TODO())
 
-	err = muffinCur.All(context.TODO(), &data)
-	if err != nil {
+	if err = muffinCur.All(context.TODO(), &data); err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	err = learnCur.All(context.TODO(), &learnData)
-	if err != nil {
+	if err = learnCur.All(context.TODO(), &learnData); err != nil {
 		return "살려주ㅅ세요", err
 	}
 
@@ -107,13 +105,13 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, error) {
 	var dbUser databases.User
 
-	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: user.ID}).Decode(&dbUser)
-	if err != nil {
+	if err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{
+		UserID: user.ID,
+	}).Decode(&dbUser); err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	err = databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserId: user.ID}).Err()
-	if err != nil {
+	if err := databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserId: user.ID}).Err(); err != nil {
 		if err == mongo.ErrNoDocuments {
 			_, err = databases.GetDatabase().Chats.CreateChat(user.ID, "새로운 채팅")
 			fmt.Println(err)
@@ -144,13 +142,12 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 	}
 
 	resultText := result.Text()
-	err = databases.GetDatabase().Memory.Save(&databases.Memory{
+	if err = databases.GetDatabase().Memory.Save(&databases.Memory{
 		UserID:  user.ID,
 		Content: question,
 		Answer:  resultText,
 		ChatID:  dbUser.ChatID,
-	})
-	if err != nil {
+	}); err != nil {
 		return "살려주ㅅ세요", err
 	}
 
