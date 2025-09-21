@@ -14,13 +14,6 @@ import (
 )
 
 func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, igCommands []string) error {
-	err := i.DeferReply(&discordgo.InteractionResponseData{
-		Flags: discordgo.MessageFlagsEphemeral,
-	})
-	if err != nil {
-		return err
-	}
-
 	command := opts["단어"].StringValue()
 	result := opts["대답"].StringValue()
 
@@ -53,7 +46,7 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 		}
 	}
 
-	_, err = databases.GetDatabase().Knowledge.InsertOne(context.TODO(), databases.Knowledge{
+	_, err := databases.GetDatabase().Knowledge.InsertOne(context.TODO(), databases.Knowledge{
 		Command:   command,
 		Result:    result,
 		UserID:    i.User.ID,
