@@ -34,17 +34,6 @@ func main() {
 
 	cmds := []*discordgo.ApplicationCommand{}
 	for _, cmd := range commands.GetDiscommand().Commands {
-		if cmd.Name == commands.HelpCommand.Name {
-			// 극한의 성능 똥망 코드 탄생!
-			// 무려 똑같은 걸 반복해서 돌리는!
-			for _, a := range commands.GetDiscommand().Commands {
-				cmd.Options[0].Choices = append(cmd.Options[0].Choices, &discordgo.ApplicationCommandOptionChoice{
-					Name:  a.Name,
-					Value: a.Name,
-				})
-			}
-		}
-
 		cmds = append(cmds, cmd.ApplicationCommand)
 	}
 
