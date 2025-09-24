@@ -25,11 +25,10 @@ func main() {
 
 	defer dg.Close()
 
-	// 봇의 상태메세지 변경
+	setBotStatusTicker := time.NewTicker(time.Minute * 10)
 	go func() {
-		for {
+		for range setBotStatusTicker.C {
 			dg.UpdateCustomStatus("ㅅ살려주세요..!")
-			time.Sleep(time.Minute * 10)
 		}
 	}()
 
