@@ -50,24 +50,31 @@ type githubConfig struct {
 	Repository string
 }
 
+type integrateMDCConfig struct {
+	Server struct {
+		Port int
+	}
+}
+
 // MuffinConfig for Muffin bot
 type MuffinConfig struct {
-	Bot      botConfig
-	Database databaseConfig
-	Chatbot  chatbotConfig
-	Service  serviceConfig
-	GitHub   githubConfig
+	Bot          botConfig
+	Database     databaseConfig
+	Chatbot      chatbotConfig
+	Service      serviceConfig
+	GitHub       githubConfig
+	IntegrateMDC integrateMDCConfig
 }
 
 var instance *MuffinConfig
 
-func init() {
-	godotenv.Load()
-	instance = &MuffinConfig{}
-	setConfig(instance)
-}
-
 func GetConfig() *MuffinConfig {
+	if instance == nil {
+		godotenv.Load()
+		instance = &MuffinConfig{}
+		setConfig(instance)
+	}
+
 	return instance
 }
 
@@ -76,11 +83,26 @@ func getRequiredValue(key string) string {
 	if value == "" {
 		log.Fatalf("[goMuffin] .env 파일에서 필요한 '%s'값이 없어요.", key)
 	}
+
 	return value
 }
 
 func getValue(key string) string {
 	return os.Getenv(key)
+}
+
+func getValueToInt(key string) int {
+	value := getValue(key)
+	if value == "" {
+		return 0
+	}
+
+	parsedInt, err := strconv.Atoi(value)
+	if err != nil {
+		log.Fatalf("[goMuffin] .env 파일에서 '%s'값은 int타입이어야 해요.", key)
+	}
+
+	return parsedInt
 }
 
 func setConfig(config *MuffinConfig) {
@@ -97,14 +119,8 @@ func setConfig(config *MuffinConfig) {
 		Username:   getValue("DATABASE_USERNAME"),
 		AuthSource: getValue("DATABASE_AUTH_SOURCE"),
 		Name:       getRequiredValue("DATABASE_NAME"),
+		Port:       getValueToInt("DATABASE_PORT"),
 	}
-	port, err := strconv.Atoi(getValue("DATABASE_PORT"))
-	if getValue("DATABASE_PORT") != "" && err != nil {
-		log.Println("[goMuffin] 'DATABASE_PORT'값을 int로 파싱할 수 없어요.")
-		log.Fatalln(err)
-	}
-
-	config.Database.Port = port
 
 	if config.Database.AuthSource == "" {
 		config.Database.AuthSource = "admin"
@@ -120,7 +136,7 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	if config.Chatbot.Gemini.Model == "" {
-		config.Chatbot.Gemini.Model = "gemini-2.0-flash"
+		config.Chatbot.Gemini.Model = "gemini-2.5-flash"
 	}
 
 	config.Service = serviceConfig{
@@ -131,5 +147,11 @@ func setConfig(config *MuffinConfig) {
 	config.GitHub = githubConfig{
 		Owner:      getValue("GITHUB_OWNER"),
 		Repository: getValue("GITHUB_REPO"),
+	}
+
+	config.IntegrateMDC = integrateMDCConfig{
+		Server: struct{ Port int }{
+			Port: getValueToInt("INTEGRATE_MDC_SERVER_PORT"),
+		},
 	}
 }
