@@ -103,11 +103,8 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 }
 
 func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, error) {
-	var dbUser databases.User
-
-	if err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{
-		UserID: user.ID,
-	}).Decode(&dbUser); err != nil {
+	dbUser, err := databases.GetDatabase().Users.Get(user.ID)
+	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 

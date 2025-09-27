@@ -1,13 +1,11 @@
 package chat
 
 import (
-	"context"
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func SwitchMode(i *utils.InteractionCreate) error {
@@ -25,12 +23,9 @@ func SwitchMode(i *utils.InteractionCreate) error {
 		newMode = databases.ChattingMuffinMode
 	}
 
-	if _, err = databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
-		Key: "$set",
-		Value: databases.User{
-			ChattingMode: databases.ChattingAIMode,
-		},
-	}}); err != nil {
+	if _, err := databases.GetDatabase().Users.Update(i.User.ID, databases.User{
+		ChattingMode: newMode,
+	}); err != nil {
 		return err
 	}
 

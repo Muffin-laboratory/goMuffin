@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -9,7 +8,6 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var SelectChatComponent *commands.Component = &commands.Component{
@@ -41,10 +39,10 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemID := utils.GetSelectChatID(i.MessageComponentData().CustomID)
-		if _, err := databases.GetDatabase().Users.UpdateOne(context.TODO(), databases.User{UserID: i.User.ID}, bson.D{{
-			Key:   "$set",
-			Value: databases.User{ChatID: id},
-		}}); err != nil {
+
+		if _, err := databases.GetDatabase().Users.Update(i.User.ID, databases.User{
+			ChatID: id,
+		}); err != nil {
 			return err
 		}
 

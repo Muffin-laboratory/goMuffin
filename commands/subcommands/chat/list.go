@@ -10,12 +10,11 @@ import (
 )
 
 func List(i *utils.InteractionCreate) error {
-	var dbUser databases.User
 	var data []databases.Chat
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
-	err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
+	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
 		return err
 	}

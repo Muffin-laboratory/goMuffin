@@ -1,11 +1,9 @@
 package components
 
 import (
-	"context"
 	"fmt"
 
 	"strings"
-	"time"
 
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -35,10 +33,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.ServiceAgree):
-			if _, err := databases.GetDatabase().Users.InsertOne(context.TODO(), databases.User{
-				UserID:    ctx.Inter.User.ID,
-				CreatedAt: time.Now(),
-			}); err != nil {
+			if _, err := databases.GetDatabase().Users.Create(ctx.Inter.User.ID); err != nil {
 				return err
 			}
 

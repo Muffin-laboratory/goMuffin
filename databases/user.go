@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/cache"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -22,7 +23,8 @@ type User struct {
 }
 
 type UserCollection struct {
-	*mongo.Collection
+	Collection *mongo.Collection
+	caches     *cache.CacheManager[*User]
 }
 
 const (
@@ -30,15 +32,53 @@ const (
 	ChattingMuffinMode
 )
 
-func (c *UserCollection) IsUser(userId string) bool {
-	var user *User
-	c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
-	return user != nil
+func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
+	user := User{
+		UserID:    userID,
+		CreatedAt: time.Now(),
+	}
+
+	result, err := c.Collection.InsertOne(context.TODO(), user)
+	if err != nil {
+		return nil, err
+	}
+
+	c.caches.Set(userID, &user)
+
+	return result, nil
 }
 
-func (c *UserCollection) IsUserBlocked(userId string) (bool, string) {
-	var user User
-	err := c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user)
+func (c *UserCollection) Get(userID string) (*User, error) {
+	if user, ok := c.caches.Get(userID); ok {
+		return user, nil
+	}
+
+	var user *User
+
+	if err := c.Collection.FindOne(context.TODO(), User{
+		UserID: userID,
+	}).Decode(&user); err != nil {
+		return nil, err
+	}
+
+	c.caches.Set(userID, user)
+
+	return user, nil
+}
+
+func (c *UserCollection) IsUser(userID string) bool {
+	user, err := c.Get(userID)
+	if err != nil {
+		return false
+	}
+
+	c.caches.Set(userID, user)
+
+	return true
+}
+
+func (c *UserCollection) IsUserBlocked(userID string) (bool, string) {
+	user, err := c.Get(userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return false, ""
@@ -47,16 +87,50 @@ func (c *UserCollection) IsUserBlocked(userId string) (bool, string) {
 		fmt.Println(err)
 		return true, "에러가 발생하여 차단한 유저를 구별 못해요. 계속 이러면 연락주세요."
 	}
+
+	c.caches.Set(userID, user)
+
 	return user.Blocked, user.BlockedReason
 }
 
-func (c *UserCollection) GetUserChattingMode(userId string) (ChattingMode, error) {
-	var user User
-
-	if err := c.FindOne(context.TODO(), User{UserID: userId}).Decode(&user); err != nil {
-		return ChattingMuffinMode, err
+func (c *UserCollection) GetUserChattingMode(userID string) (ChattingMode, error) {
+	user, err := c.Get(userID)
+	if err != nil {
+		return ChattingAIMode, err
 	}
+
+	c.caches.Set(userID, user)
+
 	return user.ChattingMode, nil
+}
+
+func (c *UserCollection) Update(userID string, data User) (*mongo.UpdateResult, error) {
+	result, err := c.Collection.UpdateOne(context.TODO(), User{UserID: userID}, bson.M{
+		"$set": data,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	c.caches.Delete(userID)
+
+	// 캐시 저장용
+	if _, err := c.Get(userID); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (c *UserCollection) Delete(userID string) (*mongo.DeleteResult, error) {
+	result, err := c.Collection.DeleteOne(context.TODO(), User{UserID: userID})
+	if err != nil {
+		return nil, err
+	}
+
+	c.caches.Delete(userID)
+
+	return result, nil
 }
 
 func ModeString(mode ChattingMode) string {

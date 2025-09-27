@@ -33,9 +33,10 @@ var DeregisterComponent *commands.Component = &commands.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
-			filter := databases.User{UserID: ctx.Inter.User.ID}
+			userID := ctx.Inter.User.ID
+			filter := databases.User{UserID: userID}
 
-			if _, err := databases.GetDatabase().Users.DeleteOne(context.TODO(), filter); err != nil {
+			if _, err := databases.GetDatabase().Users.Delete(ctx.Inter.User.ID); err != nil {
 				return err
 			}
 

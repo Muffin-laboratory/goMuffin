@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"context"
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -10,13 +9,10 @@ import (
 )
 
 func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
-	var dbUser databases.User
-
 	name := opts["이름"].StringValue()
 
-	if err := databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{
-		UserID: i.User.ID,
-	}).Decode(&dbUser); err != nil {
+	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
+	if err != nil {
 		return err
 	}
 

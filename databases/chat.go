@@ -11,7 +11,7 @@ import (
 type Chat struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Name      string        `bson:"name,omitempty"`
-	UserId    string        `bson:"user_id,omitempty"`
+	UserID    string        `bson:"user_id,omitempty"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }
 
@@ -25,10 +25,9 @@ func (c *ChatCollection) CreateChat(userID, name string) (*mongo.InsertOneResult
 		return nil, err
 	}
 
-	if _, err := GetDatabase().Users.UpdateOne(context.TODO(), User{UserID: userId}, bson.D{{
-		Key:   "$set",
-		Value: User{ChatID: createdChat.InsertedID.(bson.ObjectID)},
-	}}); err != nil {
+	if _, err := GetDatabase().Users.Update(userID, User{
+		ChatID: createdChat.InsertedID.(bson.ObjectID),
+	}); err != nil {
 		return nil, err
 	}
 

@@ -16,10 +16,9 @@ func InfoUser(i *utils.InteractionCreate) error {
 		return err
 	}
 
-	var dbUser databases.User
 	var currentChat databases.Chat
 
-	err = databases.GetDatabase().Users.FindOne(context.TODO(), databases.User{UserID: i.User.ID}).Decode(&dbUser)
+	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
 		return err
 	}
