@@ -30,7 +30,7 @@ func InfoUser(i *utils.InteractionCreate) error {
 		return err
 	}
 
-	chatLength, err := databases.GetDatabase().Memory.CountDocuments(context.TODO(), databases.Memory{UserID: i.User.ID})
+	chatLength, err := databases.GetDatabase().Memory.Collection.CountDocuments(context.TODO(), databases.Memory{UserID: i.User.ID})
 	if err != nil {
 		return err
 	}

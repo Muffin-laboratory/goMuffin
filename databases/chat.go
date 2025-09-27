@@ -19,8 +19,8 @@ type ChatCollection struct {
 	*mongo.Collection
 }
 
-func (c *ChatCollection) CreateChat(userId, name string) (*mongo.InsertOneResult, error) {
-	createdChat, err := c.InsertOne(context.TODO(), Chat{UserId: userId, Name: name, CreatedAt: time.Now()})
+func (c *ChatCollection) CreateChat(userID, name string) (*mongo.InsertOneResult, error) {
+	createdChat, err := c.InsertOne(context.TODO(), Chat{UserID: userID, Name: name, CreatedAt: time.Now()})
 	if err != nil {
 		return nil, err
 	}

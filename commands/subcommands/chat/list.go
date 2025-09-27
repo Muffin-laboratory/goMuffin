@@ -24,7 +24,7 @@ func List(i *utils.InteractionCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{UserId: i.User.ID})
+	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{UserID: i.User.ID})
 	if err != nil {
 		return err
 	}

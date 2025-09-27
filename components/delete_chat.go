@@ -55,7 +55,7 @@ var DeleteChatComponent = &commands.Component{
 			return err
 		}
 
-		if _, err := databases.GetDatabase().Memory.DeleteMany(context.TODO(), databases.Memory{ChatID: id}); err != nil {
+		if _, err := databases.GetDatabase().Memory.DeleteByChatID(id); err != nil {
 			return err
 		}
 

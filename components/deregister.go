@@ -43,7 +43,7 @@ var DeregisterComponent *commands.Component = &commands.Component{
 				return err
 			}
 
-			if _, err := databases.GetDatabase().Memory.DeleteMany(context.TODO(), filter); err != nil {
+			if _, err := databases.GetDatabase().Memory.DeleteByUserID(userID); err != nil {
 				return err
 			}
 
