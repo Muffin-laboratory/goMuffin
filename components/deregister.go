@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"strings"
 
 	"git.wh64.net/muffin/goMuffin/commands"
@@ -34,13 +33,12 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		switch {
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
 			userID := ctx.Inter.User.ID
-			filter := databases.User{UserID: userID}
 
-			if _, err := databases.GetDatabase().Users.Delete(ctx.Inter.User.ID); err != nil {
+			if _, err := databases.GetDatabase().Users.Delete(userID); err != nil {
 				return err
 			}
 
-			if _, err := databases.GetDatabase().Knowledge.DeleteMany(context.TODO(), filter); err != nil {
+			if _, err := databases.GetDatabase().Knowledge.DeleteByUserID(userID); err != nil {
 				return err
 			}
 

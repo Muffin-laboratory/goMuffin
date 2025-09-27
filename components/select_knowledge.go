@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -16,7 +15,6 @@ var SelectKnowledgeComponent = &commands.Component{
 		return strings.HasPrefix(ctx.Inter.MessageComponentData().CustomID, utils.SelectKnowledge)
 	},
 	Run: func(ctx *commands.ComponentContext) error {
-		var data []*databases.Knowledge
 		var sections []*discordgo.Section
 		var containers []*discordgo.Container
 
@@ -30,14 +28,8 @@ var SelectKnowledgeComponent = &commands.Component{
 
 		command := utils.GetSelectKnowledgeCommand(i.MessageComponentData().CustomID)
 
-		cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), databases.Knowledge{UserID: i.User.ID, Command: command})
+		data, err := databases.GetDatabase().Knowledge.GetByFilter(databases.Knowledge{UserID: i.User.ID, Command: command})
 		if err != nil {
-			return err
-		}
-
-		defer cur.Close(context.TODO())
-
-		if err = cur.All(context.TODO(), &data); err != nil {
 			return err
 		}
 

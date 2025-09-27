@@ -1,10 +1,8 @@
 package knowledge
 
 import (
-	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -46,12 +44,7 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 		}
 	}
 
-	if _, err := databases.GetDatabase().Knowledge.InsertOne(context.TODO(), databases.Knowledge{
-		Command:   command,
-		Result:    result,
-		UserID:    i.User.ID,
-		CreatedAt: time.Now(),
-	}); err != nil {
+	if _, err := databases.GetDatabase().Knowledge.Create(i.User.ID, command, result); err != nil {
 		return err
 	}
 

@@ -13,7 +13,7 @@ import (
 
 type MuffinDatabase struct {
 	Client    *mongo.Client
-	Knowledge *mongo.Collection
+	Knowledge *KnowledgeCollection
 	Texts     *mongo.Collection
 	Memory    *MemoryCollection
 	Users     *UserCollection
@@ -32,7 +32,7 @@ func init() {
 
 	instance = &MuffinDatabase{
 		Client:    client,
-		Knowledge: client.Database(configs.GetConfig().Database.Name).Collection("learn"),
+		Knowledge: &KnowledgeCollection{client.Database(configs.GetConfig().Database.Name).Collection("learn"), cache.New[*knowledgeCacheItem](timeToExpire)},
 		Texts:     client.Database(configs.GetConfig().Database.Name).Collection("text"),
 		Memory:    &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory"), cache.New[*memoryCacheItem](timeToExpire)},
 		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[*User](timeToExpire)},

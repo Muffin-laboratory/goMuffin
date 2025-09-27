@@ -1,7 +1,6 @@
 package knowledge
 
 import (
-	"context"
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -10,20 +9,13 @@ import (
 )
 
 func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
-	var data []databases.Knowledge
 	var sections []discordgo.Section
 	var containers []*discordgo.Container
 
 	command := opts["단어"].StringValue()
 
-	cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), databases.Knowledge{UserID: i.User.ID, Command: command})
+	data, err := databases.GetDatabase().Knowledge.GetByFilter(databases.Knowledge{UserID: i.User.ID, Command: command})
 	if err != nil {
-		return err
-	}
-
-	defer cur.Close(context.TODO())
-
-	if err = cur.All(context.TODO(), &data); err != nil {
 		return err
 	}
 

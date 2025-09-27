@@ -24,11 +24,11 @@ func InfoBot(i *utils.InteractionCreate) error {
 	if err != nil {
 		return err
 	}
-	learnLength, err := databases.GetDatabase().Knowledge.EstimatedDocumentCount(context.TODO())
+	learnLength, err := databases.GetDatabase().Knowledge.Collection.EstimatedDocumentCount(context.TODO())
 	if err != nil {
 		return err
 	}
-	userLearnLength, err := databases.GetDatabase().Knowledge.CountDocuments(context.TODO(), databases.Knowledge{UserID: i.User.ID})
+	userLearnLength, err := databases.GetDatabase().Knowledge.Collection.CountDocuments(context.TODO(), databases.Knowledge{UserID: i.User.ID})
 	if err != nil {
 		return err
 	}

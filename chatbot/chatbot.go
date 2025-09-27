@@ -65,28 +65,23 @@ func (c *Chatbot) GetPrompt() string {
 }
 
 func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
-	var learnData []databases.Knowledge
 	var data []databases.Text
 	var result string
 	x := rand.Intn(10)
 
-	muffinCur, err := databases.GetDatabase().Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
-	if err != nil {
-		return "살려주ㅅ세요", err
-	}
-	learnCur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), bson.D{{Key: "command", Value: question}})
+	cur, err := databases.GetDatabase().Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	defer muffinCur.Close(context.TODO())
-	defer learnCur.Close(context.TODO())
+	defer cur.Close(context.TODO())
 
-	if err = muffinCur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(context.TODO(), &data); err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	if err = learnCur.All(context.TODO(), &learnData); err != nil {
+	learnData, err := databases.GetDatabase().Knowledge.GetByCommand(question)
+	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 

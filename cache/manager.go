@@ -48,6 +48,17 @@ func (m *CacheManager[T]) Get(key string) (T, bool) {
 	return zero, false
 }
 
+// All returns all caches.
+func (m *CacheManager[T]) All() []T {
+	var cacheList []T
+
+	for _, cache := range m.data {
+		cacheList = append(cacheList, cache.Item)
+	}
+
+	return cacheList
+}
+
 // Delete deletes cache.
 func (m *CacheManager[T]) Delete(key string) {
 	m.mu.Lock()

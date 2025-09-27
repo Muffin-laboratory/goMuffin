@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"context"
-
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/knowledge"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -112,7 +110,6 @@ var KnowledgeCommand = &Command{
 	Autocomplete: func(ctx *ChatInputContext) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
 		var focusedValue string
-		var data []*databases.Knowledge
 
 		for _, opt := range ctx.Inter.ApplicationCommandData().Options[0].Options {
 			if opt.Focused {
@@ -121,19 +118,13 @@ var KnowledgeCommand = &Command{
 			}
 		}
 
-		cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), bson.M{
+		data, err := databases.GetDatabase().Knowledge.GetByFilter(bson.M{
 			"user_id": ctx.Inter.User.ID,
 			"command": bson.M{
 				"$regex": focusedValue,
 			},
 		})
 		if err != nil {
-			return err
-		}
-
-		defer cur.Close(context.TODO())
-
-		if err = cur.All(context.TODO(), &data); err != nil {
 			return err
 		}
 

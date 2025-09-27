@@ -1,7 +1,6 @@
 package knowledge
 
 import (
-	"context"
 	"fmt"
 	"slices"
 
@@ -14,7 +13,6 @@ import (
 func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
 	var command string
 	var items []string
-	var data []databases.Knowledge
 	var sections []*discordgo.Section
 	var containers []*discordgo.Container
 
@@ -30,14 +28,8 @@ func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 		command = "전체"
 	}
 
-	cur, err := databases.GetDatabase().Knowledge.Find(context.TODO(), filter)
+	data, err := databases.GetDatabase().Knowledge.GetByFilter(filter)
 	if err != nil {
-		return err
-	}
-
-	defer cur.Close(context.TODO())
-
-	if err = cur.All(context.TODO(), &data); err != nil {
 		return err
 	}
 

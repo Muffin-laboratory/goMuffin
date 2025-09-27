@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -40,7 +39,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
-		if _, err := databases.GetDatabase().Knowledge.DeleteOne(context.TODO(), databases.Knowledge{ID: id}); err != nil {
+		if _, err := databases.GetDatabase().Knowledge.Delete(id); err != nil {
 			return err
 		}
 
