@@ -64,6 +64,12 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		utils.NewMessageSender(m).
 			SetContent(result).
 			SetReply(true).
+			SetAllowedMentions(discordgo.MessageAllowedMentions{
+				Parse:       []discordgo.AllowedMentionType{},
+				Users:       []string{},
+				Roles:       []string{},
+				RepliedUser: true,
+			}).
 			Send()
 
 		return
