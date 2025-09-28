@@ -90,8 +90,6 @@ var ChatCommand *Command = &Command{
 	RegisterMessageCommand:     true,
 	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
 	ChatInputRun: func(ctx *ChatInputContext) error {
-		ctx.Inter.DeferReply(nil)
-
 		var cType chatCommandType
 		var str string
 
@@ -182,6 +180,11 @@ func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentO
 		result := chatbot.ParseResult(str, i.Session, i)
 		return i.EditReply(&utils.InteractionEdit{
 			Content: &result,
+			AllowedMentions: &discordgo.MessageAllowedMentions{
+				Parse: []discordgo.AllowedMentionType{},
+				Users: []string{},
+				Roles: []string{},
+			},
 		})
 	case chatCommandCreate:
 		var dbUser databases.User
