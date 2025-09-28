@@ -16,6 +16,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+func changeStatus() {
+	dg.UpdateCustomStatus("ㅅ살려주세요..!")
+}
+
 func main() {
 	err := dg.Open()
 	if err != nil {
@@ -25,10 +29,12 @@ func main() {
 
 	defer dg.Close()
 
+	changeStatus()
+
 	setBotStatusTicker := time.NewTicker(time.Minute * 10)
 	go func() {
 		for range setBotStatusTicker.C {
-			dg.UpdateCustomStatus("ㅅ살려주세요..!")
+			changeStatus()
 		}
 	}()
 
