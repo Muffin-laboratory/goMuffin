@@ -12,7 +12,7 @@ import (
 )
 
 type Knowledge struct {
-	ID        bson.ObjectID `bson:"_id,omitempty" json:"id"`
+	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Command   string        `bson:"command,omitempty"`
 	Result    string        `bson:"result,omitempty"`
 	UserID    string        `bson:"user_id,omitempty"`
