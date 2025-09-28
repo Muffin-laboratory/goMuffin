@@ -11,24 +11,26 @@ import (
 )
 
 func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	switch i.Type {
-	case discordgo.InteractionApplicationCommand:
-		if err := commands.GetDiscommand().ChatInputRun(i.ApplicationCommandData().Name, s, i); err != nil {
-			returnErr(s, i, err)
+	go func() {
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			if err := commands.GetDiscommand().ChatInputRun(i.ApplicationCommandData().Name, s, i); err != nil {
+				returnErr(s, i, err)
+			}
+		case discordgo.InteractionMessageComponent:
+			if err := commands.GetDiscommand().ComponentRun(s, i); err != nil {
+				returnErr(s, i, err)
+			}
+		case discordgo.InteractionModalSubmit:
+			if err := commands.GetDiscommand().ModalRun(s, i); err != nil {
+				returnErr(s, i, err)
+			}
+		case discordgo.InteractionApplicationCommandAutocomplete:
+			if err := commands.GetDiscommand().ChatInputAutocomplete(i.ApplicationCommandData().Name, s, i); err != nil {
+				returnErr(s, i, err)
+			}
 		}
-	case discordgo.InteractionMessageComponent:
-		if err := commands.GetDiscommand().ComponentRun(s, i); err != nil {
-			returnErr(s, i, err)
-		}
-	case discordgo.InteractionModalSubmit:
-		if err := commands.GetDiscommand().ModalRun(s, i); err != nil {
-			returnErr(s, i, err)
-		}
-	case discordgo.InteractionApplicationCommandAutocomplete:
-		if err := commands.GetDiscommand().ChatInputAutocomplete(i.ApplicationCommandData().Name, s, i); err != nil {
-			returnErr(s, i, err)
-		}
-	}
+	}()
 }
 
 func returnErr(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
