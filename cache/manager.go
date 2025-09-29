@@ -70,15 +70,11 @@ func (m *CacheManager[T]) startCleanupExpiredCaches() {
 	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
 		for range ticker.C {
-			m.mu.Lock()
-
 			for key, item := range m.data {
 				if item.Expired() {
 					m.Delete(key)
 				}
 			}
-
-			m.mu.Unlock()
 		}
 	}()
 }
