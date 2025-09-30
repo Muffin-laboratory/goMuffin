@@ -1,7 +1,6 @@
 package information
 
 import (
-	"context"
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/configs"
@@ -16,34 +15,23 @@ func InfoBot(i *utils.InteractionCreate) error {
 		return err
 	}
 
-	textLength, err := databases.GetDatabase().Texts.EstimatedDocumentCount(context.TODO())
+	counts, err := databases.GetDatabase().Counts(i.User.ID)
 	if err != nil {
 		return err
 	}
-	muffinLength, err := databases.GetDatabase().Texts.CountDocuments(context.TODO(), databases.Text{Persona: "muffin"})
-	if err != nil {
-		return err
+
+	thumbnail := &discordgo.Thumbnail{
+		Media: discordgo.UnfurledMediaItem{
+			URL: i.Session.State.User.AvatarURL("512"),
+		},
 	}
-	learnLength, err := databases.GetDatabase().Knowledge.Collection.EstimatedDocumentCount(context.TODO())
-	if err != nil {
-		return err
-	}
-	userLearnLength, err := databases.GetDatabase().Knowledge.Collection.CountDocuments(context.TODO(), databases.Knowledge{UserID: i.User.ID})
-	if err != nil {
-		return err
-	}
-	sum := textLength + learnLength
 
 	return utils.PaginationContainerBuilder(i).
 		AddContainers(
 			&discordgo.Container{
 				Components: []discordgo.MessageComponent{
 					discordgo.Section{
-						Accessory: discordgo.Thumbnail{
-							Media: discordgo.UnfurledMediaItem{
-								URL: i.Session.State.User.AvatarURL("512"),
-							},
-						},
+						Accessory: thumbnail,
 						Components: []discordgo.MessageComponent{
 							discordgo.TextDisplay{
 								Content: fmt.Sprintf("### %s의 정보", i.Session.State.User.Username),
@@ -88,28 +76,33 @@ func InfoBot(i *utils.InteractionCreate) error {
 			&discordgo.Container{
 				Components: []discordgo.MessageComponent{
 					discordgo.Section{
-						Accessory: discordgo.Thumbnail{
-							Media: discordgo.UnfurledMediaItem{
-								URL: i.Session.State.User.AvatarURL("512"),
-							},
-						},
+						Accessory: thumbnail,
 						Components: []discordgo.MessageComponent{
 							discordgo.TextDisplay{
-								Content: fmt.Sprintf("### 저장된 데이터량\n총합: `%d`개", sum),
+								Content: fmt.Sprintf("### 저장된 데이터 개수\n총합: `%d`개", counts.All),
 							},
 							discordgo.TextDisplay{
-								Content: fmt.Sprintf("- **총 채팅 데이터량**\n> `%d`개", textLength),
-							},
-							discordgo.TextDisplay{
-								Content: fmt.Sprintf("- **머핀 데이터량**\n> `%d`개", muffinLength),
+								Content: fmt.Sprintf("- **머핀 데이터 개수**\n> `%d`개", counts.Muffin),
 							},
 						},
 					},
 					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **총 지식 데이터량**\n> `%d`개", learnLength),
+						Content: fmt.Sprintf("- **총 지식 개수**\n> `%d`개", counts.Knowledge),
 					},
 					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **%s님이 가르쳐준 데이터량**\n> `%d`개", i.User.Username, userLearnLength),
+						Content: fmt.Sprintf("- **%s님이 가르쳐준 지식 개수**\n> `%d`개", i.User.GlobalName, counts.UserKnowledge),
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **총 채팅방 개수**\n> `%d`개", counts.Chat),
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **%s님의 채팅방 개수**\n> `%d`개", i.User.GlobalName, counts.UserChat),
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **지금까지 한 채팅 개수**\n> `%d`개", counts.Memory),
+					},
+					discordgo.TextDisplay{
+						Content: fmt.Sprintf("- **%s님이랑 지금까지 한 채팅 개수**\n> `%d`개", i.User.GlobalName, counts.UserMemory),
 					},
 					discordgo.Separator{},
 				},
