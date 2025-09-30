@@ -133,14 +133,13 @@ func GetDeregisterUserID(customID string) string {
 	}
 }
 
-func MakeSelectChat(id string, number int, userID string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", SelectChat, id, number, userID)
+func MakeSelectChat(id, name, userID string) string {
+	return fmt.Sprintf("%sid=%s&name=%s&user_id=%s", SelectChat, id, name, userID)
 }
 
-func GetSelectChatID(customID string) (id bson.ObjectID, itemID int) {
+func GetChatID(customID string) (id bson.ObjectID, name string) {
 	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
-	itemID, _ = strconv.Atoi(stringItemId)
+	name = RegexpName.FindStringSubmatch(customID)[1]
 	return
 }
 
@@ -156,15 +155,8 @@ func GetChatUserID(customID string) string {
 	}
 }
 
-func MakeDeleteChat(id string, number int, userID string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteChat, id, number, userID)
-}
-
-func GetDeleteChatID(customID string) (id bson.ObjectID, itemID int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
-	itemID, _ = strconv.Atoi(stringItemId)
-	return
+func MakeDeleteChat(id, name, userID string) string {
+	return fmt.Sprintf("%sid=%s&name=%s&user_id=%s", DeleteChat, id, name, userID)
 }
 
 func MakeDeleteChatCancel(userID string) string {

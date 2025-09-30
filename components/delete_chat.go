@@ -49,7 +49,7 @@ var DeleteChatComponent = &commands.Component{
 			return err
 		}
 
-		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
+		id, name := utils.GetChatID(i.MessageComponentData().CustomID)
 
 		if _, err := databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id}); err != nil {
 			return err
@@ -60,19 +60,10 @@ var DeleteChatComponent = &commands.Component{
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		if itemID == 0 {
-			return i.EditReply(&utils.InteractionEdit{
-				Flags: &flags,
-				Components: &[]discordgo.MessageComponent{
-					utils.GetSuccessContainer(discordgo.TextDisplay{Content: "해당 채팅을 삭제했어요."}),
-				},
-			})
-		}
-
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemID)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("`%s`번을 삭제했어요.", name)}),
 			},
 		})
 	},

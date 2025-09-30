@@ -41,33 +41,37 @@ func List(i *utils.InteractionCreate) error {
 			Send()
 	}
 
-	// x는 원래 i인데 함수 인자의 i와 충돌나 x로 하였음.
-	for x, data := range data {
-		var isDisabled bool
-		var textDisplay discordgo.TextDisplay
+	for _, data := range data {
+		button := discordgo.Button{
+			Label:    "선택",
+			Style:    discordgo.SuccessButton,
+			CustomID: utils.MakeSelectChat(data.ID.Hex(), data.Name, i.User.ID),
+		}
 
 		if data.ID == dbUser.ChatID {
-			textDisplay = discordgo.TextDisplay{
-				Content: fmt.Sprintf("**%d. %s\n (선택됨)**", x+1, data.Name),
-			}
+			button.Disabled = true
 
-			isDisabled = true
-		} else {
-			textDisplay = discordgo.TextDisplay{
-				Content: fmt.Sprintf("%d. %s\n", x+1, data.Name),
-			}
+			sections = append([]discordgo.Section{
+				{
+					Accessory: button,
+					Components: []discordgo.MessageComponent{
+						discordgo.TextDisplay{
+							Content: fmt.Sprintf("**%s (선택됨)**", data.Name),
+						},
+					},
+				},
+			}, sections...)
 
-			isDisabled = false
+			continue
 		}
 
 		sections = append(sections, discordgo.Section{
-			Accessory: discordgo.Button{
-				Label:    "선택",
-				Style:    discordgo.SuccessButton,
-				CustomID: utils.MakeSelectChat(data.ID.Hex(), x+1, i.User.ID),
-				Disabled: isDisabled,
+			Accessory: button,
+			Components: []discordgo.MessageComponent{
+				discordgo.TextDisplay{
+					Content: fmt.Sprintf("%s\n", data.Name),
+				},
 			},
-			Components: []discordgo.MessageComponent{textDisplay},
 		})
 	}
 

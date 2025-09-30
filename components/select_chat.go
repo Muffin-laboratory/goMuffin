@@ -38,7 +38,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 			return err
 		}
 
-		id, itemID := utils.GetSelectChatID(i.MessageComponentData().CustomID)
+		id, name := utils.GetChatID(i.MessageComponentData().CustomID)
 
 		if _, err := databases.GetDatabase().Users.Update(i.User.ID, databases.User{
 			ChatID: id,
@@ -50,7 +50,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		return i.EditReply(&utils.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번으로 채팅을 변경했어요.", itemID)}),
+				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("`%s`으로 채팅을 변경했어요.", name)}),
 			},
 		})
 	},

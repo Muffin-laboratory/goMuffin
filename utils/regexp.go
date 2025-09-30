@@ -11,4 +11,5 @@ var (
 	RegexpDiscordEmoji          = regexp.MustCompile(`<a?:\w+:\d+>`)
 	RegexpLearnQueryLength      = regexp.MustCompile(`개수:(\d+)`)
 	RegexpPaginationContainerID = regexp.MustCompile(`^(\d+)/(\d+)$`)
+	RegexpName                  = regexp.MustCompile(`name=([^&]*)`)
 )

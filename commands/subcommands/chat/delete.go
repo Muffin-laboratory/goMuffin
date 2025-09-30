@@ -45,17 +45,16 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 		var sections []discordgo.Section
 		var containers []*discordgo.Container
 
-		// x는 원래 i인데 함수 인자의 i와 충돌나 x로 하였음.
-		for x, data := range data {
+		for _, data := range data {
 			sections = append(sections, discordgo.Section{
 				Accessory: discordgo.Button{
 					Label:    "삭제",
 					Style:    discordgo.DangerButton,
-					CustomID: utils.MakeDeleteChat(data.ID.Hex(), x+1, i.User.ID),
+					CustomID: utils.MakeDeleteChat(data.ID.Hex(), data.Name, i.User.ID),
 				},
 				Components: []discordgo.MessageComponent{
 					discordgo.TextDisplay{
-						Content: fmt.Sprintf("%d. %s\n", x+1, data.Name),
+						Content: fmt.Sprintf("- **%s**\n", data.Name),
 					},
 				},
 			})
@@ -92,7 +91,7 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 						discordgo.Button{
 							Label:    "삭제",
 							Style:    discordgo.DangerButton,
-							CustomID: utils.MakeDeleteChat(data[0].ID.Hex(), 0, i.User.ID),
+							CustomID: utils.MakeDeleteChat(data[0].ID.Hex(), name, i.User.ID),
 						},
 						discordgo.Button{
 							Label:    "취소",
