@@ -51,11 +51,8 @@ func (d *MuffinDatabase) Counts(userID string) (*CountDocuments, error) {
 
 	sum := muffinLength +
 		knowledgeLength +
-		userKnowledgeLength +
 		chatLength +
-		userChatLength +
-		memoryLength +
-		userMemoryLength
+		memoryLength
 
 	return &CountDocuments{
 		All:           sum,
