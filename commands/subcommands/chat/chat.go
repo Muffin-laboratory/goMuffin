@@ -5,6 +5,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/utils"
+	"github.com/bwmarrin/discordgo"
 )
 
 func Chat(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
@@ -20,5 +21,10 @@ func Chat(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 	result := chatbot.ParseResult(str, i.Session, i)
 	return i.EditReply(&utils.InteractionEdit{
 		Content: &result,
+		AllowedMentions: &discordgo.MessageAllowedMentions{
+			Parse: []discordgo.AllowedMentionType{},
+			Users: []string{},
+			Roles: []string{},
+		},
 	})
 }
