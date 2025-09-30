@@ -41,16 +41,16 @@ var SelectKnowledgeComponent = &commands.Component{
 				Send()
 		}
 
-		for x, data := range data {
+		for _, data := range data {
 			sections = append(sections, &discordgo.Section{
 				Accessory: discordgo.Button{
 					Label:    "삭제",
 					Style:    discordgo.DangerButton,
-					CustomID: utils.MakeDeleteKnowledge(data.ID.Hex(), x+1, i.User.ID),
+					CustomID: utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID),
 				},
 				Components: []discordgo.MessageComponent{
 					discordgo.TextDisplay{
-						Content: fmt.Sprintf("%d. %s\n", x+1, data.Result),
+						Content: fmt.Sprintf("**%s**\n", data.Result),
 					},
 				},
 			})

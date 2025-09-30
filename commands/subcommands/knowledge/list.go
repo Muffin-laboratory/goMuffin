@@ -69,7 +69,7 @@ func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 		Components: []discordgo.MessageComponent{
 			discordgo.TextDisplay{Content: fmt.Sprintf("### %s님에 대한 지식", i.User.GlobalName)},
 			discordgo.TextDisplay{Content: fmt.Sprintf("- 총 `%d`개", len(items))},
-			discordgo.TextDisplay{Content: fmt.Sprintf("- %s에 대한 검색 결과", command)},
+			discordgo.TextDisplay{Content: fmt.Sprintf("> %s에 대한 검색 결과", command)},
 		},
 	}
 	container := &discordgo.Container{Components: []discordgo.MessageComponent{title, discordgo.Separator{}}}

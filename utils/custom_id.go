@@ -31,8 +31,8 @@ const (
 	UserInformationDeregister = "#muffin/info/user/deregister@"
 )
 
-func MakeDeleteKnowledge(id string, number int, userID string) string {
-	return fmt.Sprintf("%sid=%s&no=%d&user_id=%s", DeleteKnowledge, id, number, userID)
+func MakeDeleteKnowledge(id, name, userID string) string {
+	return fmt.Sprintf("%sid=%s&name=%s&user_id=%s", DeleteKnowledge, id, name, userID)
 }
 
 func GetDeleteKnowledgeID(customID string) (id bson.ObjectID, itemID int) {
