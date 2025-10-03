@@ -12,13 +12,15 @@ func SectionBuilder() *Section {
 	}
 }
 
-func (s *Section) SetAccessory(accessory discordgo.MessageComponent) *Section {
-	s.Section.Accessory = accessory
+func (s *Section) SetAccessory(accessory ComponentBuilder) *Section {
+	s.Section.Accessory = accessory.Build()
 	return s
 }
 
-func (s *Section) AddComponents(components ...discordgo.MessageComponent) *Section {
-	s.Section.Components = append(s.Section.Components, components...)
+func (s *Section) AddText(text string) *Section {
+	s.Components = append(s.Components, discordgo.TextDisplay{
+		Content: text,
+	})
 	return s
 }
 

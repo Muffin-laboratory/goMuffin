@@ -26,15 +26,15 @@ func (c *Container) SetSpoiler(spoiler bool) *Container {
 	return c
 }
 
-func (c *Container) AddComponents(components ...discordgo.MessageComponent) *Container {
-	c.Container.Components = append(c.Container.Components, components...)
+func (c *Container) AddComponents(components ...ComponentBuilder) *Container {
+	for _, cmp := range components {
+		c.Container.Components = append(c.Container.Components, cmp.Build())
+	}
 	return c
 }
 
 func (c *Container) AddText(text string) *Container {
-	c.AddComponents(discordgo.TextDisplay{
-		Content: text,
-	})
+	c.AddComponents(TextDisplayBuilder(text))
 	return c
 }
 
@@ -45,48 +45,32 @@ func (c *Container) Build() discordgo.MessageComponent {
 func MakeErrorContainer(text string) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			discordgo.TextDisplay{
-				Content: "### ❌ 오류",
-			},
-			discordgo.TextDisplay{
-				Content: text,
-			},
+			TextDisplayBuilder("### ❌ 오류"),
+			TextDisplayBuilder(text),
 		)
 }
 
 func MakeDeclineContainer(text string) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			discordgo.TextDisplay{
-				Content: "### ❌ 거부",
-			},
-			discordgo.TextDisplay{
-				Content: text,
-			},
+			TextDisplayBuilder("### ❌ 거부"),
+			TextDisplayBuilder(text),
 		)
 }
 
 func MakeCanceledContainer(text string) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			discordgo.TextDisplay{
-				Content: "### ❌ 취소",
-			},
-			discordgo.TextDisplay{
-				Content: text,
-			},
+			TextDisplayBuilder("### ❌ 취소"),
+			TextDisplayBuilder(text),
 		)
 }
 
 func MakeSuccessContainer(text string) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			discordgo.TextDisplay{
-				Content: "### ✅ 성공",
-			},
-			discordgo.TextDisplay{
-				Content: text,
-			},
+			TextDisplayBuilder("### ✅ 성공"),
+			TextDisplayBuilder(text),
 		)
 }
 
