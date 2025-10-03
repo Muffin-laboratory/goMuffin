@@ -31,6 +31,13 @@ func (c *Container) AddComponents(components ...discordgo.MessageComponent) *Con
 	return c
 }
 
+func (c *Container) AddText(text string) *Container {
+	c.AddComponents(discordgo.TextDisplay{
+		Content: text,
+	})
+	return c
+}
+
 func (c *Container) Build() discordgo.MessageComponent {
 	return c.Container
 }
