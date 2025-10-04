@@ -20,7 +20,7 @@ func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 		return chatSendErrorMessage(i)
 	}
 
-	if _, err := databases.GetDatabase().Chats.CreateChat(i.User.ID, name); err != nil {
+	if _, err := databases.GetDatabase().Chats.Create(i.User.ID, name); err != nil {
 		return err
 	}
 

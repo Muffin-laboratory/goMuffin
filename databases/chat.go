@@ -19,14 +19,15 @@ type ChatCollection struct {
 	*mongo.Collection
 }
 
-func (c *ChatCollection) CreateChat(userID, name string) (*mongo.InsertOneResult, error) {
+func (c *ChatCollection) Create(userID, name string) (*mongo.InsertOneResult, error) {
 	createdChat, err := c.InsertOne(context.TODO(), Chat{UserID: userID, Name: name, CreatedAt: time.Now()})
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := GetDatabase().Users.Update(userID, User{
-		ChatID: createdChat.InsertedID.(bson.ObjectID),
+	chatID := createdChat.InsertedID.(bson.ObjectID)
+	if _, err := GetDatabase().Users.Update(userID, &UserUpdate{
+		ChatID: &chatID,
 	}); err != nil {
 		return nil, err
 	}

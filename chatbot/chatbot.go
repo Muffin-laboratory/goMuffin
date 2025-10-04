@@ -105,7 +105,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 
 	if err := databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserID: user.ID}).Err(); err != nil {
 		if err == mongo.ErrNoDocuments {
-			_, err = databases.GetDatabase().Chats.CreateChat(user.ID, "새로운 채팅")
+			_, err = databases.GetDatabase().Chats.Create(user.ID, "새로운 채팅")
 			fmt.Println(err)
 			if err != nil {
 				return "살려주ㅅ세요", err

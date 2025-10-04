@@ -23,8 +23,8 @@ func SwitchMode(i *utils.InteractionCreate) error {
 		newMode = databases.ChattingMuffinMode
 	}
 
-	if _, err := databases.GetDatabase().Users.Update(i.User.ID, databases.User{
-		ChattingMode: newMode,
+	if _, err := databases.GetDatabase().Users.Update(i.User.ID, &databases.UserUpdate{
+		ChattingMode: &newMode,
 	}); err != nil {
 		return err
 	}

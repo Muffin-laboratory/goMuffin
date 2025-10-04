@@ -13,13 +13,22 @@ import (
 type ChattingMode int
 
 type User struct {
-	ID            bson.ObjectID `bson:"_id,omitempty"`
-	UserID        string        `bson:"user_id,omitempty"`
-	Blocked       bool          `bson:"blocked,omitempty"`
-	BlockedReason string        `bson:"blocked_reason,omitempty"`
-	ChatID        bson.ObjectID `bson:"chat_id,omitempty"`
-	CreatedAt     time.Time     `bson:"created_at,omitempty"`
-	ChattingMode  ChattingMode  `bson:"chatting_mode,omitempty"`
+	ID            bson.ObjectID `bson:"_id"`
+	UserID        string        `bson:"user_id"`
+	Blocked       bool          `bson:"blocked"`
+	BlockedReason string        `bson:"blocked_reason"`
+	ChatID        bson.ObjectID `bson:"chat_id"`
+	CreatedAt     time.Time     `bson:"created_at"`
+	ChattingMode  ChattingMode  `bson:"chatting_mode"`
+}
+
+type UserUpdate struct {
+	UserID        *string        `bson:"user_id,omitempty"`
+	Blocked       *bool          `bson:"blocked,omitempty"`
+	BlockedReason *string        `bson:"blocked_reason,omitempty"`
+	ChatID        *bson.ObjectID `bson:"chat_id,omitempty"`
+	CreatedAt     *time.Time     `bson:"created_at,omitempty"`
+	ChattingMode  *ChattingMode  `bson:"chatting_mode,omitempty"`
 }
 
 type UserCollection struct {
@@ -34,8 +43,9 @@ const (
 
 func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
 	user := User{
-		UserID:    userID,
-		CreatedAt: time.Now(),
+		UserID:       userID,
+		ChattingMode: ChattingAIMode,
+		CreatedAt:    time.Now(),
 	}
 
 	result, err := c.Collection.InsertOne(context.TODO(), user)
@@ -55,8 +65,8 @@ func (c *UserCollection) Get(userID string) (*User, error) {
 
 	var user *User
 
-	if err := c.Collection.FindOne(context.TODO(), User{
-		UserID: userID,
+	if err := c.Collection.FindOne(context.TODO(), bson.M{
+		"user_id": userID,
 	}).Decode(&user); err != nil {
 		return nil, err
 	}
@@ -104,8 +114,8 @@ func (c *UserCollection) GetUserChattingMode(userID string) (ChattingMode, error
 	return user.ChattingMode, nil
 }
 
-func (c *UserCollection) Update(userID string, data User) (*mongo.UpdateResult, error) {
-	result, err := c.Collection.UpdateOne(context.TODO(), User{UserID: userID}, bson.M{
+func (c *UserCollection) Update(userID string, data *UserUpdate) (*mongo.UpdateResult, error) {
+	result, err := c.Collection.UpdateOne(context.TODO(), bson.M{"user_id": userID}, bson.M{
 		"$set": data,
 	})
 	if err != nil {
@@ -123,7 +133,7 @@ func (c *UserCollection) Update(userID string, data User) (*mongo.UpdateResult, 
 }
 
 func (c *UserCollection) Delete(userID string) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteOne(context.TODO(), User{UserID: userID})
+	result, err := c.Collection.DeleteOne(context.TODO(), bson.M{"user_id": userID})
 	if err != nil {
 		return nil, err
 	}

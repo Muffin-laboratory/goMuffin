@@ -40,8 +40,8 @@ var SelectChatComponent *commands.Component = &commands.Component{
 
 		id, name := utils.GetChatID(i.MessageComponentData().CustomID)
 
-		if _, err := databases.GetDatabase().Users.Update(i.User.ID, databases.User{
-			ChatID: id,
+		if _, err := databases.GetDatabase().Users.Update(i.User.ID, &databases.UserUpdate{
+			ChatID: &id,
 		}); err != nil {
 			return err
 		}
