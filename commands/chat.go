@@ -2,6 +2,7 @@ package commands
 
 import (
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
+	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -71,6 +72,24 @@ var ChatCommand *Command = &Command{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
 				Name:        chatCommandSwitchMode,
 				Description: "채팅 방식을 변경해요. (일반 <-> AI)",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "모드",
+						Description: "무슨 모드로 바꿀지 선택하세요.",
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "AI 모드",
+								Value: databases.ChattingAIMode,
+							},
+							{
+								Name:  "일반 모드",
+								Value: databases.ChattingMuffinMode,
+							},
+						},
+						Required: true,
+					},
+				},
 			},
 		},
 	},
@@ -91,7 +110,7 @@ var ChatCommand *Command = &Command{
 				return err
 			}
 
-			return subcommands.SwitchMode(ctx.Inter)
+			return subcommands.SwitchMode(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandCreate:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,

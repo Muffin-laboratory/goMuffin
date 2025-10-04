@@ -8,20 +8,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func SwitchMode(i *utils.InteractionCreate) error {
-	var newMode databases.ChattingMode
-
-	mode, err := databases.GetDatabase().Users.GetUserChattingMode(i.User.ID)
-	if err != nil {
-		return err
-	}
-
-	switch mode {
-	case databases.ChattingMuffinMode:
-		newMode = databases.ChattingAIMode
-	case databases.ChattingAIMode:
-		newMode = databases.ChattingMuffinMode
-	}
+func SwitchMode(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
+	newMode := databases.ChattingMode(opts["모드"].IntValue())
 
 	if _, err := databases.GetDatabase().Users.Update(i.User.ID, &databases.UserUpdate{
 		ChattingMode: &newMode,
