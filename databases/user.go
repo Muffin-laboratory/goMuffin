@@ -13,22 +13,26 @@ import (
 type ChattingMode int
 
 type User struct {
-	ID            bson.ObjectID `bson:"_id"`
-	UserID        string        `bson:"user_id"`
-	Blocked       bool          `bson:"blocked"`
-	BlockedReason string        `bson:"blocked_reason"`
-	ChatID        bson.ObjectID `bson:"chat_id"`
-	CreatedAt     time.Time     `bson:"created_at"`
-	ChattingMode  ChattingMode  `bson:"chatting_mode"`
+	ID                        bson.ObjectID `bson:"_id"`
+	UserID                    string        `bson:"user_id"`
+	Blocked                   bool          `bson:"blocked"`
+	BlockedReason             string        `bson:"blocked_reason"`
+	ChatID                    bson.ObjectID `bson:"chat_id"`
+	CreatedAt                 time.Time     `bson:"created_at"`
+	ChattingMode              ChattingMode  `bson:"chatting_mode"`
+	ReplyUser                 bool          `bson:"reply_user"`
+	CreateNewChatAfter12Hours bool          `bson:"create_new_chat_after_12_hours"`
 }
 
 type UserUpdate struct {
-	UserID        *string        `bson:"user_id,omitempty"`
-	Blocked       *bool          `bson:"blocked,omitempty"`
-	BlockedReason *string        `bson:"blocked_reason,omitempty"`
-	ChatID        *bson.ObjectID `bson:"chat_id,omitempty"`
-	CreatedAt     *time.Time     `bson:"created_at,omitempty"`
-	ChattingMode  *ChattingMode  `bson:"chatting_mode,omitempty"`
+	UserID                    *string        `bson:"user_id,omitempty"`
+	Blocked                   *bool          `bson:"blocked,omitempty"`
+	BlockedReason             *string        `bson:"blocked_reason,omitempty"`
+	ChatID                    *bson.ObjectID `bson:"chat_id,omitempty"`
+	CreatedAt                 *time.Time     `bson:"created_at,omitempty"`
+	ChattingMode              *ChattingMode  `bson:"chatting_mode,omitempty"`
+	ReplyUser                 *bool          `bson:"reply_user,omitempty"`
+	CreateNewChatAfter12Hours *bool          `bson:"create_new_chat_after_12_hours,omitempty"`
 }
 
 type UserCollection struct {
@@ -45,6 +49,7 @@ func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
 	user := User{
 		UserID:       userID,
 		ChattingMode: ChattingAIMode,
+		ReplyUser:    true,
 		CreatedAt:    time.Now(),
 	}
 

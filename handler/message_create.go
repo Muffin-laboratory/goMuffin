@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -34,6 +35,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
+
 				return
 			}
 
@@ -45,10 +47,24 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
+
 				return
 			}
 
 			s.ChannelTyping(m.ChannelID)
+
+			dbUser, err := databases.GetDatabase().Users.Get(m.Author.ID)
+			if err != nil {
+				owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
+				log.Println(err)
+				utils.NewMessageSender(m).
+					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))})).
+					SetComponentsV2(true).
+					SetReply(true).
+					Send()
+
+				return
+			}
 
 			str, err := chatbot.GetChatBot().GetResponse(m.Author, content)
 			if err != nil {
@@ -56,6 +72,12 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				utils.NewMessageSender(m).
 					SetContent(str).
 					SetReply(true).
+					SetAllowedMentions(discordgo.MessageAllowedMentions{
+						Parse:       []discordgo.AllowedMentionType{},
+						Users:       []string{},
+						Roles:       []string{},
+						RepliedUser: dbUser.ReplyUser,
+					}).
 					Send()
 
 				return
@@ -69,7 +91,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 					Parse:       []discordgo.AllowedMentionType{},
 					Users:       []string{},
 					Roles:       []string{},
-					RepliedUser: true,
+					RepliedUser: dbUser.ReplyUser,
 				}).
 				Send()
 

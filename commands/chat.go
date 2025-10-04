@@ -8,11 +8,13 @@ import (
 )
 
 var (
-	chatCommandChatting   = "하기"
-	chatCommandList       = "목록"
-	chatCommandCreate     = "생성"
-	chatCommandDelete     = "삭제"
-	chatCommandSwitchMode = "모드전환"
+	chatCommandChatting                  = "하기"
+	chatCommandList                      = "목록"
+	chatCommandCreate                    = "생성"
+	chatCommandDelete                    = "삭제"
+	chatCommandSwitchMode                = "모드전환"
+	chatCommandReplyUser                 = "답장"
+	chatCommandCreateNewChatAfter12Hours = "12시간"
 )
 
 const chatNameMaxLength = 25
@@ -91,6 +93,29 @@ var ChatCommand *Command = &Command{
 					},
 				},
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        chatCommandReplyUser,
+				Description: "이 봇이 대답할 때 멘션을 킬지 선택해요.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "활성화",
+						Description: "활성화 여부를 선택해요.",
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "활성화",
+								Value: 1,
+							},
+							{
+								Name:  "비활성화",
+								Value: 0,
+							},
+						},
+						Required: true,
+					},
+				},
+			},
 		},
 	},
 	Category: Chatting,
@@ -103,14 +128,6 @@ var ChatCommand *Command = &Command{
 			}
 
 			return subcommands.Chat(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
-		case chatCommandSwitchMode:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
-			return subcommands.SwitchMode(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandCreate:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -135,6 +152,22 @@ var ChatCommand *Command = &Command{
 			}
 
 			return subcommands.Delete(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandSwitchMode:
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.SwitchMode(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandReplyUser:
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.SetReplyUser(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}
