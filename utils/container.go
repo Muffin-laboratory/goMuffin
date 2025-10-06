@@ -60,7 +60,7 @@ func GetSuccessContainer(components ...discordgo.MessageComponent) *discordgo.Co
 
 func GetUserIsNotRegisteredErrContainer(prefix string) *discordgo.Container {
 	return GetErrorContainer(discordgo.TextDisplay{
-		Content: fmt.Sprintf("해당 기능은 등록된 사용자만 쓸 수 있어요. `%s가입`으로 가입해주새요.", prefix),
+		Content: "해당 기능은 등록된 사용자만 쓸 수 있어요. `/가입`으로 가입해주새요.",
 	})
 }
 
