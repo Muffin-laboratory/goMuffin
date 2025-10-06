@@ -33,10 +33,11 @@ type MemoryCollection struct {
 
 func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer string) error {
 	data := Memory{
-		UserID:  userID,
-		Content: content,
-		Answer:  answer,
-		ChatID:  chatID,
+		UserID:    userID,
+		Content:   content,
+		Answer:    answer,
+		ChatID:    chatID,
+		CreatedAt: time.Now(),
 	}
 
 	if _, err := c.Collection.InsertOne(context.TODO(), data); err != nil {
@@ -54,48 +55,63 @@ func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer st
 	return nil
 }
 
+func (c *MemoryCollection) get(chatID bson.ObjectID) (*memoryCacheItem, error) {
+	if item, ok := c.caches.Get(chatID.Hex()); ok {
+		return item, nil
+	}
+
+	var data []*Memory
+	var item *memoryCacheItem
+
+	cur, err := c.Collection.Find(context.TODO(), bson.M{"chat_id": chatID})
+	if err != nil {
+		return nil, err
+	}
+
+	defer cur.Close(context.TODO())
+
+	if err = cur.All(context.TODO(), &data); err != nil {
+		return nil, err
+	}
+
+	item = &memoryCacheItem{memory: &data}
+	c.caches.Set(chatID.Hex(), item)
+
+	return item, nil
+}
+
 func (c *MemoryCollection) Get(chatID bson.ObjectID) ([]*genai.Content, error) {
 	var memory []*genai.Content
 
-	if item, ok := c.caches.Get(chatID.Hex()); ok {
-		item.mu.RLock()
-		defer item.mu.RUnlock()
+	item, err := c.get(chatID)
+	if err != nil {
+		return memory, nil
+	}
 
-		for _, cache := range *item.memory {
-			memory = append(memory,
-				genai.NewContentFromText(cache.Content, genai.RoleUser),
-				genai.NewContentFromText(cache.Answer, genai.RoleModel),
-			)
-		}
-	} else {
-		var data []*Memory
-
-		cur, err := c.Collection.Find(context.TODO(), User{ChatID: chatID})
-		if err != nil {
-			return memory, err
-		}
-
-		defer cur.Close(context.TODO())
-
-		if err = cur.All(context.TODO(), &data); err != nil {
-			return memory, err
-		}
-
-		if len(data) == 0 {
-			return memory, nil
-		}
-
-		for _, data := range data {
-			memory = append(memory,
-				genai.NewContentFromText(data.Content, genai.RoleUser),
-				genai.NewContentFromText(data.Answer, genai.RoleModel),
-			)
-		}
-
-		c.caches.Set(chatID.Hex(), &memoryCacheItem{memory: &data})
+	for _, data := range *item.memory {
+		memory = append(memory,
+			genai.NewContentFromText(data.Content, genai.RoleUser),
+			genai.NewContentFromText(data.Answer, genai.RoleModel),
+		)
 	}
 
 	return memory, nil
+}
+
+func (c *MemoryCollection) GetLastMemoryTimestamp(chatID bson.ObjectID) (int64, error) {
+	data, err := c.get(chatID)
+	if err != nil {
+		return 0, err
+	}
+
+	data.mu.RLock()
+	defer data.mu.RUnlock()
+
+	memory := *data.memory
+	if len(memory) == 0 {
+		return 0, nil
+	}
+	return memory[len(memory)-1].CreatedAt.Unix(), nil
 }
 
 func (c *MemoryCollection) DeleteByUserID(userID string) (*mongo.DeleteResult, error) {

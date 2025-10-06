@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"time"
 
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -98,6 +99,8 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 }
 
 func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, error) {
+	const twelveHours = 43_200
+
 	dbUser, err := databases.GetDatabase().Users.Get(user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
@@ -105,9 +108,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 
 	if err := databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserID: user.ID}).Err(); err != nil {
 		if err == mongo.ErrNoDocuments {
-			_, err = databases.GetDatabase().Chats.Create(user.ID, "새로운 채팅")
-			fmt.Println(err)
-			if err != nil {
+			if _, err = databases.GetDatabase().Chats.Create(user.ID, "새로운 채팅"); err != nil {
 				return "살려주ㅅ세요", err
 			}
 		} else {
@@ -118,6 +119,22 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 	contents, err := databases.GetDatabase().Memory.Get(dbUser.ChatID)
 	if err != nil {
 		return "AI에 문제가 생겼ㅇ어요.", err
+	}
+
+	if dbUser.CreateNewChatAfter12Hours {
+		timestamp, err := databases.GetDatabase().Memory.GetLastMemoryTimestamp(dbUser.ChatID)
+		if err != nil {
+			return "살려주세요", err
+		}
+
+		if time.Now().Unix()-timestamp > twelveHours {
+			result, err := databases.GetDatabase().Chats.Create(user.ID, "새로운 채팅")
+			if err != nil {
+				return "살려주ㅅ세요", err
+			}
+
+			dbUser.ChatID = result.InsertedID.(bson.ObjectID)
+		}
 	}
 
 	prompt, err := makePrompt(c.systemPrompt, user)

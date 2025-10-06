@@ -116,6 +116,29 @@ var ChatCommand *Command = &Command{
 					},
 				},
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        chatCommandCreateNewChatAfter12Hours,
+				Description: "대답하고 12시간 뒤에 새로운 채팅을 시작할지 선택해요.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "활성화",
+						Description: "활성화 여부를 선택해요.",
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "활성화",
+								Value: 1,
+							},
+							{
+								Name:  "비활성화",
+								Value: 0,
+							},
+						},
+						Required: true,
+					},
+				},
+			},
 		},
 	},
 	Category: Chatting,
@@ -168,6 +191,14 @@ var ChatCommand *Command = &Command{
 			}
 
 			return subcommands.SetReplyUser(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandCreateNewChatAfter12Hours:
+			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.SetCreateNewChatAfter12Hours(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}
