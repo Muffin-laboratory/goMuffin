@@ -108,7 +108,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 
 	if err := databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{UserID: user.ID}).Err(); err != nil {
 		if err == mongo.ErrNoDocuments {
-			if _, err = databases.GetDatabase().Chats.Create(user.ID, "새로운 채팅"); err != nil {
+			if _, err = databases.GetDatabase().Chats.Create(user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
 				return "살려주ㅅ세요", err
 			}
 		} else {
@@ -128,7 +128,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 		}
 
 		if time.Now().Unix()-timestamp > twelveHours {
-			result, err := databases.GetDatabase().Chats.Create(user.ID, "새로운 채팅")
+			result, err := databases.GetDatabase().Chats.Create(user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
 			if err != nil {
 				return "살려주ㅅ세요", err
 			}
