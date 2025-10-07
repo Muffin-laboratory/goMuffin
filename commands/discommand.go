@@ -66,6 +66,7 @@ const (
 const (
 	CommandFlagsIsRegistered CommandFlags = 1 << iota
 	CommandFlagsIsBlocked
+	CommandFlagsIsDeveloperOnlyCommand
 )
 
 var (
@@ -116,6 +117,14 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 	i.InteractionCreate.User = utils.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
+		if command.Flags&CommandFlagsIsDeveloperOnlyCommand != 0 && i.User.ID != configs.GetConfig().Bot.OwnerID {
+			return utils.NewMessageSender(i).
+				AddComponents(utils.GetDeclineContainer(discordgo.TextDisplay{Content: "이 명령어는 개발자 전용 명령어에요."})).
+				SetComponentsV2(true).
+				SetEphemeral(true).
+				Send()
+		}
+
 		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
 			return utils.NewMessageSender(i).
 				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
@@ -136,6 +145,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 		}
 
 		return command.Run(&ChatInputContext{i, command})
+
 	}
 	return nil
 }

@@ -63,6 +63,35 @@ func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
 	return result, nil
 }
 
+func (c *UserCollection) All() ([]*User, error) {
+	var data []*User
+
+	if caches := c.caches.All(); len(caches) != 0 {
+		return caches, nil
+	}
+
+	cur, err := c.Collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		return data, nil
+	}
+
+	defer cur.Close(context.TODO())
+
+	if err = cur.All(context.TODO(), &data); err != nil {
+		return data, nil
+	}
+
+	if len(data) == 0 {
+		return data, nil
+	}
+
+	for _, data := range data {
+		c.caches.Set(data.UserID, data)
+	}
+
+	return data, nil
+}
+
 func (c *UserCollection) Get(userID string) (*User, error) {
 	if user, ok := c.caches.Get(userID); ok {
 		return user, nil

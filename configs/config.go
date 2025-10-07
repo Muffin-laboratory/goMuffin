@@ -56,6 +56,10 @@ type integrateMDCConfig struct {
 	}
 }
 
+type commandConfig struct {
+	DeveloperOnlyGuildID string
+}
+
 // MuffinConfig for Muffin bot
 type MuffinConfig struct {
 	Bot          botConfig
@@ -64,6 +68,7 @@ type MuffinConfig struct {
 	Service      serviceConfig
 	GitHub       githubConfig
 	IntegrateMDC integrateMDCConfig
+	Command      commandConfig
 }
 
 var instance *MuffinConfig
@@ -153,5 +158,9 @@ func setConfig(config *MuffinConfig) {
 		Server: struct{ Port int }{
 			Port: getValueToInt("INTEGRATE_MDC_SERVER_PORT"),
 		},
+	}
+
+	config.Command = commandConfig{
+		DeveloperOnlyGuildID: getRequiredValue("COMMAND_DEVELOPER_ONLY_GUILD_ID"),
 	}
 }

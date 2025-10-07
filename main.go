@@ -33,14 +33,27 @@ func main() {
 		}
 	}()
 
-	cmds := []*discordgo.ApplicationCommand{}
+	var globalCmds []*discordgo.ApplicationCommand
+	var developerOnlyGuildCmds []*discordgo.ApplicationCommand
 	for _, cmd := range commands.GetDiscommand().Commands {
-		cmds = append(cmds, cmd.ApplicationCommand)
+		if cmd.Flags&commands.CommandFlagsIsDeveloperOnlyCommand != 0 {
+			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.ApplicationCommand)
+			continue
+		}
+
+		globalCmds = append(globalCmds, cmd.ApplicationCommand)
 	}
 
-	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", cmds)
+	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", globalCmds)
 	if err != nil {
 		log.Println(err)
+	}
+
+	if len(developerOnlyGuildCmds) != 0 {
+		_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, configs.GetConfig().Command.DeveloperOnlyGuildID, developerOnlyGuildCmds)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 
 	defer databases.GetDatabase().Disconnect()
