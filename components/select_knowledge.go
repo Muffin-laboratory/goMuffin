@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -15,8 +16,8 @@ var SelectKnowledgeComponent = &commands.Component{
 		return strings.HasPrefix(ctx.Inter.MessageComponentData().CustomID, utils.SelectKnowledge)
 	},
 	Run: func(ctx *commands.ComponentContext) error {
-		var sections []*discordgo.Section
-		var containers []*discordgo.Container
+		var sections []*builders.Section
+		var containers []*builders.Container
 
 		i := ctx.Inter
 
@@ -34,36 +35,34 @@ var SelectKnowledgeComponent = &commands.Component{
 		}
 
 		if len(data) == 0 {
-			return utils.NewMessageSender(i).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 결과를 찾을 수 없어요."})).
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeErrorContainer("해당 결과를 찾을 수 없어요.")).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
 		}
 
 		for _, data := range data {
-			sections = append(sections, &discordgo.Section{
-				Accessory: discordgo.Button{
-					Label:    "삭제",
-					Style:    discordgo.DangerButton,
-					CustomID: utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID),
-				},
-				Components: []discordgo.MessageComponent{
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("**%s**\n", data.Result),
-					},
-				},
-			})
+			sections = append(sections,
+				builders.SectionBuilder().
+					SetAccessory(
+						builders.ButtonBuilder().
+							SetStyle(discordgo.DangerButton).
+							SetLabel("삭제").
+							SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID)),
+					).
+					AddText(fmt.Sprintf("**%s**\n", data.Result)),
+			)
 		}
 
-		textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s에 대한 목록", command)}
-		container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+		textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s에 대한 목록", command))
+		container := builders.ContainerBuilder().AddComponents(textDisplay)
 		for i, section := range sections {
 			container.Components = append(container.Components, section, discordgo.Separator{})
 
 			if (i+1)%10 == 0 {
 				containers = append(containers, container)
-				container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+				container = builders.ContainerBuilder().AddComponents(textDisplay)
 				continue
 			}
 		}
@@ -72,7 +71,7 @@ var SelectKnowledgeComponent = &commands.Component{
 			containers = append(containers, container)
 		}
 
-		return utils.PaginationContainerBuilder(i).
+		return builders.PaginationContainerBuilder(i).
 			AddContainers(containers...).
 			Start()
 	},

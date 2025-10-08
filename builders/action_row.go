@@ -6,13 +6,23 @@ type ActionsRow struct {
 	*discordgo.ActionsRow
 }
 
-func ActionsRowBuilder(components ...discordgo.MessageComponent) *ActionsRow {
-	row := ActionsRow{}
-	row.ActionsRow.Components = append(row.ActionsRow.Components, components...)
+func ActionsRowBuilder(components ...ComponentBuilder) *ActionsRow {
+	row := &ActionsRow{
+		ActionsRow: &discordgo.ActionsRow{},
+	}
+	row.AddComponents(components...)
 
-	return &row
+	return row
+}
+
+func (r *ActionsRow) AddComponents(components ...ComponentBuilder) *ActionsRow {
+	for _, cmp := range components {
+		r.ActionsRow.Components = append(r.ActionsRow.Components, cmp.Build())
+	}
+
+	return r
 }
 
 func (r *ActionsRow) Build() discordgo.MessageComponent {
-	return r
+	return r.ActionsRow
 }

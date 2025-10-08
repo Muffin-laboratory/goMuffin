@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -30,7 +31,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 			return false
 		}
 
-		if utils.GetPaginationContainer(id) == nil {
+		if builders.GetPaginationContainer(id) == nil {
 			return false
 		}
 
@@ -39,7 +40,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 		if _, err := strconv.Atoi(cmp.Value); err != nil {
 			i.Reply(&discordgo.InteractionResponseData{
 				Components: []discordgo.MessageComponent{
-					utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 값은 숫자여야해요."}),
+					builders.MakeErrorContainer("해당 값은 숫자여야해요."),
 				},
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 			})
@@ -52,7 +53,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 		data := ctx.Inter.ModalSubmitData()
 		customID := data.CustomID
 		id := utils.GetPaginationEmbedID(customID)
-		p := utils.GetPaginationContainer(id)
+		p := builders.GetPaginationContainer(id)
 		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
 
 		page, _ := strconv.Atoi(cmp.Value)

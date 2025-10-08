@@ -3,9 +3,8 @@ package commands
 import (
 	"sync"
 
-	"git.wh64.net/muffin/goMuffin/configs"
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -34,17 +33,17 @@ type Discommand struct {
 }
 
 type ChatInputContext struct {
-	Inter   *utils.InteractionCreate
+	Inter   *builders.InteractionCreate
 	Command *Command
 }
 
 type ComponentContext struct {
-	Inter     *utils.InteractionCreate
+	Inter     *builders.InteractionCreate
 	Component *Component
 }
 
 type ModalContext struct {
-	Inter *utils.InteractionCreate
+	Inter *builders.InteractionCreate
 	Modal *Modal
 }
 
@@ -107,18 +106,18 @@ func (d *Discommand) LoadModal(m *Modal) {
 }
 
 func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
-	i := &utils.InteractionCreate{
+	i := &builders.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
-		Options:           utils.MakeCommandInteractionOptionsMap(inter.ApplicationCommandData().Options),
+		Options:           builders.MakeCommandInteractionOptionsMap(inter.ApplicationCommandData().Options),
 	}
 
-	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
 		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
-			return utils.NewMessageSender(i).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.GetConfig().Bot.Prefix)).
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				SetReply(true).
@@ -128,8 +127,8 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
-			return utils.NewMessageSender(i).
-				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeUserIsBlockedContainer(user.GlobalName, reason)).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
@@ -141,12 +140,12 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 }
 
 func (d *Discommand) ChatInputAutocomplete(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
-	i := &utils.InteractionCreate{
+	i := &builders.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
 	}
 
-	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
 		return command.Autocomplete(&ChatInputContext{i, command})
@@ -158,12 +157,12 @@ func (d *Discommand) ChatInputAutocomplete(name string, s *discordgo.Session, in
 func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	var err error
 
-	i := &utils.InteractionCreate{
+	i := &builders.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
 	}
 
-	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 	data := &ComponentContext{
 		Inter: i,
 	}
@@ -185,7 +184,7 @@ func (d *Discommand) ModalRun(s *discordgo.Session, i *discordgo.InteractionCrea
 	var err error
 
 	data := &ModalContext{
-		Inter: &utils.InteractionCreate{
+		Inter: &builders.InteractionCreate{
 			InteractionCreate: i,
 			Session:           s,
 		},

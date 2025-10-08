@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -25,7 +26,7 @@ var DeleteChatComponent = &commands.Component{
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					utils.GetDeclineContainer(discordgo.TextDisplay{Content: "당신은 해당 권한이 없ㅇ어요."}),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
 				},
 			})
 			return false
@@ -40,7 +41,7 @@ var DeleteChatComponent = &commands.Component{
 			return i.Update(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					utils.GetCanceledContainer(discordgo.TextDisplay{Content: "아무 채팅방을 삭제하지 않았어요."}),
+					builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요."),
 				},
 			})
 		}
@@ -60,10 +61,10 @@ var DeleteChatComponent = &commands.Component{
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		return i.EditReply(&utils.InteractionEdit{
+		return i.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("`%s`번을 삭제했어요.", name)}),
+				builders.MakeSuccessContainer(fmt.Sprintf("`%s`번을 삭제했어요.", name)),
 			},
 		})
 	},

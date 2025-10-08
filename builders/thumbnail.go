@@ -17,7 +17,7 @@ func ThumbnailBuilder(mediaURL string) *Thumbnail {
 }
 
 func (t *Thumbnail) SetMedia(mediaURL string) *Thumbnail {
-	t.Thumbnail.Media = discordgo.UnfurledMediaItem{URL: mediaURL}
+	t.Thumbnail.Media.URL = mediaURL
 	return t
 }
 

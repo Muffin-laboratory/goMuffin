@@ -3,6 +3,7 @@ package components
 import (
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -22,7 +23,7 @@ var UserInformationDeregisterComponent = &commands.Component{
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					utils.GetDeclineContainer(discordgo.TextDisplay{Content: "당신은 해당 권한이 없ㅇ어요."}),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
 				},
 			})
 			return false

@@ -1,8 +1,8 @@
 package commands
 
 import (
+	"git.wh64.net/muffin/goMuffin/builders"
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -83,7 +83,7 @@ var ChatCommand *Command = &Command{
 				return err
 			}
 
-			return subcommands.Chat(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Chat(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandSwitchMode:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -99,7 +99,7 @@ var ChatCommand *Command = &Command{
 				return err
 			}
 
-			return subcommands.Create(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Create(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandList:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -115,7 +115,7 @@ var ChatCommand *Command = &Command{
 				return err
 			}
 
-			return subcommands.Delete(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Delete(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}

@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-func InfoUser(i *utils.InteractionCreate) error {
+func InfoUser(i *builders.InteractionCreate) error {
 	accCreatedTimestamp, err := discordgo.SnowflakeTimestamp(i.User.ID)
 	if err != nil {
 		return err
@@ -34,63 +35,36 @@ func InfoUser(i *utils.InteractionCreate) error {
 		return err
 	}
 
-	return utils.NewMessageSender(i).
-		AddComponents(discordgo.Container{
-			Components: []discordgo.MessageComponent{
-				discordgo.Section{
-					Accessory: discordgo.Thumbnail{Media: discordgo.UnfurledMediaItem{URL: i.User.AvatarURL("512")}},
-					Components: []discordgo.MessageComponent{
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("### %s님의 정보", i.User.GlobalName),
-						},
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime)),
-						},
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime)),
-						},
-					},
-				},
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **현재 모드**\n> %s", dbUser.ModeString()),
-				},
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **현재 채팅**\n> %s", currentChat.Name),
-				},
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **총 채팅량**\n> `%d`개", chatLength),
-				},
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label: "개인정보처리방침",
-							URL:   configs.GetConfig().Service.PrivacyPolicyURL,
-							Style: discordgo.LinkButton,
-							Emoji: &discordgo.ComponentEmoji{
-								Name: "🔗",
-							},
-						},
-						discordgo.Button{
-							Label: "서비스 이용약관",
-							URL:   configs.GetConfig().Service.TermOfServiceURL,
-							Style: discordgo.LinkButton,
-							Emoji: &discordgo.ComponentEmoji{
-								Name: "🔗",
-							},
-						},
-					},
-				},
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							CustomID: utils.MakeUserInformationDeregister(i.User.ID),
-							Label:    "탈퇴",
-							Style:    discordgo.DangerButton,
-						},
-					},
-				},
-			},
-		}).
+	return builders.NewMessageSender(i).
+		AddComponents(
+			builders.ContainerBuilder().
+				AddComponents(
+					builders.SectionBuilder().
+						SetAccessory(builders.ThumbnailBuilder(i.User.AvatarURL("512"))).
+						AddText(fmt.Sprintf("### %s님의 정보", i.User.GlobalName)).
+						AddText(fmt.Sprintf("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime))).
+						AddText(fmt.Sprintf("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime))),
+				),
+			builders.TextDisplayBuilder(fmt.Sprintf("- **현재 모드**\n> %s", dbUser.ModeString())),
+			builders.TextDisplayBuilder(fmt.Sprintf("- **현재 채팅**\n> %s", currentChat.Name)),
+			builders.TextDisplayBuilder(fmt.Sprintf("- **총 채팅량**\n> `%d`개", chatLength)),
+			builders.ActionsRowBuilder(
+				builders.ButtonBuilder().
+					SetStyle(discordgo.LinkButton).
+					SetLabel("개인정보처리방침").
+					SetURL(configs.GetConfig().Service.PrivacyPolicyURL).
+					SetEmoji(discordgo.ComponentEmoji{Name: "🔗"}),
+				builders.ButtonBuilder().
+					SetStyle(discordgo.LinkButton).
+					SetLabel("서비스 이용약관").
+					SetURL(configs.GetConfig().Service.TermOfServiceURL).
+					SetEmoji(discordgo.ComponentEmoji{Name: "🔗"}),
+				builders.ButtonBuilder().
+					SetStyle(discordgo.DangerButton).
+					SetLabel("탈퇴").
+					SetCustomID(utils.MakeUserInformationDeregister(i.User.ID)),
+			),
+		).
 		SetComponentsV2(true).
 		SetEphemeral(true).
 		Send()

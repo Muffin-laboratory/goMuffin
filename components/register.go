@@ -5,6 +5,7 @@ import (
 
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -37,21 +38,17 @@ var RegisterComponent *commands.Component = &commands.Component{
 				return err
 			}
 
-			return ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetSuccessContainer(discordgo.TextDisplay{
-						Content: fmt.Sprintf("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", ctx.Inter.Session.State.User.Username),
-					}),
+					builders.MakeSuccessContainer(fmt.Sprintf("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", ctx.Inter.Session.State.User.Username)),
 				},
 			})
 		case strings.HasPrefix(customID, utils.ServiceDisagree):
-			return ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetDeclineContainer(discordgo.TextDisplay{
-						Content: "가입을 거부했어요.",
-					}),
+					builders.MakeDeclineContainer("가입을 거부했어요."),
 				},
 			})
 		default:

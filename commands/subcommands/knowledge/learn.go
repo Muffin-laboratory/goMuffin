@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
-	"github.com/bwmarrin/discordgo"
 )
 
-func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, igCommands []string) error {
+func Learn(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap, igCommands []string) error {
 	command := opts["단어"].StringValue()
 	result := opts["대답"].StringValue()
 
@@ -26,8 +25,8 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 
 	for _, ig := range ignores {
 		if strings.Contains(command, ig) {
-			return utils.NewMessageSender(i).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해ㄷ당 단어는 배우기 껄끄럽네요."})).
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeErrorContainer("해당 단어는 배우기 껄끄럽네요.")).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
@@ -36,8 +35,8 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 
 	for _, di := range disallows {
 		if strings.Contains(result, di) {
-			return utils.NewMessageSender(i).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 단ㅇ어의 대답으로 하기 좀 그렇네요."})).
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeErrorContainer("해당 단어의 대답으로 하기 좀 그렇네요.")).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
@@ -48,12 +47,8 @@ func Learn(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap, 
 		return err
 	}
 
-	return utils.NewMessageSender(i).
-		AddComponents(utils.GetSuccessContainer(
-			discordgo.TextDisplay{
-				Content: fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
-			},
-		)).
+	return builders.NewMessageSender(i).
+		AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)))).
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()

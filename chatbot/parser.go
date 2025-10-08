@@ -4,6 +4,7 @@ import (
 	"strings"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -16,10 +17,10 @@ func ParseResult(content string, s *discordgo.Session, m any) string {
 	var joinedAt *time.Time
 
 	switch m := m.(type) {
-	case *utils.MessageCreate:
+	case *builders.MessageCreate:
 		user = m.Author
 		joinedAt = &m.Member.JoinedAt
-	case *utils.InteractionCreate:
+	case *builders.InteractionCreate:
 		user = m.Member.User
 		joinedAt = &m.Member.JoinedAt
 	}

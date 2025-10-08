@@ -3,6 +3,7 @@ package components
 import (
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
@@ -28,7 +29,7 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 				return false
 			}
 
-			if utils.GetPaginationContainer(id) == nil {
+			if builders.GetPaginationContainer(id) == nil {
 				return false
 			}
 		} else {
@@ -39,7 +40,7 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 	Run: func(ctx *commands.ComponentContext) error {
 		customID := ctx.Inter.MessageComponentData().CustomID
 		id := utils.GetPaginationEmbedID(customID)
-		p := utils.GetPaginationContainer(id)
+		p := builders.GetPaginationContainer(id)
 
 		if strings.HasPrefix(customID, utils.PaginationEmbedPrev) {
 			return p.Prev(ctx.Inter)
