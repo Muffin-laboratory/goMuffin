@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -35,11 +36,11 @@ func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func returnErr(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
 	owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
-	utils.NewMessageSender(&utils.InteractionCreate{
+	builders.NewMessageSender(&builders.InteractionCreate{
 		InteractionCreate: i,
 		Session:           s,
 	}).
-		AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))})).
+		AddComponents(builders.MakeErrorContainer(fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username)))).
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()

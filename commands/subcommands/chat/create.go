@@ -3,12 +3,11 @@ package chat
 import (
 	"fmt"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
-	"github.com/bwmarrin/discordgo"
 )
 
-func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
+func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
 	name := opts["이름"].StringValue()
 
 	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
@@ -24,8 +23,8 @@ func Create(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 		return err
 	}
 
-	return utils.NewMessageSender(i).
-		AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%s를 생성했어요. 이제 현재 채팅은 %s에요.", name, name)})).
+	return builders.NewMessageSender(i).
+		AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("%s를 생성했어요. 이제 현재 채팅은 %s에요.", name, name))).
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()

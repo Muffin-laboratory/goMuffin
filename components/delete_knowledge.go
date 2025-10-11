@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -24,7 +25,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 			i.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					utils.GetDeclineContainer(discordgo.TextDisplay{Content: "당신은 해당 권한이 없ㅇ어요."}),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
 				},
 			})
 			return false
@@ -44,10 +45,10 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		return i.EditReply(&utils.InteractionEdit{
+		return i.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%d번을 삭제했어요.", itemID)}),
+				builders.MakeSuccessContainer(fmt.Sprintf("%d번을 삭제했어요.", itemID)),
 			},
 		})
 	},

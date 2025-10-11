@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"slices"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
+func List(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
 	var command string
 	var items []string
-	var sections []*discordgo.Section
-	var containers []*discordgo.Container
+	var sections []*builders.Section
+	var containers []*builders.Container
 
 	if opt, ok := opts["단어"]; ok {
 		command = opt.StringValue()
@@ -34,8 +35,8 @@ func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 	}
 
 	if len(data) == 0 {
-		return utils.NewMessageSender(i).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 결과를 찾을 수 없어요."})).
+		return builders.NewMessageSender(i).
+			AddComponents(builders.MakeErrorContainer("해당 결과를 찾을 수 없어요.")).
 			SetComponentsV2(true).
 			SetEphemeral(true).
 			Send()
@@ -50,36 +51,31 @@ func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 	}
 
 	for _, item := range items {
-		sections = append(sections, &discordgo.Section{
-			Accessory: discordgo.Button{
-				CustomID: utils.MakeSelectKnowledge(item),
-				Label:    "자세히 보기",
-				Style:    discordgo.PrimaryButton,
-			},
-			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **%s**", item),
-				},
-			},
-		})
+		sections = append(sections,
+			builders.SectionBuilder().
+				SetAccessory(
+					builders.ButtonBuilder().
+						SetStyle(discordgo.PrimaryButton).
+						SetLabel("자세히 보기").
+						SetCustomID(utils.MakeSelectKnowledge(item)),
+				).
+				AddText(fmt.Sprintf("- **%s**", item)),
+		)
 	}
 
-	title := &discordgo.Section{
-		Accessory: discordgo.Thumbnail{Media: discordgo.UnfurledMediaItem{URL: i.User.AvatarURL("512")}},
-		Components: []discordgo.MessageComponent{
-			discordgo.TextDisplay{Content: fmt.Sprintf("### %s님에 대한 지식", i.User.GlobalName)},
-			discordgo.TextDisplay{Content: fmt.Sprintf("- 총 `%d`개", len(items))},
-			discordgo.TextDisplay{Content: fmt.Sprintf("> %s에 대한 검색 결과", command)},
-		},
-	}
-	container := &discordgo.Container{Components: []discordgo.MessageComponent{title, discordgo.Separator{}}}
+	title := builders.SectionBuilder().
+		SetAccessory(builders.ThumbnailBuilder(i.User.AvatarURL("512"))).
+		AddText(fmt.Sprintf("### %s님에 대한 지식", i.User.GlobalName)).
+		AddText(fmt.Sprintf("- 총 `%d`개", len(items))).
+		AddText(fmt.Sprintf("> %s에 대한 검색 결과", command))
+	container := builders.ContainerBuilder().AddComponents(title, builders.SeparatorBuilder())
 
 	for i, section := range sections {
 		container.Components = append(container.Components, section, discordgo.Separator{})
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)
-			container = &discordgo.Container{Components: []discordgo.MessageComponent{title, discordgo.Separator{}}}
+			container = builders.ContainerBuilder().AddComponents(title, builders.SeparatorBuilder())
 			continue
 		}
 	}
@@ -88,7 +84,7 @@ func List(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) e
 		containers = append(containers, container)
 	}
 
-	return utils.PaginationContainerBuilder(i).
+	return builders.PaginationContainerBuilder(i).
 		AddContainers(containers...).
 		Start()
 }

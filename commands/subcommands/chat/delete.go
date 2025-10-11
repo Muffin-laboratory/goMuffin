@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
+func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
 	var data []databases.Chat
 
 	name := opts["이름"].StringValue()
@@ -34,40 +35,38 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 	}
 
 	if len(data) == 0 {
-		return utils.NewMessageSender(i).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당하는 채팅을 찾을 수 없어요."})).
+		return builders.NewMessageSender(i).
+			AddComponents(builders.MakeErrorContainer("해당하는 채팅을 찾을 수 없어요.")).
 			SetComponentsV2(true).
 			SetReply(true).
 			Send()
 	}
 
 	if len(data) > 1 {
-		var sections []discordgo.Section
-		var containers []*discordgo.Container
+		var sections []*builders.Section
+		var containers []*builders.Container
 
 		for _, data := range data {
-			sections = append(sections, discordgo.Section{
-				Accessory: discordgo.Button{
-					Label:    "삭제",
-					Style:    discordgo.DangerButton,
-					CustomID: utils.MakeDeleteChat(data.ID.Hex(), data.Name, i.User.ID),
-				},
-				Components: []discordgo.MessageComponent{
-					discordgo.TextDisplay{
-						Content: fmt.Sprintf("- **%s**\n", data.Name),
-					},
-				},
-			})
+			sections = append(sections,
+				builders.SectionBuilder().
+					SetAccessory(
+						builders.ButtonBuilder().
+							SetStyle(discordgo.DangerButton).
+							SetLabel("삭제").
+							SetCustomID(utils.MakeDeleteChat(data.ID.Hex(), data.Name, i.User.ID)),
+					).
+					AddText(fmt.Sprintf("- **%s**\n", data.Name)),
+			)
 		}
 
-		textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", i.User.GlobalName)}
-		container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+		textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", i.User.GlobalName))
+		container := builders.ContainerBuilder().AddComponents(textDisplay)
 		for i, section := range sections {
 			container.Components = append(container.Components, section, discordgo.Separator{})
 
 			if (i+1)%10 == 0 {
 				containers = append(containers, container)
-				container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+				container = builders.ContainerBuilder().AddComponents(textDisplay)
 				continue
 			}
 		}
@@ -76,12 +75,12 @@ func Delete(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap)
 			containers = append(containers, container)
 		}
 
-		return utils.PaginationContainerBuilder(i).
+		return builders.PaginationContainerBuilder(i).
 			AddContainers(containers...).
 			Start()
 	}
 
-	return utils.NewMessageSender(i).
+	return builders.NewMessageSender(i).
 		AddComponents(discordgo.Container{
 			Components: []discordgo.MessageComponent{
 				discordgo.TextDisplay{Content: fmt.Sprintf("### 채팅 %s 삭제", name)},

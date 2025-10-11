@@ -1,9 +1,9 @@
 package commands
 
 import (
+	"git.wh64.net/muffin/goMuffin/builders"
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/knowledge"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -86,7 +86,7 @@ var KnowledgeCommand = &Command{
 				igCommands = append(igCommands, command.Name)
 			}
 
-			return subcommands.Learn(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
+			return subcommands.Learn(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
 		case knowledgeList:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -94,7 +94,7 @@ var KnowledgeCommand = &Command{
 				return err
 			}
 
-			return subcommands.List(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.List(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case knowledgeDelete:
 			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
@@ -102,7 +102,7 @@ var KnowledgeCommand = &Command{
 				return err
 			}
 
-			return subcommands.Delete(ctx.Inter, utils.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Delete(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
@@ -23,15 +24,15 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 
 		if strings.HasPrefix(m.Content, config.Bot.Prefix) {
-			m := &utils.MessageCreate{
+			m := &builders.MessageCreate{
 				MessageCreate: m,
 				Session:       s,
 			}
 			content := strings.TrimPrefix(m.Content, config.Bot.Prefix)
 
 			if !databases.GetDatabase().Users.IsUser(m.Author.ID) {
-				utils.NewMessageSender(m).
-					AddComponents(utils.GetUserIsNotRegisteredErrContainer(config.Bot.Prefix)).
+				builders.NewMessageSender(m).
+					AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
@@ -42,8 +43,8 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			blocked, reason := databases.GetDatabase().Users.IsUserBlocked(m.Author.ID)
 			if blocked {
 				user, _ := s.User(m.Author.ID)
-				utils.NewMessageSender(m).
-					AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+				builders.NewMessageSender(m).
+					AddComponents(builders.MakeUserIsBlockedContainer(user.GlobalName, reason)).
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
@@ -57,8 +58,8 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 				log.Println(err)
-				utils.NewMessageSender(m).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))})).
+				builders.NewMessageSender(m).
+					AddComponents(builders.MakeErrorContainer(fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username)))).
 					SetComponentsV2(true).
 					SetReply(true).
 					Send()
@@ -69,7 +70,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			str, err := chatbot.GetChatBot().GetResponse(m.Author, content)
 			if err != nil {
 				log.Println(err)
-				utils.NewMessageSender(m).
+				builders.NewMessageSender(m).
 					SetContent(str).
 					SetReply(true).
 					SetAllowedMentions(discordgo.MessageAllowedMentions{
@@ -84,7 +85,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 
 			result := chatbot.ParseResult(str, s, m)
-			utils.NewMessageSender(m).
+			builders.NewMessageSender(m).
 				SetContent(result).
 				SetReply(true).
 				SetAllowedMentions(discordgo.MessageAllowedMentions{

@@ -1,9 +1,10 @@
-package utils
+package builders
 
 import (
 	"fmt"
 	"math/rand"
 
+	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -36,9 +37,11 @@ func PaginationContainerBuilder(m any) *PaginationContainer {
 	}
 }
 
-func (p *PaginationContainer) AddContainers(container ...*discordgo.Container) *PaginationContainer {
-	p.Total += len(container)
-	p.Containers = append(p.Containers, container...)
+func (p *PaginationContainer) AddContainers(containers ...*Container) *PaginationContainer {
+	p.Total += len(containers)
+	for _, container := range containers {
+		p.Containers = append(p.Containers, container.Build().(*discordgo.Container))
+	}
 	return p
 }
 
@@ -63,28 +66,24 @@ func makeComponents(id string, current, total int) *discordgo.ActionsRow {
 		disabled = true
 	}
 
-	return &discordgo.ActionsRow{
-		Components: []discordgo.MessageComponent{
-			discordgo.Button{
-				Style:    discordgo.PrimaryButton,
-				Label:    "이전",
-				CustomID: MakePaginationEmbedPrev(id),
-				Disabled: disabled,
-			},
-			discordgo.Button{
-				Style:    discordgo.SecondaryButton,
-				Label:    fmt.Sprintf("(%d/%d)", current, total),
-				CustomID: MakePaginationEmbedPages(id),
-				Disabled: disabled,
-			},
-			discordgo.Button{
-				Style:    discordgo.PrimaryButton,
-				Label:    "다음",
-				CustomID: MakePaginationEmbedNext(id),
-				Disabled: disabled,
-			},
-		},
-	}
+	return ActionsRowBuilder(
+		ButtonBuilder().
+			SetStyle(discordgo.PrimaryButton).
+			SetLabel("이전").
+			SetCustomID(utils.MakePaginationEmbedPrev(id)).
+			SetDisabled(disabled),
+		ButtonBuilder().
+			SetStyle(discordgo.SecondaryButton).
+			SetLabel(fmt.Sprintf("(%d/%d)", current, total)).
+			SetCustomID(utils.MakePaginationEmbedPages(id)).
+			SetDisabled(disabled),
+		ButtonBuilder().
+			SetStyle(discordgo.PrimaryButton).
+			SetLabel("다음").
+			SetCustomID(utils.MakePaginationEmbedNext(id)).
+			SetDisabled(disabled),
+	).
+		Build().(*discordgo.ActionsRow)
 }
 
 func GetPaginationContainer(id string) *PaginationContainer {
@@ -134,13 +133,13 @@ func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
 
 func (p *PaginationContainer) ShowModal(i *InteractionCreate) error {
 	return i.ShowModal(&ModalData{
-		CustomId: MakePaginationEmbedModal(p.ID),
+		CustomId: utils.MakePaginationEmbedModal(p.ID),
 		Title:    fmt.Sprintf("%s의 리스트", i.Session.State.User.Username),
 		Components: []discordgo.MessageComponent{
 			discordgo.ActionsRow{
 				Components: []discordgo.MessageComponent{
 					discordgo.TextInput{
-						CustomID:    MakePaginationEmbedSetPage(p.ID),
+						CustomID:    utils.MakePaginationEmbedSetPage(p.ID),
 						Label:       "페이지",
 						Style:       discordgo.TextInputShort,
 						Placeholder: "이동할 페이지를 여기에 적어주세요.",

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"regexp"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -84,8 +84,8 @@ var BlockCommand = &commands.Command{
 		}
 
 		if userID == configs.GetConfig().Bot.OwnerID {
-			return utils.NewMessageSender(ctx.Inter).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "개발자는 차단을 할 수 없어요."})).
+			return builders.NewMessageSender(ctx.Inter).
+				AddComponents(builders.MakeErrorContainer("개발자는 차단을 할 수 없어요.")).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
@@ -97,8 +97,8 @@ var BlockCommand = &commands.Command{
 		}
 
 		if !databases.GetDatabase().Users.IsUser(userID) {
-			return utils.NewMessageSender(ctx.Inter).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName)})).
+			return builders.NewMessageSender(ctx.Inter).
+				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName))).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
@@ -111,8 +111,8 @@ var BlockCommand = &commands.Command{
 			return err
 		}
 
-		return utils.NewMessageSender(ctx.Inter).
-			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("유저 %s을/를 성공적으로 차단했어요.", user.GlobalName)})).
+		return builders.NewMessageSender(ctx.Inter).
+			AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("유저 %s을/를 성공적으로 차단했어요.", user.GlobalName))).
 			SetComponentsV2(true).
 			SetEphemeral(true).
 			Send()

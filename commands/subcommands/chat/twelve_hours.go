@@ -3,12 +3,11 @@ package chat
 import (
 	"fmt"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
-	"github.com/bwmarrin/discordgo"
 )
 
-func SetCreateNewChatAfter12Hours(i *utils.InteractionCreate, opts utils.CommandInteractionOptionsMap) error {
+func SetCreateNewChatAfter12Hours(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
 	createNewChatAfter12Hours := false
 	text := "비활성화"
 
@@ -23,8 +22,8 @@ func SetCreateNewChatAfter12Hours(i *utils.InteractionCreate, opts utils.Command
 		return err
 	}
 
-	return utils.NewMessageSender(i).
-		AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("마지막 대화 후 12시간이 지났을 시 새로운 채팅 생성하기를 성공적으로 %s했어요.", text)})).
+	return builders.NewMessageSender(i).
+		AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("마지막 대화 후 12시간이 지났을 시 새로운 채팅 생성하기를 성공적으로 %s했어요.", text))).
 		SetComponentsV2(true).
 		SetEphemeral(true).
 		Send()

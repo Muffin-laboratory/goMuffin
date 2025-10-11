@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-func List(i *utils.InteractionCreate) error {
+func List(i *builders.InteractionCreate) error {
 	var data []databases.Chat
-	var sections []discordgo.Section
-	var containers []*discordgo.Container
+	var sections []*builders.Section
+	var containers []*builders.Container
 
 	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
@@ -23,7 +25,7 @@ func List(i *utils.InteractionCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{UserID: i.User.ID})
+	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), bson.M{"user_id": i.User.ID})
 	if err != nil {
 		return err
 	}
@@ -33,8 +35,8 @@ func List(i *utils.InteractionCreate) error {
 	}
 
 	if len(data) == 0 {
-		return utils.NewMessageSender(i).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅이 단 하나도 없어요. 새로운 채팅을 만들거나, 대화를 시작해 채팅을 만들어주세요."})).
+		return builders.NewMessageSender(i).
+			AddComponents(builders.MakeErrorContainer("채팅이 단 하나도 없어요. 새로운 채팅을 만들거나, 대화를 시작해 채팅을 만들어주세요.")).
 			SetComponentsV2(true).
 			SetReply(true).
 			SetEphemeral(true).
@@ -42,47 +44,39 @@ func List(i *utils.InteractionCreate) error {
 	}
 
 	for _, data := range data {
-		button := discordgo.Button{
-			Label:    "선택",
-			Style:    discordgo.SuccessButton,
-			CustomID: utils.MakeSelectChat(data.ID.Hex(), data.Name, i.User.ID),
-		}
+		button := builders.ButtonBuilder().
+			SetStyle(discordgo.SuccessButton).
+			SetLabel("선택").
+			SetCustomID(utils.MakeSelectChat(data.ID.Hex(), data.Name, i.User.ID))
 
 		if data.ID == dbUser.ChatID {
-			button.Disabled = true
+			button.SetDisabled(true)
 
-			sections = append([]discordgo.Section{
-				{
-					Accessory: button,
-					Components: []discordgo.MessageComponent{
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("**%s (선택됨)**", data.Name),
-						},
-					},
-				},
+			sections = append([]*builders.Section{
+				builders.SectionBuilder().
+					SetAccessory(button).
+					AddText(fmt.Sprintf("**%s (선택됨)**", data.Name)),
 			}, sections...)
 
 			continue
 		}
 
-		sections = append(sections, discordgo.Section{
-			Accessory: button,
-			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("%s\n", data.Name),
-				},
-			},
-		})
+		sections = append(sections,
+			builders.SectionBuilder().
+				SetAccessory(button).
+				AddText(fmt.Sprintf("%s\n", data.Name)),
+		)
 	}
 
-	textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록", i.User.GlobalName)}
-	container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+	textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s님의 채팅목록", i.User.GlobalName))
+	container := builders.ContainerBuilder().AddComponents(textDisplay)
 	for i, section := range sections {
 		container.Components = append(container.Components, section, discordgo.Separator{})
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)
-			container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
+			container = builders.ContainerBuilder().AddComponents(textDisplay)
+
 			continue
 		}
 	}
@@ -91,7 +85,7 @@ func List(i *utils.InteractionCreate) error {
 		containers = append(containers, container)
 	}
 
-	return utils.PaginationContainerBuilder(i).
+	return builders.PaginationContainerBuilder(i).
 		AddContainers(containers...).
 		Start()
 }

@@ -3,6 +3,7 @@ package components
 import (
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -46,21 +47,17 @@ var DeregisterComponent *commands.Component = &commands.Component{
 				return err
 			}
 
-			return ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetSuccessContainer(discordgo.TextDisplay{
-						Content: "탈퇴를 했어요.",
-					}),
+					builders.MakeSuccessContainer("탈퇴를 했어요."),
 				},
 			})
 		case strings.HasPrefix(customID, utils.DeregisterDisagree):
-			return ctx.Inter.EditReply(&utils.InteractionEdit{
+			return ctx.Inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetCanceledContainer(discordgo.TextDisplay{
-						Content: "탈퇴를 거부했어요.",
-					}),
+					builders.MakeCanceledContainer("탈퇴를 거부했어요."),
 				},
 			})
 		default:
