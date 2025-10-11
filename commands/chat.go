@@ -1,10 +1,13 @@
 package commands
 
 import (
+	"context"
+
 	"git.wh64.net/muffin/goMuffin/builders"
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var (
@@ -62,11 +65,12 @@ var ChatCommand *Command = &Command{
 				Description: "채팅을 삭제해요.",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
-						Type:        discordgo.ApplicationCommandOptionString,
-						Name:        "이름",
-						Description: "지울 채팅방의 이름",
-						MaxLength:   chatNameMaxLength,
-						Required:    true,
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "이름",
+						Description:  "지울 채팅방의 이름",
+						MaxLength:    chatNameMaxLength,
+						Required:     true,
+						Autocomplete: true,
 					},
 				},
 			},
@@ -202,6 +206,38 @@ var ChatCommand *Command = &Command{
 		default:
 			return nil
 		}
+	},
+	Autocomplete: func(ctx *ChatInputContext) error {
+		var choices []*discordgo.ApplicationCommandOptionChoice
+		var data []*databases.Chat
+		var focusedValue string
+
+		for _, opt := range ctx.Inter.ApplicationCommandData().Options[0].Options {
+			if opt.Focused {
+				focusedValue = opt.StringValue()
+				break
+			}
+		}
+
+		cur, err := databases.GetDatabase().Chats.Find(context.TODO(), bson.M{"name": bson.M{"$regex": focusedValue}})
+		if err != nil {
+			return err
+		}
+
+		defer cur.Close(context.TODO())
+
+		if err = cur.All(context.TODO(), &data); err != nil {
+			return err
+		}
+
+		for _, data := range data {
+			choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+				Name:  data.Name,
+				Value: data.Name,
+			})
+		}
+
+		return ctx.Inter.Autocomplete(choices)
 	},
 }
 
