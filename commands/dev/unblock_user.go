@@ -1,6 +1,7 @@
 package dev
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
@@ -10,30 +11,27 @@ import (
 	"git.wh64.net/muffin/goMuffin/databases"
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var BlockCommand = &commands.Command{
+var UnblockCommand = &commands.Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
-		Name:        "차단",
-		Description: "유저를 차단해요.",
+		Name:        "차단해제",
+		Description: "유저를 차단 해제해요.",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:         discordgo.ApplicationCommandOptionString,
 				Name:         "유저",
-				Description:  "차단할 유저를 선택해요.",
+				Description:  "차단 해제할 유저를 선택해요.",
 				Required:     true,
 				Autocomplete: true,
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "이유",
-				Description: "해당 유저를 차단하는 이유를 적어주세요.",
 			},
 		},
 	},
 	Flags: commands.CommandFlagsIsDeveloperOnlyCommand,
 	Autocomplete: func(ctx *commands.ChatInputContext) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
+		var data []*databases.User
 		var focusedValue string
 
 		for _, opt := range ctx.Inter.ApplicationCommandData().Options {
@@ -43,8 +41,14 @@ var BlockCommand = &commands.Command{
 			}
 		}
 
-		data, err := databases.GetDatabase().Users.All()
+		cur, err := databases.GetDatabase().Users.Collection.Find(context.TODO(), bson.M{"blocked": true})
 		if err != nil {
+			return err
+		}
+
+		defer cur.Close(context.TODO())
+
+		if err = cur.All(context.TODO(), &data); err != nil {
 			return err
 		}
 
@@ -76,17 +80,14 @@ var BlockCommand = &commands.Command{
 		return ctx.Inter.Autocomplete(choices)
 	},
 	Run: func(ctx *commands.ChatInputContext) error {
-		reason := "없음"
-		userID := ctx.Inter.Options["유저"].StringValue()
-		blocked := true
+		var blocked bool
+		var reason string
 
-		if opt, ok := ctx.Inter.Options["이유"]; ok {
-			reason = opt.StringValue()
-		}
+		userID := ctx.Inter.Options["유저"].StringValue()
 
 		if userID == configs.GetConfig().Bot.OwnerID {
 			return builders.NewMessageSender(ctx.Inter).
-				AddComponents(builders.MakeErrorContainer("개발자는 차단을 할 수 없어요.")).
+				AddComponents(builders.MakeErrorContainer("개발자는 차단 해제를 할 수 없어요.")).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
@@ -113,7 +114,7 @@ var BlockCommand = &commands.Command{
 		}
 
 		return builders.NewMessageSender(ctx.Inter).
-			AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("유저 %s 성공적으로 차단했어요.", hangul.GetJosa(user.GlobalName, hangul.EUL_REUL)))).
+			AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("유저 %s 성공적으로 차단 해제했어요.", hangul.GetJosa(user.GlobalName, hangul.EUL_REUL)))).
 			SetComponentsV2(true).
 			SetEphemeral(true).
 			Send()
@@ -121,5 +122,5 @@ var BlockCommand = &commands.Command{
 }
 
 func init() {
-	commands.GetDiscommand().LoadCommand(BlockCommand)
+	commands.GetDiscommand().LoadCommand(UnblockCommand)
 }
