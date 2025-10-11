@@ -13,7 +13,7 @@ import (
 type ChattingMode int
 
 type User struct {
-	ID                        bson.ObjectID `bson:"_id"`
+	ID                        bson.ObjectID `bson:"_id,omitempty"`
 	UserID                    string        `bson:"user_id"`
 	Blocked                   bool          `bson:"blocked"`
 	BlockedReason             string        `bson:"blocked_reason"`
