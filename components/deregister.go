@@ -11,29 +11,29 @@ import (
 )
 
 var DeregisterComponent *commands.Component = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		customID := ctx.Inter.MessageComponentData().CustomID
+	Parse: func(inter *builders.InteractionCreate) bool {
+		customID := inter.MessageComponentData().CustomID
 		if !strings.HasPrefix(customID, utils.DeregisterAgree) && !strings.HasPrefix(customID, utils.DeregisterDisagree) {
 			return false
 		}
 
-		if ctx.Inter.User.ID != utils.GetDeregisterUserID(customID) {
+		if inter.User.ID != utils.GetDeregisterUserID(customID) {
 			return false
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		err := ctx.Inter.DeferUpdate()
+	Run: func(inter *builders.InteractionCreate) error {
+		err := inter.DeferUpdate()
 		if err != nil {
 			return err
 		}
 
-		customID := ctx.Inter.MessageComponentData().CustomID
+		customID := inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
-			userID := ctx.Inter.User.ID
+			userID := inter.User.ID
 
 			if _, err := databases.GetDatabase().Users.Delete(userID); err != nil {
 				return err
@@ -47,14 +47,14 @@ var DeregisterComponent *commands.Component = &commands.Component{
 				return err
 			}
 
-			return ctx.Inter.EditReply(&builders.InteractionEdit{
+			return inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					builders.MakeSuccessContainer("탈퇴를 했어요."),
 				},
 			})
 		case strings.HasPrefix(customID, utils.DeregisterDisagree):
-			return ctx.Inter.EditReply(&builders.InteractionEdit{
+			return inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
 					builders.MakeCanceledContainer("탈퇴를 거부했어요."),

@@ -29,12 +29,12 @@ var UnblockCommand = &commands.Command{
 		},
 	},
 	Flags: commands.CommandFlagsIsDeveloperOnlyCommand,
-	Autocomplete: func(ctx *commands.ChatInputContext) error {
+	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
 		var data []*databases.User
 		var focusedValue string
 
-		for _, opt := range ctx.Inter.ApplicationCommandData().Options {
+		for _, opt := range inter.ApplicationCommandData().Options {
 			if opt.Focused {
 				focusedValue = opt.StringValue()
 				break
@@ -57,7 +57,7 @@ var UnblockCommand = &commands.Command{
 				continue
 			}
 
-			user, err := ctx.Inter.Session.User(data.UserID)
+			user, err := inter.Session.User(data.UserID)
 			if err != nil {
 				return err
 			}
@@ -77,29 +77,29 @@ var UnblockCommand = &commands.Command{
 			}
 		}
 
-		return ctx.Inter.Autocomplete(choices)
+		return inter.Autocomplete(choices)
 	},
-	Run: func(ctx *commands.ChatInputContext) error {
+	Run: func(inter *builders.InteractionCreate) error {
 		var blocked bool
 		var reason string
 
-		userID := ctx.Inter.Options["유저"].StringValue()
+		userID := inter.Options["유저"].StringValue()
 
 		if userID == configs.GetConfig().Bot.OwnerID {
-			return builders.NewMessageSender(ctx.Inter).
+			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("개발자는 차단 해제를 할 수 없어요.")).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
 		}
 
-		user, err := ctx.Inter.Session.User(userID)
+		user, err := inter.Session.User(userID)
 		if err != nil {
 			return err
 		}
 
 		if !databases.GetDatabase().Users.IsUser(userID) {
-			return builders.NewMessageSender(ctx.Inter).
+			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName))).
 				SetComponentsV2(true).
 				SetEphemeral(true).
@@ -113,7 +113,7 @@ var UnblockCommand = &commands.Command{
 			return err
 		}
 
-		return builders.NewMessageSender(ctx.Inter).
+		return builders.NewMessageSender(inter).
 			AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("유저 %s 성공적으로 차단 해제했어요.", hangul.GetJosa(user.GlobalName, hangul.EUL_REUL)))).
 			SetComponentsV2(true).
 			SetEphemeral(true).

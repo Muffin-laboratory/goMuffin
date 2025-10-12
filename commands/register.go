@@ -15,25 +15,24 @@ var RegisterCommand *Command = &Command{
 		Name:        "가입",
 		Description: "이 봇에 가입해요.",
 	},
-	Category: General,
-	Flags:    CommandFlagsIsBlocked,
-	Run: func(ctx *ChatInputContext) error {
-		userID := ctx.Inter.User.ID
+	Flags: CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		userID := inter.User.ID
 
 		if databases.GetDatabase().Users.IsUser(userID) {
-			return builders.NewMessageSender(ctx.Inter).
+			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 /탈퇴를 이용해주세요.")).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
 		}
 
-		return builders.NewMessageSender(ctx.Inter).
+		return builders.NewMessageSender(inter).
 			AddComponents(
 				builders.ContainerBuilder().
 					AddComponents(
 						builders.TextDisplayBuilder(fmt.Sprintf("### %s 가입\n해당 서비스에 가입하실려면 [개인정보처리방침](%s)과 [서비스 이용약관](%s)에 동의해야해요.",
-							ctx.Inter.Session.State.User.Username,
+							inter.Session.State.User.Username,
 							configs.GetConfig().Service.PrivacyPolicyURL,
 							configs.GetConfig().Service.TermOfServiceURL,
 						)),

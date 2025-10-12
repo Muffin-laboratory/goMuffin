@@ -12,17 +12,16 @@ import (
 )
 
 var SelectChatComponent *commands.Component = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		i := ctx.Inter
-		customID := i.MessageComponentData().CustomID
+	Parse: func(inter *builders.InteractionCreate) bool {
+		customID := inter.MessageComponentData().CustomID
 
 		if !strings.HasPrefix(customID, utils.SelectChat) {
 			return false
 		}
 
 		userID := utils.GetChatUserID(customID)
-		if i.User.ID != userID {
-			i.Reply(&discordgo.InteractionResponseData{
+		if inter.User.ID != userID {
+			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
 					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
@@ -32,23 +31,21 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		i := ctx.Inter
-
-		if err := i.DeferUpdate(); err != nil {
+	Run: func(inter *builders.InteractionCreate) error {
+		if err := inter.DeferUpdate(); err != nil {
 			return err
 		}
 
-		id, name := utils.GetChatID(i.MessageComponentData().CustomID)
+		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
 
-		if _, err := databases.GetDatabase().Users.Update(i.User.ID, &databases.UserUpdate{
+		if _, err := databases.GetDatabase().Users.Update(inter.User.ID, &databases.UserUpdate{
 			ChatID: &id,
 		}); err != nil {
 			return err
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		return i.EditReply(&builders.InteractionEdit{
+		return inter.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
 				builders.MakeSuccessContainer(fmt.Sprintf("`%s`으로 채팅을 변경했어요.", name)),

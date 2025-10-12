@@ -69,12 +69,11 @@ var KnowledgeCommand = &Command{
 			},
 		},
 	},
-	Category: Chatting,
-	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	Run: func(ctx *ChatInputContext) error {
-		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
+	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case knowledgeLearn:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
@@ -86,32 +85,32 @@ var KnowledgeCommand = &Command{
 				igCommands = append(igCommands, command.Name)
 			}
 
-			return subcommands.Learn(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
+			return subcommands.Learn(inter, builders.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
 		case knowledgeList:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.List(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.List(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case knowledgeDelete:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.Delete(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}
 	},
-	Autocomplete: func(ctx *ChatInputContext) error {
+	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
 		var focusedValue string
 
-		for _, opt := range ctx.Inter.ApplicationCommandData().Options[0].Options {
+		for _, opt := range inter.ApplicationCommandData().Options[0].Options {
 			if opt.Focused {
 				focusedValue = opt.StringValue()
 				break
@@ -119,7 +118,7 @@ var KnowledgeCommand = &Command{
 		}
 
 		data, err := databases.GetDatabase().Knowledge.GetByFilter(bson.M{
-			"user_id": ctx.Inter.User.ID,
+			"user_id": inter.User.ID,
 			"command": bson.M{
 				"$regex": focusedValue,
 			},
@@ -135,7 +134,7 @@ var KnowledgeCommand = &Command{
 			})
 		}
 
-		return ctx.Inter.Autocomplete(choices)
+		return inter.Autocomplete(choices)
 	},
 }
 

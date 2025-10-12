@@ -12,30 +12,28 @@ import (
 )
 
 var SelectKnowledgeComponent = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		return strings.HasPrefix(ctx.Inter.MessageComponentData().CustomID, utils.SelectKnowledge)
+	Parse: func(inter *builders.InteractionCreate) bool {
+		return strings.HasPrefix(inter.MessageComponentData().CustomID, utils.SelectKnowledge)
 	},
-	Run: func(ctx *commands.ComponentContext) error {
+	Run: func(inter *builders.InteractionCreate) error {
 		var sections []*builders.Section
 		var containers []*builders.Container
 
-		i := ctx.Inter
-
-		if err := i.DeferReply(&discordgo.InteractionResponseData{
+		if err := inter.DeferReply(&discordgo.InteractionResponseData{
 			Flags: discordgo.MessageFlagsEphemeral,
 		}); err != nil {
 			return err
 		}
 
-		command := utils.GetSelectKnowledgeCommand(i.MessageComponentData().CustomID)
+		command := utils.GetSelectKnowledgeCommand(inter.MessageComponentData().CustomID)
 
-		data, err := databases.GetDatabase().Knowledge.GetByFilter(databases.Knowledge{UserID: i.User.ID, Command: command})
+		data, err := databases.GetDatabase().Knowledge.GetByFilter(databases.Knowledge{UserID: inter.User.ID, Command: command})
 		if err != nil {
 			return err
 		}
 
 		if len(data) == 0 {
-			return builders.NewMessageSender(i).
+			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("해당 결과를 찾을 수 없어요.")).
 				SetComponentsV2(true).
 				SetEphemeral(true).
@@ -49,7 +47,7 @@ var SelectKnowledgeComponent = &commands.Component{
 						builders.ButtonBuilder().
 							SetStyle(discordgo.DangerButton).
 							SetLabel("삭제").
-							SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID)),
+							SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, inter.User.ID)),
 					).
 					AddText(fmt.Sprintf("**%s**\n", data.Result)),
 			)
@@ -71,7 +69,7 @@ var SelectKnowledgeComponent = &commands.Component{
 			containers = append(containers, container)
 		}
 
-		return builders.PaginationContainerBuilder(i).
+		return builders.PaginationContainerBuilder(inter).
 			AddContainers(containers...).
 			Start()
 	},

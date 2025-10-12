@@ -10,11 +10,9 @@ import (
 )
 
 var PaginationContainerComponent *commands.Component = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		i := ctx.Inter
-
-		if i.MessageComponentData().ComponentType == discordgo.ButtonComponent {
-			customID := i.MessageComponentData().CustomID
+	Parse: func(inter *builders.InteractionCreate) bool {
+		if inter.MessageComponentData().ComponentType == discordgo.ButtonComponent {
+			customID := inter.MessageComponentData().CustomID
 
 			isPrev := strings.HasPrefix(customID, utils.PaginationEmbedPrev)
 			isNext := strings.HasPrefix(customID, utils.PaginationEmbedNext)
@@ -25,7 +23,7 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 
 			id := utils.GetPaginationEmbedID(customID)
 			userID := utils.GetPaginationEmbedUserID(id)
-			if i.Member.User.ID != userID {
+			if inter.Member.User.ID != userID {
 				return false
 			}
 
@@ -37,17 +35,17 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		customID := ctx.Inter.MessageComponentData().CustomID
+	Run: func(inter *builders.InteractionCreate) error {
+		customID := inter.MessageComponentData().CustomID
 		id := utils.GetPaginationEmbedID(customID)
 		p := builders.GetPaginationContainer(id)
 
 		if strings.HasPrefix(customID, utils.PaginationEmbedPrev) {
-			return p.Prev(ctx.Inter)
+			return p.Prev(inter)
 		} else if strings.HasPrefix(customID, utils.PaginationEmbedNext) {
-			return p.Next(ctx.Inter)
+			return p.Next(inter)
 		} else {
-			return p.ShowModal(ctx.Inter)
+			return p.ShowModal(inter)
 		}
 	},
 }

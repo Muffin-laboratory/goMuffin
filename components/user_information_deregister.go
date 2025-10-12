@@ -10,17 +10,16 @@ import (
 )
 
 var UserInformationDeregisterComponent = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		i := ctx.Inter
-		customID := i.MessageComponentData().CustomID
+	Parse: func(inter *builders.InteractionCreate) bool {
+		customID := inter.MessageComponentData().CustomID
 
 		if !strings.HasPrefix(customID, utils.UserInformationDeregister) {
 			return false
 		}
 
 		userID := utils.GetUserInformationDeregisterUserID(customID)
-		if i.User.ID != userID {
-			i.Reply(&discordgo.InteractionResponseData{
+		if inter.User.ID != userID {
+			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
 					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
@@ -30,11 +29,8 @@ var UserInformationDeregisterComponent = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		return commands.DeregisterCommand.Run(&commands.ChatInputContext{
-			Inter:   ctx.Inter,
-			Command: nil,
-		})
+	Run: func(inter *builders.InteractionCreate) error {
+		return commands.DeregisterCommand.Run(inter)
 	},
 }
 

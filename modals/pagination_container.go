@@ -11,9 +11,8 @@ import (
 )
 
 var PaginationContainerModal *commands.Modal = &commands.Modal{
-	Parse: func(ctx *commands.ModalContext) bool {
-		i := ctx.Inter
-		data := i.ModalSubmitData()
+	Parse: func(inter *builders.InteractionCreate) bool {
+		data := inter.ModalSubmitData()
 		customID := data.CustomID
 
 		if data.Components[0].Type() != discordgo.ActionsRowComponent {
@@ -27,7 +26,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 		id := utils.GetPaginationEmbedID(customID)
 		userID := utils.GetPaginationEmbedUserID(id)
 
-		if i.Member.User.ID != userID {
+		if inter.Member.User.ID != userID {
 			return false
 		}
 
@@ -38,7 +37,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
 
 		if _, err := strconv.Atoi(cmp.Value); err != nil {
-			i.Reply(&discordgo.InteractionResponseData{
+			inter.Reply(&discordgo.InteractionResponseData{
 				Components: []discordgo.MessageComponent{
 					builders.MakeErrorContainer("해당 값은 숫자여야해요."),
 				},
@@ -49,8 +48,8 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 
 		return true
 	},
-	Run: func(ctx *commands.ModalContext) error {
-		data := ctx.Inter.ModalSubmitData()
+	Run: func(inter *builders.InteractionCreate) error {
+		data := inter.ModalSubmitData()
 		customID := data.CustomID
 		id := utils.GetPaginationEmbedID(customID)
 		p := builders.GetPaginationContainer(id)
@@ -58,7 +57,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 
 		page, _ := strconv.Atoi(cmp.Value)
 
-		return p.Set(ctx.Inter, page)
+		return p.Set(inter, page)
 	},
 }
 

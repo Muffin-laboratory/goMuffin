@@ -145,74 +145,73 @@ var ChatCommand *Command = &Command{
 			},
 		},
 	},
-	Category: Chatting,
-	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	Run: func(ctx *ChatInputContext) error {
-		switch opt := ctx.Inter.ApplicationCommandData().Options[0]; opt.Name {
+	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case chatCommandChatting:
-			if err := ctx.Inter.DeferReply(nil); err != nil {
+			if err := inter.DeferReply(nil); err != nil {
 				return err
 			}
 
-			return subcommands.Chat(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Chat(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandCreate:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.Create(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Create(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandList:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.List(ctx.Inter)
+			return subcommands.List(inter)
 		case chatCommandDelete:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.Delete(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandSwitchMode:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.SwitchMode(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.SwitchMode(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandReplyUser:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.SetReplyUser(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.SetReplyUser(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandCreateNewChatAfter12Hours:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.SetCreateNewChatAfter12Hours(ctx.Inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.SetCreateNewChatAfter12Hours(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
 		}
 	},
-	Autocomplete: func(ctx *ChatInputContext) error {
+	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
 		var data []*databases.Chat
 		var focusedValue string
 
-		for _, opt := range ctx.Inter.ApplicationCommandData().Options[0].Options {
+		for _, opt := range inter.ApplicationCommandData().Options[0].Options {
 			if opt.Focused {
 				focusedValue = opt.StringValue()
 				break
@@ -237,7 +236,7 @@ var ChatCommand *Command = &Command{
 			})
 		}
 
-		return ctx.Inter.Autocomplete(choices)
+		return inter.Autocomplete(choices)
 	},
 }
 

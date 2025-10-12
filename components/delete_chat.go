@@ -13,17 +13,16 @@ import (
 )
 
 var DeleteChatComponent = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		i := ctx.Inter
-		customID := i.MessageComponentData().CustomID
+	Parse: func(inter *builders.InteractionCreate) bool {
+		customID := inter.MessageComponentData().CustomID
 
 		if !strings.HasPrefix(customID, utils.DeleteChat) && !strings.HasPrefix(customID, utils.DeleteChatCancel) {
 			return false
 		}
 
 		userID := utils.GetChatUserID(customID)
-		if i.Member.User.ID != userID {
-			i.Reply(&discordgo.InteractionResponseData{
+		if inter.Member.User.ID != userID {
+			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
 					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
@@ -33,12 +32,11 @@ var DeleteChatComponent = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		i := ctx.Inter
-		customId := i.MessageComponentData().CustomID
+	Run: func(inter *builders.InteractionCreate) error {
+		customId := inter.MessageComponentData().CustomID
 
 		if strings.HasPrefix(customId, utils.DeleteChatCancel) {
-			return i.Update(&discordgo.InteractionResponseData{
+			return inter.Update(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
 					builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요."),
@@ -46,11 +44,11 @@ var DeleteChatComponent = &commands.Component{
 			})
 		}
 
-		if err := i.DeferUpdate(); err != nil {
+		if err := inter.DeferUpdate(); err != nil {
 			return err
 		}
 
-		id, name := utils.GetChatID(i.MessageComponentData().CustomID)
+		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
 
 		if _, err := databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id}); err != nil {
 			return err
@@ -61,7 +59,7 @@ var DeleteChatComponent = &commands.Component{
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		return i.EditReply(&builders.InteractionEdit{
+		return inter.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
 				builders.MakeSuccessContainer(fmt.Sprintf("`%s`번을 삭제했어요.", name)),

@@ -9,22 +9,16 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type modalRun func(ctx *ModalContext) error
-type chatInputRun func(ctx *ChatInputContext) error
-type componentRun func(ctx *ComponentContext) error
+type run func(ctx *builders.InteractionCreate) error
+type parse func(ctx *builders.InteractionCreate) bool
 
-type modalParse func(ctx *ModalContext) bool
-type componentParse func(ctx *ComponentContext) bool
-
-type Category string
 type CommandFlags uint8
 
 type Command struct {
 	*discordgo.ApplicationCommand
-	Category     Category
 	Flags        CommandFlags
-	Run          chatInputRun
-	Autocomplete chatInputRun
+	Run          run
+	Autocomplete run
 }
 
 type Discommand struct {
@@ -33,35 +27,15 @@ type Discommand struct {
 	Modals     []*Modal
 }
 
-type ChatInputContext struct {
-	Inter   *builders.InteractionCreate
-	Command *Command
-}
-
-type ComponentContext struct {
-	Inter     *builders.InteractionCreate
-	Component *Component
-}
-
-type ModalContext struct {
-	Inter *builders.InteractionCreate
-	Modal *Modal
-}
-
 type Component struct {
-	Parse componentParse
-	Run   componentRun
+	Parse parse
+	Run   run
 }
 
 type Modal struct {
-	Parse modalParse
-	Run   modalRun
+	Parse parse
+	Run   run
 }
-
-const (
-	Chatting Category = "채팅"
-	General  Category = "일반"
-)
 
 const (
 	CommandFlagsIsRegistered CommandFlags = 1 << iota
@@ -144,7 +118,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 				Send()
 		}
 
-		return command.Run(&ChatInputContext{i, command})
+		return command.Run(i)
 
 	}
 	return nil
@@ -159,7 +133,7 @@ func (d *Discommand) ChatInputAutocomplete(name string, s *discordgo.Session, in
 	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
-		return command.Autocomplete(&ChatInputContext{i, command})
+		return command.Autocomplete(i)
 	}
 
 	return nil
@@ -174,41 +148,32 @@ func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.Interac
 	}
 
 	i.InteractionCreate.User = builders.GetInteractionUser(inter)
-	data := &ComponentContext{
-		Inter: i,
-	}
 
 	for _, c := range d.Components {
-		data.Component = c
-
-		if !c.Parse(data) {
+		if !c.Parse(i) {
 			continue
 		}
 
-		err = c.Run(data)
+		err = c.Run(i)
 		break
 	}
 	return err
 }
 
-func (d *Discommand) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func (d *Discommand) ModalRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	var err error
 
-	data := &ModalContext{
-		Inter: &builders.InteractionCreate{
-			InteractionCreate: i,
-			Session:           s,
-		},
+	i := &builders.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
 	}
 
 	for _, m := range d.Modals {
-		data.Modal = m
-
-		if !m.Parse(data) {
+		if !m.Parse(i) {
 			continue
 		}
 
-		err = m.Run(data)
+		err = m.Run(i)
 		break
 	}
 	return err

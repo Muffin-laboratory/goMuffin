@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"git.wh64.net/muffin/goMuffin/builders"
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/information"
 	"github.com/bwmarrin/discordgo"
 )
@@ -33,30 +34,29 @@ var InformationCommand *Command = &Command{
 			},
 		},
 	},
-	Category: General,
-	Flags:    CommandFlagsIsBlocked,
-	Run: func(ctx *ChatInputContext) error {
-		switch ctx.Inter.ApplicationCommandData().Options[0].Name {
+	Flags: CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		switch inter.ApplicationCommandData().Options[0].Name {
 		case informationCommandBot:
-			if err := ctx.Inter.DeferReply(nil); err != nil {
+			if err := inter.DeferReply(nil); err != nil {
 				return err
 			}
 
-			return subcommands.InfoBot(ctx.Inter)
+			return subcommands.InfoBot(inter)
 		case informationCommandUser:
-			if err := ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
 			}); err != nil {
 				return err
 			}
 
-			return subcommands.InfoUser(ctx.Inter)
+			return subcommands.InfoUser(inter)
 		case informationCommandPatchNotes:
-			if err := ctx.Inter.DeferReply(nil); err != nil {
+			if err := inter.DeferReply(nil); err != nil {
 				return err
 			}
 
-			return subcommands.InfoPatchLogs(ctx.Inter)
+			return subcommands.InfoPatchLogs(inter)
 		default:
 			return nil
 		}

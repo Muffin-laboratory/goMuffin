@@ -12,17 +12,16 @@ import (
 )
 
 var DeleteKnowledgeComponent *commands.Component = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		i := ctx.Inter
-		customID := i.MessageComponentData().CustomID
+	Parse: func(inter *builders.InteractionCreate) bool {
+		customID := inter.MessageComponentData().CustomID
 
 		if !strings.HasPrefix(customID, utils.DeleteKnowledge) {
 			return false
 		}
 
 		userID := utils.GetDeleteKnowledgeUserID(customID)
-		if i.Member.User.ID != userID {
-			i.Reply(&discordgo.InteractionResponseData{
+		if inter.Member.User.ID != userID {
+			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
 					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
@@ -32,20 +31,18 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		i := ctx.Inter
-
-		if err := i.DeferUpdate(); err != nil {
+	Run: func(inter *builders.InteractionCreate) error {
+		if err := inter.DeferUpdate(); err != nil {
 			return err
 		}
 
-		id, itemID := utils.GetDeleteKnowledgeID(i.MessageComponentData().CustomID)
+		id, itemID := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
 		if _, err := databases.GetDatabase().Knowledge.Delete(id); err != nil {
 			return err
 		}
 
 		flags := discordgo.MessageFlagsIsComponentsV2
-		return i.EditReply(&builders.InteractionEdit{
+		return inter.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
 				builders.MakeSuccessContainer(fmt.Sprintf("%d번을 삭제했어요.", itemID)),

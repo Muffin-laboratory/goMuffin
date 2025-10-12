@@ -13,16 +13,15 @@ var DeregisterCommand *Command = &Command{
 		Name:        "탈퇴",
 		Description: "이 봇에서 탈퇴해요.",
 	},
-	Category: General,
-	Flags:    CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	Run: func(ctx *ChatInputContext) error {
-		userID := ctx.Inter.User.ID
+	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		userID := inter.User.ID
 
-		return builders.NewMessageSender(ctx.Inter).
+		return builders.NewMessageSender(inter).
 			AddComponents(
 				builders.ContainerBuilder().
 					AddComponents(
-						builders.TextDisplayBuilder(fmt.Sprintf("### %s 탈퇴\n- 정말로 해당 서비스에서 탈퇴하시겠어요?\n> 주의: **모든 데이터는 삭제되어요.**", ctx.Inter.Session.State.User.Username)),
+						builders.TextDisplayBuilder(fmt.Sprintf("### %s 탈퇴\n- 정말로 해당 서비스에서 탈퇴하시겠어요?\n> 주의: **모든 데이터는 삭제되어요.**", inter.Session.State.User.Username)),
 						builders.ActionsRowBuilder(
 							builders.ButtonBuilder().
 								SetStyle(discordgo.DangerButton).
