@@ -42,7 +42,7 @@ var ChatCommand *Command = &Command{
 						Name:        "이름",
 						Description: "채팅방의 이름 (25자 이내)",
 						MaxLength:   chatNameMaxLength,
-						Required:    true,
+						Required:    false,
 					},
 				},
 			},

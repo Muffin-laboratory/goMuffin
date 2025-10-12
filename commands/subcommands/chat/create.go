@@ -2,13 +2,18 @@ package chat
 
 import (
 	"fmt"
+	"math/rand"
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/databases"
 )
 
 func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
-	name := opts["이름"].StringValue()
+	var name = fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))
+
+	if opt, ok := opts["이름"]; ok {
+		name = opt.StringValue()
+	}
 
 	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
