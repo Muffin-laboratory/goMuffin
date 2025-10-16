@@ -9,8 +9,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-type run func(ctx *builders.InteractionCreate) error
-type parse func(ctx *builders.InteractionCreate) bool
+type run func(inter *builders.InteractionCreate) error
+type parse func(inter *builders.InteractionCreate) bool
 
 type CommandFlags uint8
 

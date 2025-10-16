@@ -83,6 +83,11 @@ func (i *InteractionCreate) DeferReply(data *discordgo.InteractionResponseData) 
 	return nil
 }
 
+// FetchReply gets message that was sent.
+func (i *InteractionCreate) FetchReply() (*discordgo.Message, error) {
+	return i.Session.WebhookMessage(i.AppID, i.Token, "@original")
+}
+
 // DeferUpdate to this interaction.
 func (i *InteractionCreate) DeferUpdate() error {
 	if err := i.Session.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
