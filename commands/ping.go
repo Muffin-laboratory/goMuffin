@@ -38,7 +38,8 @@ var PingCommand = &Command{
 			return err
 		}
 
-		discordPing := time.Since(message.Timestamp).Milliseconds()
+		createdTimestamp, _ := discordgo.SnowflakeTimestamp(inter.ID)
+		discordPing := message.Timestamp.Sub(createdTimestamp).Milliseconds()
 
 		return builders.NewMessageSender(inter).
 			AddComponents(
