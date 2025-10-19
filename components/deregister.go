@@ -1,9 +1,9 @@
 package components
 
 import (
-	"context"
 	"strings"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/databases"
 	"git.wh64.net/muffin/goMuffin/utils"
@@ -11,62 +11,61 @@ import (
 )
 
 var DeregisterComponent *commands.Component = &commands.Component{
-	Parse: func(ctx *commands.ComponentContext) bool {
-		customId := ctx.Inter.MessageComponentData().CustomID
-		if !strings.HasPrefix(customId, utils.DeregisterAgree) && !strings.HasPrefix(customId, utils.DeregisterDisagree) {
+	Parse: func(inter *builders.InteractionCreate) bool {
+		customID := inter.MessageComponentData().CustomID
+		if !strings.HasPrefix(customID, utils.DeregisterAgree) && !strings.HasPrefix(customID, utils.DeregisterDisagree) {
 			return false
 		}
 
-		if ctx.Inter.User.ID != utils.GetDeregisterUserId(customId) {
+		if inter.User.ID != utils.GetDeregisterUserID(customID) {
 			return false
 		}
 		return true
 	},
-	Run: func(ctx *commands.ComponentContext) error {
-		err := ctx.Inter.DeferUpdate()
+	Run: func(inter *builders.InteractionCreate) error {
+		err := inter.DeferUpdate()
 		if err != nil {
 			return err
 		}
 
-		customId := ctx.Inter.MessageComponentData().CustomID
+		customID := inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
-		case strings.HasPrefix(customId, utils.DeregisterAgree):
-			filter := databases.User{UserId: ctx.Inter.User.ID}
-			_, err := databases.Database.Users.DeleteOne(context.TODO(), filter)
-			if err != nil {
+		case strings.HasPrefix(customID, utils.DeregisterAgree):
+			userID := inter.User.ID
+
+			if _, err := databases.GetDatabase().Users.Delete(userID); err != nil {
 				return err
 			}
 
-			_, err = databases.Database.Learns.DeleteMany(context.TODO(), filter)
-			if err != nil {
+			if _, err := databases.GetDatabase().Knowledge.DeleteByUserID(userID); err != nil {
 				return err
 			}
 
-			_, err = databases.Database.Memory.DeleteMany(context.TODO(), filter)
-			if err != nil {
+			if _, err := databases.GetDatabase().Memory.DeleteByUserID(userID); err != nil {
 				return err
 			}
 
-			return ctx.Inter.EditReply(&utils.InteractionEdit{
+			return inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetSuccessContainer(discordgo.TextDisplay{
-						Content: "탈퇴를 했어요.",
-					}),
+					builders.MakeSuccessContainer("탈퇴를 했어요."),
 				},
 			})
-		case strings.HasPrefix(customId, utils.DeregisterDisagree):
-			return ctx.Inter.EditReply(&utils.InteractionEdit{
+		case strings.HasPrefix(customID, utils.DeregisterDisagree):
+			return inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,
 				Components: &[]discordgo.MessageComponent{
-					utils.GetCanceledContainer(discordgo.TextDisplay{
-						Content: "탈퇴를 거부했어요.",
-					}),
+					builders.MakeCanceledContainer("탈퇴를 거부했어요."),
 				},
 			})
+		default:
+			return nil
 		}
-		return nil
 	},
+}
+
+func init() {
+	commands.GetDiscommand().LoadComponent(DeregisterComponent)
 }

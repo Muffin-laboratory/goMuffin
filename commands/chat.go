@@ -2,23 +2,22 @@ package commands
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"strings"
 
-	"git.wh64.net/muffin/goMuffin/chatbot"
+	"git.wh64.net/muffin/goMuffin/builders"
+	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-type chatCommandType string
-
 var (
-	chatCommandChatting chatCommandType = "하기"
-	chatCommandList     chatCommandType = "목록"
-	chatCommandCreate   chatCommandType = "생성"
-	chatCommandDelete   chatCommandType = "삭제"
+	chatCommandChatting                  = "하기"
+	chatCommandList                      = "목록"
+	chatCommandCreate                    = "생성"
+	chatCommandDelete                    = "삭제"
+	chatCommandSwitchMode                = "모드전환"
+	chatCommandReplyUser                 = "답장"
+	chatCommandCreateNewChatAfter12Hours = "12시간"
 )
 
 const chatNameMaxLength = 25
@@ -30,12 +29,12 @@ var ChatCommand *Command = &Command{
 		Options: []*discordgo.ApplicationCommandOption{
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        string(chatCommandList),
+				Name:        chatCommandList,
 				Description: "채팅 목록을 나열해요.",
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        string(chatCommandCreate),
+				Name:        chatCommandCreate,
 				Description: "새로운 채팅을 생성해요.",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
@@ -43,13 +42,13 @@ var ChatCommand *Command = &Command{
 						Name:        "이름",
 						Description: "채팅방의 이름 (25자 이내)",
 						MaxLength:   chatNameMaxLength,
-						Required:    true,
+						Required:    false,
 					},
 				},
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        string(chatCommandChatting),
+				Name:        chatCommandChatting,
 				Description: "이 봇이랑 대화해요.",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
@@ -62,337 +61,185 @@ var ChatCommand *Command = &Command{
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        string(chatCommandDelete),
+				Name:        chatCommandDelete,
 				Description: "채팅을 삭제해요.",
 				Options: []*discordgo.ApplicationCommandOption{
 					{
-						Type:        discordgo.ApplicationCommandOptionString,
-						Name:        "이름",
-						Description: "지울 채팅방의 이름",
-						MaxLength:   chatNameMaxLength,
-						Required:    true,
+						Type:         discordgo.ApplicationCommandOptionString,
+						Name:         "이름",
+						Description:  "지울 채팅방의 이름",
+						MaxLength:    chatNameMaxLength,
+						Required:     true,
+						Autocomplete: true,
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        chatCommandSwitchMode,
+				Description: "채팅 방식을 변경해요. (일반 <-> AI)",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "모드",
+						Description: "무슨 모드로 바꿀지 선택하세요.",
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "AI 모드",
+								Value: databases.ChattingAIMode,
+							},
+							{
+								Name:  "일반 모드",
+								Value: databases.ChattingMuffinMode,
+							},
+						},
+						Required: true,
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        chatCommandReplyUser,
+				Description: "이 봇이 대답할 때 멘션을 킬지 선택해요.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "활성화",
+						Description: "활성화 여부를 선택해요.",
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "활성화",
+								Value: 1,
+							},
+							{
+								Name:  "비활성화",
+								Value: 0,
+							},
+						},
+						Required: true,
+					},
+				},
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        chatCommandCreateNewChatAfter12Hours,
+				Description: "대답하고 12시간 뒤에 새로운 채팅을 시작할지 선택해요.",
+				Options: []*discordgo.ApplicationCommandOption{
+					{
+						Type:        discordgo.ApplicationCommandOptionInteger,
+						Name:        "활성화",
+						Description: "활성화 여부를 선택해요.",
+						Choices: []*discordgo.ApplicationCommandOptionChoice{
+							{
+								Name:  "활성화",
+								Value: 1,
+							},
+							{
+								Name:  "비활성화",
+								Value: 0,
+							},
+						},
+						Required: true,
 					},
 				},
 			},
 		},
 	},
-	Aliases: []string{"채팅"},
-	DetailedDescription: &DetailedDescription{
-		Usage: "/대화 (목록/생성/삭제) (이름:숫자(최대 25자, 목록에선 사용 불가능))",
-		Examples: []string{
-			"/대화 목록",
-			"/대화 생성 이름:머핀 냠냠",
-			"/대화 삭제 이름:뷁",
-		},
-	},
-	Category:                   Chatting,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsRegistered | CommandFlagsIsBlocked,
-	ChatInputRun: func(ctx *ChatInputContext) error {
-		var cType chatCommandType
-		var str string
+	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
+		case chatCommandChatting:
+			if err := inter.DeferReply(nil); err != nil {
+				return err
+			}
 
-		if opt, ok := ctx.Inter.Options[string(chatCommandChatting)]; ok {
-			ctx.Inter.DeferReply(nil)
-			cType = chatCommandChatting
-			str = opt.Options[0].StringValue()
-		} else if opt, ok := ctx.Inter.Options[string(chatCommandCreate)]; ok {
-			ctx.Inter.DeferReply(&discordgo.InteractionResponseData{
+			return subcommands.Chat(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandCreate:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral,
-			})
-			cType = chatCommandCreate
-			str = opt.Options[0].StringValue()
-		} else if _, ok := ctx.Inter.Options[string(chatCommandList)]; ok {
-			ctx.Inter.DeferReply(nil)
-			cType = chatCommandList
-		} else if _, ok := ctx.Inter.Options[string(chatCommandDelete)]; ok {
-			ctx.Inter.DeferReply(nil)
-			cType = chatCommandDelete
-			str = opt.Options[0].StringValue()
-		}
-		return chatCommandRun(cType, ctx.Inter, ctx.Inter.User, str)
-	},
-	MessageRun: func(ctx *MsgContext) error {
-		if len((*ctx.Args)) < 1 {
-			goto RequiredValue
-		}
-
-		switch (*ctx.Args)[0] {
-		case string(chatCommandCreate):
-			if len((*ctx.Args)) < 2 {
-				return utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름을 정해야해요."})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
+			}); err != nil {
+				return err
 			}
 
-			name := strings.Trim(strings.Join((*ctx.Args)[1:], " "), " ")
-			if len([]rune(name)) > 25 {
-				return utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름은 25자를 초과할 수 없어요."})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
+			return subcommands.Create(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandList:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
 			}
 
-			return chatCommandRun(chatCommandCreate, ctx.Msg, ctx.Msg.Author, name)
-		case string(chatCommandList):
-			return chatCommandRun(chatCommandList, ctx.Msg, ctx.Msg.Author, "")
-		case string(chatCommandDelete):
-			if len((*ctx.Args)) < 2 {
-				return utils.NewMessageSender(ctx.Msg).
-					AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅방의 이름을 적어야해요."})).
-					SetComponentsV2(true).
-					SetReply(true).
-					Send()
+			return subcommands.List(inter)
+		case chatCommandDelete:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
 			}
-			return chatCommandRun(chatCommandDelete, ctx.Msg, ctx.Msg.Author, strings.Join((*ctx.Args)[1:], " "))
+
+			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandSwitchMode:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.SwitchMode(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandReplyUser:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.SetReplyUser(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandCreateNewChatAfter12Hours:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.SetCreateNewChatAfter12Hours(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
-			goto RequiredValue
-		}
-
-	RequiredValue:
-		return utils.NewMessageSender(ctx.Msg).
-			AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "명령어의 첫번째 인자는 `생성`, `목록`중에 하나여야 해요."})).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
-	},
-}
-
-func chatCommandRun(cType chatCommandType, m any, user *discordgo.User, contentOrName string) error {
-	switch cType {
-	// 채팅하기는 슬래시 커맨드만 가능
-	case chatCommandChatting:
-		i := m.(*utils.InteractionCreate)
-
-		str, err := chatbot.ChatBot.GetResponse(user, contentOrName)
-		if err != nil {
-			log.Println(err)
-			i.EditReply(&utils.InteractionEdit{
-				Content: &str,
-			})
 			return nil
 		}
+	},
+	Autocomplete: func(inter *builders.InteractionCreate) error {
+		var choices []*discordgo.ApplicationCommandOptionChoice
+		var data []*databases.Chat
+		var focusedValue string
 
-		result := chatbot.ParseResult(str, i.Session, i)
-		return i.EditReply(&utils.InteractionEdit{
-			Content: &result,
-			AllowedMentions: &discordgo.MessageAllowedMentions{
-				Parse: []discordgo.AllowedMentionType{},
-				Users: []string{},
-				Roles: []string{},
-			},
-		})
-	case chatCommandCreate:
-		var dbUser databases.User
-
-		err := databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
-		if err != nil {
-			return err
-		}
-
-		if dbUser.ChattingMode == databases.ChattingMuffinMode {
-			return chatSendErrorMessage(m)
-		}
-
-		_, err = databases.CreateChat(user.ID, contentOrName)
-		if err != nil {
-			return err
-		}
-		return utils.NewMessageSender(m).
-			AddComponents(utils.GetSuccessContainer(discordgo.TextDisplay{Content: fmt.Sprintf("%s를 생성했어요. 이제 현재 채팅은 %s에요.", contentOrName, contentOrName)})).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
-	case chatCommandList:
-		var dbUser databases.User
-		var data []databases.Chat
-		var sections []discordgo.Section
-		var containers []*discordgo.Container
-
-		err := databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
-		if err != nil {
-			return err
-		}
-
-		if dbUser.ChattingMode == databases.ChattingMuffinMode {
-			return chatSendErrorMessage(m)
-		}
-
-		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{UserId: user.ID})
-		if err != nil {
-			return err
-		}
-
-		err = cur.All(context.TODO(), &data)
-		if err != nil {
-			return err
-		}
-
-		if len(data) == 0 {
-			return utils.NewMessageSender(m).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "채팅이 단 하나도 없어요. 새로운 채팅을 만들거나, 대화를 시작해 채팅을 만들어주세요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				SetEphemeral(true).
-				Send()
-		}
-
-		for i, data := range data {
-			var isDisabled bool
-			var textDisplay discordgo.TextDisplay
-
-			if data.Id == dbUser.ChatId {
-				textDisplay = discordgo.TextDisplay{
-					Content: fmt.Sprintf("**%d. %s\n (선택됨)**", i+1, data.Name),
-				}
-
-				isDisabled = true
-			} else {
-				textDisplay = discordgo.TextDisplay{
-					Content: fmt.Sprintf("%d. %s\n", i+1, data.Name),
-				}
-
-				isDisabled = false
+		for _, opt := range inter.ApplicationCommandData().Options[0].Options {
+			if opt.Focused {
+				focusedValue = opt.StringValue()
+				break
 			}
+		}
 
-			sections = append(sections, discordgo.Section{
-				Accessory: discordgo.Button{
-					Label:    "선택",
-					Style:    discordgo.SuccessButton,
-					CustomID: utils.MakeSelectChat(data.Id.Hex(), i+1, user.ID),
-					Disabled: isDisabled,
-				},
-				Components: []discordgo.MessageComponent{textDisplay},
+		cur, err := databases.GetDatabase().Chats.Find(context.TODO(), bson.M{"name": bson.M{"$regex": focusedValue}})
+		if err != nil {
+			return err
+		}
+
+		defer cur.Close(context.TODO())
+
+		if err = cur.All(context.TODO(), &data); err != nil {
+			return err
+		}
+
+		for _, data := range data {
+			choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+				Name:  data.Name,
+				Value: data.Name,
 			})
 		}
 
-		textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록", user.GlobalName)}
-		container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
-		for i, section := range sections {
-			container.Components = append(container.Components, section, discordgo.Separator{})
-
-			if (i+1)%5 == 0 {
-				containers = append(containers, container)
-				container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
-				continue
-			}
-		}
-
-		if len(container.Components) > 1 {
-			containers = append(containers, container)
-		}
-
-		return utils.PaginationEmbedBuilder(m).
-			AddContainers(containers...).
-			Start()
-	case chatCommandDelete:
-		var dbUser databases.User
-		var data []databases.Chat
-
-		err := databases.Database.Users.FindOne(context.TODO(), databases.User{UserId: user.ID}).Decode(&dbUser)
-		if err != nil {
-			return err
-		}
-
-		if dbUser.ChattingMode == databases.ChattingMuffinMode {
-			return chatSendErrorMessage(m)
-		}
-
-		cur, err := databases.Database.Chats.Find(context.TODO(), databases.Chat{Name: contentOrName})
-		if err != nil {
-			return err
-		}
-
-		err = cur.All(context.TODO(), &data)
-		if err != nil {
-			return err
-		}
-
-		if len(data) == 0 {
-			return utils.NewMessageSender(m).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당하는 채팅을 찾을 수 없어요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-		}
-
-		if len(data) > 1 {
-			var sections []discordgo.Section
-			var containers []*discordgo.Container
-
-			for i, data := range data {
-				sections = append(sections, discordgo.Section{
-					Accessory: discordgo.Button{
-						Label:    "삭제",
-						Style:    discordgo.DangerButton,
-						CustomID: utils.MakeDeleteChat(data.Id.Hex(), i+1, user.ID),
-					},
-					Components: []discordgo.MessageComponent{
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("%d. %s\n", i+1, data.Name),
-						},
-					},
-				})
-			}
-
-			textDisplay := discordgo.TextDisplay{Content: fmt.Sprintf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", user.GlobalName)}
-			container := &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
-			for i, section := range sections {
-				container.Components = append(container.Components, section, discordgo.Separator{})
-
-				if (i+1)%10 == 0 {
-					containers = append(containers, container)
-					container = &discordgo.Container{Components: []discordgo.MessageComponent{textDisplay}}
-					continue
-				}
-			}
-
-			if len(container.Components) > 1 {
-				containers = append(containers, container)
-			}
-
-			return utils.PaginationEmbedBuilder(m).
-				AddContainers(containers...).
-				Start()
-		}
-
-		return utils.NewMessageSender(m).
-			AddComponents(discordgo.Container{
-				Components: []discordgo.MessageComponent{
-					discordgo.TextDisplay{Content: fmt.Sprintf("### 채팅 %s 삭제", contentOrName)},
-					discordgo.TextDisplay{Content: "- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**"},
-					discordgo.ActionsRow{
-						Components: []discordgo.MessageComponent{
-							discordgo.Button{
-								Label:    "삭제",
-								Style:    discordgo.DangerButton,
-								CustomID: utils.MakeDeleteChat(data[0].Id.Hex(), 0, user.ID),
-							},
-							discordgo.Button{
-								Label:    "취소",
-								Style:    discordgo.PrimaryButton,
-								CustomID: utils.MakeDeleteChatCancel(user.ID),
-							},
-						},
-					},
-				},
-			}).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
-	}
-	return nil
+		return inter.Autocomplete(choices)
+	},
 }
 
-func chatSendErrorMessage(m any) error {
-	return utils.NewMessageSender(m).
-		AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: fmt.Sprintf("채팅모드가 %s여야해요.", databases.ModeString(databases.ChattingAIMode))})).
-		SetComponentsV2(true).
-		SetReply(true).
-		SetEphemeral(true).
-		Send()
+func init() {
+	GetDiscommand().LoadCommand(ChatCommand)
 }

@@ -3,88 +3,44 @@ package commands
 import (
 	"sync"
 
+	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/databases"
-	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-type modalRun func(ctx *ModalContext) error
-type messageRun func(ctx *MsgContext) error
-type chatInputRun func(ctx *ChatInputContext) error
-type componentRun func(ctx *ComponentContext) error
+type run func(inter *builders.InteractionCreate) error
+type parse func(inter *builders.InteractionCreate) bool
 
-type modalParse func(ctx *ModalContext) bool
-type componentParse func(ctx *ComponentContext) bool
-
-type Category string
 type CommandFlags uint8
-
-type DetailedDescription struct {
-	Usage    string
-	Examples []string
-}
 
 type Command struct {
 	*discordgo.ApplicationCommand
-	Aliases                    []string
-	DetailedDescription        *DetailedDescription
-	Category                   Category
-	RegisterApplicationCommand bool
-	RegisterMessageCommand     bool
-	Flags                      CommandFlags
-	MessageRun                 messageRun
-	ChatInputRun               chatInputRun
+	Flags        CommandFlags
+	Run          run
+	Autocomplete run
 }
 
-type DiscommandStruct struct {
+type Discommand struct {
 	Commands   map[string]*Command
 	Components []*Component
-	Aliases    map[string]string
 	Modals     []*Modal
 }
 
-type MsgContext struct {
-	Msg     *utils.MessageCreate
-	Args    *[]string
-	Command *Command
-}
-
-type ChatInputContext struct {
-	Inter   *utils.InteractionCreate
-	Command *Command
-}
-
-type ComponentContext struct {
-	Inter     *utils.InteractionCreate
-	Component *Component
-}
-
-type ModalContext struct {
-	Inter *utils.InteractionCreate
-	Modal *Modal
-}
-
 type Component struct {
-	Parse componentParse
-	Run   componentRun
+	Parse parse
+	Run   run
 }
 
 type Modal struct {
-	Parse modalParse
-	Run   modalRun
+	Parse parse
+	Run   run
 }
 
 const (
-	Chatting      Category = "채팅"
-	General       Category = "일반"
-	DeveloperOnly Category = "개발자 전용"
-)
-
-const (
-	CommandFlagsIsDeveloper CommandFlags = 1 << iota
-	CommandFlagsIsRegistered
+	CommandFlagsIsRegistered CommandFlags = 1 << iota
 	CommandFlagsIsBlocked
+	CommandFlagsIsDeveloperOnlyCommand
 )
 
 var (
@@ -93,185 +49,131 @@ var (
 	modalMutex     sync.Mutex
 )
 
-var Discommand *DiscommandStruct
+var instance *Discommand
 
-func init() {
-	Discommand = &DiscommandStruct{
-		Commands:   map[string]*Command{},
-		Aliases:    map[string]string{},
-		Components: []*Component{},
-		Modals:     []*Modal{},
+func GetDiscommand() *Discommand {
+	if instance == nil {
+		instance = &Discommand{
+			Commands:   map[string]*Command{},
+			Components: []*Component{},
+			Modals:     []*Modal{},
+		}
 	}
+
+	return instance
 }
 
-func (d *DiscommandStruct) LoadCommand(c *Command) {
+func (d *Discommand) LoadCommand(c *Command) {
 	defer commandMutex.Unlock()
 	commandMutex.Lock()
 	d.Commands[c.Name] = c
-	d.Aliases[c.Name] = c.Name
-
-	for _, alias := range c.Aliases {
-		d.Aliases[alias] = c.Name
-	}
 }
 
-func (d *DiscommandStruct) LoadComponent(c *Component) {
+func (d *Discommand) LoadComponent(c *Component) {
 	defer componentMutex.Unlock()
 	componentMutex.Lock()
 	d.Components = append(d.Components, c)
 }
 
-func (d *DiscommandStruct) LoadModal(m *Modal) {
+func (d *Discommand) LoadModal(m *Modal) {
 	defer modalMutex.Unlock()
 	modalMutex.Lock()
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *DiscommandStruct) MessageRun(name string, s *discordgo.Session, msg *discordgo.MessageCreate, args []string) error {
-	m := &utils.MessageCreate{
-		MessageCreate: msg,
-		Session:       s,
-	}
-
-	if command, ok := d.Commands[name]; ok && command.RegisterMessageCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && m.Author.ID != configs.Config.Bot.OwnerId {
-			utils.NewMessageSender(m).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(m.Author.ID) {
-			utils.NewMessageSender(m).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		blocked, reason := databases.Database.IsUserBlocked(m.Author.ID)
-		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
-			user, _ := s.User(m.Author.ID)
-			utils.NewMessageSender(m).
-				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		utils.NewMessageSender(m).
-			AddComponents(discordgo.Container{
-				Components: []discordgo.MessageComponent{
-					discordgo.TextDisplay{Content: "### ⚠️ 고지"},
-					discordgo.TextDisplay{
-						Content: "메세지 기반 명령어는 머핀봇 7.0.0 (MadeleineV2)부터 지원이 종료될 예정이에요. " +
-							"따라서 앞으로는 빗금 기반 명령어를 사용해주세요.",
-					},
-				},
-			}).
-			SetReply(true).
-			SetComponentsV2(true).
-			Send()
-
-		return command.MessageRun(&MsgContext{m, &args, command})
-	}
-	return nil
-}
-
-func (d *DiscommandStruct) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
-	i := &utils.InteractionCreate{
+func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	i := &builders.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
-		Options:           utils.GetInteractionOptions(inter),
+		Options:           builders.MakeCommandInteractionOptionsMap(inter.ApplicationCommandData().Options),
 	}
 
-	i.InteractionCreate.User = utils.GetInteractionUser(inter)
+	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
-	if command, ok := d.Commands[name]; ok && command.RegisterApplicationCommand {
-		if command.Flags&CommandFlagsIsDeveloper != 0 && i.User.ID != configs.Config.Bot.OwnerId {
-			utils.NewMessageSender(i).
-				AddComponents(utils.GetErrorContainer(discordgo.TextDisplay{Content: "해당 명령어는 개발자만 사용 가능해요."})).
+	if command, ok := d.Commands[name]; ok {
+		if command.Flags&CommandFlagsIsDeveloperOnlyCommand != 0 && i.User.ID != configs.GetConfig().Bot.OwnerID {
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeDeclineContainer("이 명령어는 개발자 전용 명령어에요.")).
+				SetComponentsV2(true).
+				SetEphemeral(true).
+				Send()
+		}
+
+		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				SetReply(true).
 				Send()
-			return nil
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.Database.IsUser(i.User.ID) {
-			utils.NewMessageSender(i).
-				AddComponents(utils.GetUserIsNotRegisteredErrContainer(configs.Config.Bot.Prefix)).
-				SetComponentsV2(true).
-				SetEphemeral(true).
-				SetReply(true).
-				Send()
-			return nil
-		}
-
-		blocked, reason := databases.Database.IsUserBlocked(i.User.ID)
+		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
-			utils.NewMessageSender(i).
-				AddComponents(utils.GetUserIsBlockedContainer(user.GlobalName, reason)).
+			return builders.NewMessageSender(i).
+				AddComponents(builders.MakeUserIsBlockedContainer(user.GlobalName, reason)).
 				SetComponentsV2(true).
 				SetReply(true).
 				Send()
-			return nil
 		}
 
-		return command.ChatInputRun(&ChatInputContext{i, command})
+		return command.Run(i)
+
 	}
 	return nil
 }
 
-func (d *DiscommandStruct) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
-	var err error
-
-	i := &utils.InteractionCreate{
+func (d *Discommand) ChatInputAutocomplete(name string, s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	i := &builders.InteractionCreate{
 		InteractionCreate: inter,
 		Session:           s,
 	}
 
-	i.InteractionCreate.User = utils.GetInteractionUser(inter)
-	data := &ComponentContext{
-		Inter: i,
+	i.InteractionCreate.User = builders.GetInteractionUser(inter)
+
+	if command, ok := d.Commands[name]; ok {
+		return command.Autocomplete(i)
 	}
 
-	for _, c := range d.Components {
-		data.Component = c
+	return nil
+}
 
-		if !c.Parse(data) {
+func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+	var err error
+
+	i := &builders.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
+	}
+
+	i.InteractionCreate.User = builders.GetInteractionUser(inter)
+
+	for _, c := range d.Components {
+		if !c.Parse(i) {
 			continue
 		}
 
-		err = c.Run(data)
+		err = c.Run(i)
 		break
 	}
 	return err
 }
 
-func (d *DiscommandStruct) ModalRun(s *discordgo.Session, i *discordgo.InteractionCreate) error {
+func (d *Discommand) ModalRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
 	var err error
 
-	data := &ModalContext{
-		Inter: &utils.InteractionCreate{
-			InteractionCreate: i,
-			Session:           s,
-		},
+	i := &builders.InteractionCreate{
+		InteractionCreate: inter,
+		Session:           s,
 	}
 
 	for _, m := range d.Modals {
-		data.Modal = m
-
-		if !m.Parse(data) {
+		if !m.Parse(i) {
 			continue
 		}
 
-		err = m.Run(data)
+		err = m.Run(i)
 		break
 	}
 	return err

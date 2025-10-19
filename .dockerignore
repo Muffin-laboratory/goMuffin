@@ -1,10 +1,9 @@
-.git/
 .vscode/
 .github/
 .env*
-.gitignore
 .dockerignore
 README.md
-update.sh
+scripts/
 compose.yml
 Dockerfile
+data/

@@ -1,88 +1,68 @@
 package commands
 
 import (
-	"fmt"
-
-	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/utils"
+	"git.wh64.net/muffin/goMuffin/builders"
+	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/information"
 	"github.com/bwmarrin/discordgo"
+)
+
+const (
+	informationCommandBot        = "봇"
+	informationCommandUser       = "유저"
+	informationCommandPatchNotes = "패치내역"
 )
 
 var InformationCommand *Command = &Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "정보",
 		Description: "해당 봇의 정보를 알려줘요.",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        informationCommandBot,
+				Description: "해당 봇의 정보를 확인해요.",
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        informationCommandUser,
+				Description: "명령어를 친 유저의 정보를 확인해요.",
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionSubCommand,
+				Name:        informationCommandPatchNotes,
+				Description: "해당 봇의 패치 내역을 확인해요.",
+			},
+		},
 	},
-	DetailedDescription: &DetailedDescription{
-		Usage: "/정보",
-	},
-	Category:                   General,
-	RegisterApplicationCommand: true,
-	RegisterMessageCommand:     true,
-	Flags:                      CommandFlagsIsBlocked,
-	MessageRun: func(ctx *MsgContext) error {
-		return informationRun(ctx.Msg.Session, ctx.Msg)
-	},
-	ChatInputRun: func(ctx *ChatInputContext) error {
-		return informationRun(ctx.Inter.Session, ctx.Inter)
+	Flags: CommandFlagsIsBlocked,
+	Run: func(inter *builders.InteractionCreate) error {
+		switch inter.ApplicationCommandData().Options[0].Name {
+		case informationCommandBot:
+			if err := inter.DeferReply(nil); err != nil {
+				return err
+			}
+
+			return subcommands.InfoBot(inter)
+		case informationCommandUser:
+			if err := inter.DeferReply(&discordgo.InteractionResponseData{
+				Flags: discordgo.MessageFlagsEphemeral,
+			}); err != nil {
+				return err
+			}
+
+			return subcommands.InfoUser(inter)
+		case informationCommandPatchNotes:
+			if err := inter.DeferReply(nil); err != nil {
+				return err
+			}
+
+			return subcommands.InfoPatchLogs(inter)
+		default:
+			return nil
+		}
 	},
 }
 
-func informationRun(s *discordgo.Session, m any) error {
-	owner, err := s.User(configs.Config.Bot.OwnerId)
-	if err != nil {
-		return err
-	}
-	return utils.NewMessageSender(m).
-		AddComponents(discordgo.Container{
-			Components: []discordgo.MessageComponent{
-				discordgo.Section{
-					Accessory: discordgo.Thumbnail{
-						Media: discordgo.UnfurledMediaItem{
-							URL: s.State.User.AvatarURL("512"),
-						},
-					},
-					Components: []discordgo.MessageComponent{
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("### %s의 정보", s.State.User.Username),
-						},
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **제작자**\n> %s", owner.Username),
-						},
-						discordgo.TextDisplay{
-							Content: fmt.Sprintf("- **버전**\n> %s", configs.MUFFIN_VERSION),
-						},
-					},
-				},
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **최근에 업데이트된 날짜**\n> %s", utils.Time(configs.UpdatedAt, utils.RelativeTime)),
-				},
-				discordgo.TextDisplay{
-					Content: fmt.Sprintf("- **봇이 시작한 시각**\n> %s", utils.Time(configs.StartedAt, utils.RelativeTime)),
-				},
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label: "개인정보처리방침",
-							URL:   configs.Config.Service.PrivacyPolicyURL,
-							Style: discordgo.LinkButton,
-							Emoji: &discordgo.ComponentEmoji{
-								Name: "🔗",
-							},
-						},
-						discordgo.Button{
-							Label: "서비스 이용약관",
-							URL:   configs.Config.Service.TermOfServiceURL,
-							Style: discordgo.LinkButton,
-							Emoji: &discordgo.ComponentEmoji{
-								Name: "🔗",
-							},
-						},
-					},
-				},
-			},
-		}).
-		SetComponentsV2(true).
-		SetReply(true).
-		Send()
+func init() {
+	GetDiscommand().LoadCommand(InformationCommand)
 }
