@@ -3,14 +3,18 @@ package builders
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
+const EndDuration = time.Minute * 10
+
 // PaginationContainer is container with page
 type PaginationContainer struct {
 	Containers []*discordgo.Container
+	timer      *time.Timer
 	Current    int
 	Total      int
 	ID         string
@@ -21,6 +25,7 @@ var paginationContainers = make(map[string]*PaginationContainer)
 
 func PaginationContainerBuilder(m any) *PaginationContainer {
 	var userID string
+	var p PaginationContainer
 
 	switch m := m.(type) {
 	case *MessageCreate:
@@ -30,11 +35,27 @@ func PaginationContainerBuilder(m any) *PaginationContainer {
 	}
 
 	id := fmt.Sprintf("%s/%d", userID, rand.Intn(100))
-	return &PaginationContainer{
+	p = PaginationContainer{
 		Current: 1,
 		ID:      id,
 		m:       m,
+		timer:   time.NewTimer(EndDuration),
 	}
+
+	p.startTimer()
+
+	return &p
+}
+
+func (p *PaginationContainer) startTimer() {
+	go func() {
+		<-p.timer.C
+		delete(paginationContainers, p.ID)
+	}()
+}
+
+func (p *PaginationContainer) resetTimer() {
+	p.timer.Reset(EndDuration)
 }
 
 func (p *PaginationContainer) AddContainers(containers ...*Container) *PaginationContainer {
@@ -114,6 +135,8 @@ func (p *PaginationContainer) Next(i *InteractionCreate) error {
 }
 
 func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
+	p.resetTimer()
+
 	if page <= 0 {
 		p.Current = 1
 	} else if page > p.Total {
