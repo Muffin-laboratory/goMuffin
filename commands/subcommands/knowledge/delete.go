@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,7 +15,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 
 	command := opts["단어"].StringValue()
 
-	data, err := databases.GetDatabase().Knowledge.GetByFilter(databases.Knowledge{UserID: i.User.ID, Command: command})
+	data, err := repository.GetDatabase().Knowledge.GetByFilter(repository.Knowledge{UserID: i.User.ID, Command: command})
 	if err != nil {
 		return err
 	}

@@ -5,27 +5,27 @@ import (
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func List(i *builders.InteractionCreate) error {
-	var data []databases.Chat
+	var data []repository.Chat
 	var sections []*builders.Section
 	var containers []*builders.Container
 
-	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
 		return err
 	}
 
-	if dbUser.ChattingMode == databases.ChattingMuffinMode {
+	if dbUser.ChattingMode == repository.ChattingMuffinMode {
 		return chatSendErrorMessage(i)
 	}
 
-	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), bson.M{"user_id": i.User.ID})
+	cur, err := repository.GetDatabase().Chats.Find(context.TODO(), bson.M{"user_id": i.User.ID})
 	if err != nil {
 		return err
 	}

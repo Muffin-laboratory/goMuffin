@@ -3,7 +3,7 @@ package commands
 import (
 	"git.wh64.net/muffin/goMuffin/builders"
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/knowledge"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -117,7 +117,7 @@ var KnowledgeCommand = &Command{
 			}
 		}
 
-		data, err := databases.GetDatabase().Knowledge.GetByFilter(bson.M{
+		data, err := repository.GetDatabase().Knowledge.GetByFilter(bson.M{
 			"user_id": inter.User.ID,
 			"command": bson.M{
 				"$regex": focusedValue,

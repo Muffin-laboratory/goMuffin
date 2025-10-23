@@ -8,7 +8,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -31,7 +31,7 @@ var UnblockCommand = &commands.Command{
 	Flags: commands.CommandFlagsIsDeveloperOnlyCommand,
 	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
-		var data []*databases.User
+		var data []*repository.User
 		var focusedValue string
 
 		for _, opt := range inter.ApplicationCommandData().Options {
@@ -41,7 +41,7 @@ var UnblockCommand = &commands.Command{
 			}
 		}
 
-		cur, err := databases.GetDatabase().Users.Collection.Find(context.TODO(), bson.M{"blocked": true})
+		cur, err := repository.GetDatabase().Users.Collection.Find(context.TODO(), bson.M{"blocked": true})
 		if err != nil {
 			return err
 		}
@@ -98,7 +98,7 @@ var UnblockCommand = &commands.Command{
 			return err
 		}
 
-		if !databases.GetDatabase().Users.IsUser(userID) {
+		if !repository.GetDatabase().Users.IsUser(userID) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName))).
 				SetComponentsV2(true).
@@ -106,7 +106,7 @@ var UnblockCommand = &commands.Command{
 				Send()
 		}
 
-		if _, err = databases.GetDatabase().Users.Update(userID, &databases.UserUpdate{
+		if _, err = repository.GetDatabase().Users.Update(userID, &repository.UserUpdate{
 			Blocked:       &blocked,
 			BlockedReason: &reason,
 		}); err != nil {

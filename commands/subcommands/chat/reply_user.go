@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 )
 
 func SetReplyUser(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
@@ -16,7 +16,7 @@ func SetReplyUser(i *builders.InteractionCreate, opts builders.CommandInteractio
 		text = "활성화"
 	}
 
-	if _, err := databases.GetDatabase().Users.Update(i.User.ID, &databases.UserUpdate{
+	if _, err := repository.GetDatabase().Users.Update(i.User.ID, &repository.UserUpdate{
 		ReplyUser: &replyUser,
 	}); err != nil {
 		return err

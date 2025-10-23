@@ -10,7 +10,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/chatbot"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -30,7 +30,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 			content := strings.TrimPrefix(m.Content, config.Bot.Prefix)
 
-			if !databases.GetDatabase().Users.IsUser(m.Author.ID) {
+			if !repository.GetDatabase().Users.IsUser(m.Author.ID) {
 				builders.NewMessageSender(m).
 					AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 					SetComponentsV2(true).
@@ -40,7 +40,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 
-			blocked, reason := databases.GetDatabase().Users.IsUserBlocked(m.Author.ID)
+			blocked, reason := repository.GetDatabase().Users.IsUserBlocked(m.Author.ID)
 			if blocked {
 				user, _ := s.User(m.Author.ID)
 				builders.NewMessageSender(m).
@@ -54,7 +54,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 			s.ChannelTyping(m.ChannelID)
 
-			dbUser, err := databases.GetDatabase().Users.Get(m.Author.ID)
+			dbUser, err := repository.GetDatabase().Users.Get(m.Author.ID)
 			if err != nil {
 				owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 				log.Println(err)
@@ -99,7 +99,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		} else {
 			if m.Author.ID == config.Chatbot.Train.UserID {
-				if _, err := databases.GetDatabase().Texts.InsertOne(context.TODO(), databases.Text{
+				if _, err := repository.GetDatabase().Texts.InsertOne(context.TODO(), repository.Text{
 					Text:      m.Content,
 					Persona:   "muffin",
 					CreatedAt: time.Now(),

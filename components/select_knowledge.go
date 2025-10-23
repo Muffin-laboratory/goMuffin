@@ -6,7 +6,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -27,7 +27,7 @@ var SelectKnowledgeComponent = &commands.Component{
 
 		command := utils.GetSelectKnowledgeCommand(inter.MessageComponentData().CustomID)
 
-		data, err := databases.GetDatabase().Knowledge.GetByFilter(databases.Knowledge{UserID: inter.User.ID, Command: command})
+		data, err := repository.GetDatabase().Knowledge.GetByFilter(repository.Knowledge{UserID: inter.User.ID, Command: command})
 		if err != nil {
 			return err
 		}

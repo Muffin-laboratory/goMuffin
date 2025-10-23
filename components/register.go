@@ -7,7 +7,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -34,7 +34,7 @@ var RegisterComponent *commands.Component = &commands.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.ServiceAgree):
-			if _, err := databases.GetDatabase().Users.Create(inter.User.ID); err != nil {
+			if _, err := repository.GetDatabase().Users.Create(inter.User.ID); err != nil {
 				return err
 			}
 

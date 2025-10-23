@@ -6,7 +6,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 )
 
@@ -43,7 +43,7 @@ func Learn(i *builders.InteractionCreate, opts builders.CommandInteractionOption
 		}
 	}
 
-	if _, err := databases.GetDatabase().Knowledge.Create(i.User.ID, command, result); err != nil {
+	if _, err := repository.GetDatabase().Knowledge.Create(i.User.ID, command, result); err != nil {
 		return err
 	}
 

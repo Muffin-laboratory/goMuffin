@@ -5,7 +5,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -86,11 +86,11 @@ var ChatCommand *Command = &Command{
 						Choices: []*discordgo.ApplicationCommandOptionChoice{
 							{
 								Name:  "AI 모드",
-								Value: databases.ChattingAIMode,
+								Value: repository.ChattingAIMode,
 							},
 							{
 								Name:  "일반 모드",
-								Value: databases.ChattingMuffinMode,
+								Value: repository.ChattingMuffinMode,
 							},
 						},
 						Required: true,
@@ -208,7 +208,7 @@ var ChatCommand *Command = &Command{
 	},
 	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
-		var data []*databases.Chat
+		var data []*repository.Chat
 		var focusedValue string
 
 		for _, opt := range inter.ApplicationCommandData().Options[0].Options {
@@ -218,7 +218,7 @@ var ChatCommand *Command = &Command{
 			}
 		}
 
-		cur, err := databases.GetDatabase().Chats.Find(context.TODO(), bson.M{"name": bson.M{"$regex": focusedValue}})
+		cur, err := repository.GetDatabase().Chats.Find(context.TODO(), bson.M{"name": bson.M{"$regex": focusedValue}})
 		if err != nil {
 			return err
 		}

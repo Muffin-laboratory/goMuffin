@@ -5,7 +5,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -35,15 +35,15 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
 			userID := inter.User.ID
 
-			if _, err := databases.GetDatabase().Users.Delete(userID); err != nil {
+			if _, err := repository.GetDatabase().Users.Delete(userID); err != nil {
 				return err
 			}
 
-			if _, err := databases.GetDatabase().Knowledge.DeleteByUserID(userID); err != nil {
+			if _, err := repository.GetDatabase().Knowledge.DeleteByUserID(userID); err != nil {
 				return err
 			}
 
-			if _, err := databases.GetDatabase().Memory.DeleteByUserID(userID); err != nil {
+			if _, err := repository.GetDatabase().Memory.DeleteByUserID(userID); err != nil {
 				return err
 			}
 

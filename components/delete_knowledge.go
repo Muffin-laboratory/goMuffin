@@ -6,7 +6,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -37,7 +37,7 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		}
 
 		id, itemID := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
-		if _, err := databases.GetDatabase().Knowledge.Delete(id); err != nil {
+		if _, err := repository.GetDatabase().Knowledge.Delete(id); err != nil {
 			return err
 		}
 

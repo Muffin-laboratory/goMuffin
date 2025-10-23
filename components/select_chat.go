@@ -6,7 +6,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -38,7 +38,7 @@ var SelectChatComponent *commands.Component = &commands.Component{
 
 		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
 
-		if _, err := databases.GetDatabase().Users.Update(inter.User.ID, &databases.UserUpdate{
+		if _, err := repository.GetDatabase().Users.Update(inter.User.ID, &repository.UserUpdate{
 			ChatID: &id,
 		}); err != nil {
 			return err

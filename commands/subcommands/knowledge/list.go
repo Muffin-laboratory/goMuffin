@@ -5,7 +5,7 @@ import (
 	"slices"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -29,7 +29,7 @@ func List(i *builders.InteractionCreate, opts builders.CommandInteractionOptions
 		command = "전체"
 	}
 
-	data, err := databases.GetDatabase().Knowledge.GetByFilter(filter)
+	data, err := repository.GetDatabase().Knowledge.GetByFilter(filter)
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -37,7 +37,7 @@ func makePrompt(systemPrompt string, user *discordgo.User) (string, error) {
 		)
 	}
 
-	knowledge, err := databases.GetDatabase().Knowledge.Get(user.ID)
+	knowledge, err := repository.GetDatabase().Knowledge.Get(user.ID)
 	if err != nil {
 		return "", err
 	}

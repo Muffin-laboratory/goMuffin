@@ -5,7 +5,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -19,7 +19,7 @@ var RegisterCommand *Command = &Command{
 	Run: func(inter *builders.InteractionCreate) error {
 		userID := inter.User.ID
 
-		if databases.GetDatabase().Users.IsUser(userID) {
+		if repository.GetDatabase().Users.IsUser(userID) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 /탈퇴를 이용해주세요.")).
 				SetComponentsV2(true).

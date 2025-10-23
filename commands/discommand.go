@@ -5,7 +5,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -99,7 +99,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 				Send()
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !databases.GetDatabase().Users.IsUser(i.User.ID) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !repository.GetDatabase().Users.IsUser(i.User.ID) {
 			return builders.NewMessageSender(i).
 				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 				SetComponentsV2(true).
@@ -108,7 +108,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 				Send()
 		}
 
-		blocked, reason := databases.GetDatabase().Users.IsUserBlocked(i.User.ID)
+		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
 			return builders.NewMessageSender(i).

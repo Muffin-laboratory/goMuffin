@@ -7,7 +7,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -50,11 +50,11 @@ var DeleteChatComponent = &commands.Component{
 
 		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
 
-		if _, err := databases.GetDatabase().Chats.DeleteOne(context.TODO(), databases.Chat{ID: id}); err != nil {
+		if _, err := repository.GetDatabase().Chats.DeleteOne(context.TODO(), repository.Chat{ID: id}); err != nil {
 			return err
 		}
 
-		if _, err := databases.GetDatabase().Memory.DeleteByChatID(id); err != nil {
+		if _, err := repository.GetDatabase().Memory.DeleteByChatID(id); err != nil {
 			return err
 		}
 

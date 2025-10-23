@@ -7,7 +7,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/bwmarrin/discordgo"
 )
@@ -43,7 +43,7 @@ var BlockCommand = &commands.Command{
 			}
 		}
 
-		data, err := databases.GetDatabase().Users.All()
+		data, err := repository.GetDatabase().Users.All()
 		if err != nil {
 			return err
 		}
@@ -97,7 +97,7 @@ var BlockCommand = &commands.Command{
 			return err
 		}
 
-		if !databases.GetDatabase().Users.IsUser(userID) {
+		if !repository.GetDatabase().Users.IsUser(userID) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName))).
 				SetComponentsV2(true).
@@ -105,7 +105,7 @@ var BlockCommand = &commands.Command{
 				Send()
 		}
 
-		if _, err = databases.GetDatabase().Users.Update(userID, &databases.UserUpdate{
+		if _, err = repository.GetDatabase().Users.Update(userID, &repository.UserUpdate{
 			Blocked:       &blocked,
 			BlockedReason: &reason,
 		}); err != nil {

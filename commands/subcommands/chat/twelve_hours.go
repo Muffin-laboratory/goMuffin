@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 )
 
 func SetCreateNewChatAfter12Hours(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
@@ -16,7 +16,7 @@ func SetCreateNewChatAfter12Hours(i *builders.InteractionCreate, opts builders.C
 		text = "활성화"
 	}
 
-	if _, err := databases.GetDatabase().Users.Update(i.User.ID, &databases.UserUpdate{
+	if _, err := repository.GetDatabase().Users.Update(i.User.ID, &repository.UserUpdate{
 		CreateNewChatAfter12Hours: &createNewChatAfter12Hours,
 	}); err != nil {
 		return err

@@ -12,7 +12,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/commands"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -56,7 +56,7 @@ func main() {
 		}
 	}
 
-	defer databases.GetDatabase().Disconnect()
+	defer repository.GetDatabase().Disconnect()
 
 	if port := &configs.GetConfig().IntegrateMDC.Server.Port; *port != 0 {
 		go func() {

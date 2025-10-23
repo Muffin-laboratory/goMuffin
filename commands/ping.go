@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -21,7 +21,7 @@ var PingCommand = &Command{
 		title := fmt.Sprintf("### 🏓 %s의 지연시간", inter.Session.State.User.Username)
 
 		start := time.Now()
-		if err := databases.GetDatabase().Client.Ping(context.TODO(), nil); err != nil {
+		if err := repository.GetDatabase().Client.Ping(context.TODO(), nil); err != nil {
 			return err
 		}
 		dbPing = time.Since(start).Milliseconds()

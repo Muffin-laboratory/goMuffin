@@ -6,7 +6,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -25,20 +25,20 @@ func InfoUser(i *builders.InteractionCreate) error {
 		return err
 	}
 
-	var currentChat databases.Chat
+	var currentChat repository.Chat
 
-	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
 		return err
 	}
 
-	if err = databases.GetDatabase().Chats.FindOne(context.TODO(), databases.Chat{
+	if err = repository.GetDatabase().Chats.FindOne(context.TODO(), repository.Chat{
 		ID: dbUser.ChatID,
 	}).Decode(&currentChat); err != nil {
 		return err
 	}
 
-	chatLength, err := databases.GetDatabase().Memory.Collection.CountDocuments(context.TODO(), databases.Memory{UserID: i.User.ID})
+	chatLength, err := repository.GetDatabase().Memory.Collection.CountDocuments(context.TODO(), repository.Memory{UserID: i.User.ID})
 	if err != nil {
 		return err
 	}

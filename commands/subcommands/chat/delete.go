@@ -5,26 +5,26 @@ import (
 	"fmt"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
 func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
-	var data []databases.Chat
+	var data []repository.Chat
 
 	name := opts["이름"].StringValue()
 
-	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
 		return err
 	}
 
-	if dbUser.ChattingMode == databases.ChattingMuffinMode {
+	if dbUser.ChattingMode == repository.ChattingMuffinMode {
 		return chatSendErrorMessage(i)
 	}
 
-	cur, err := databases.GetDatabase().Chats.Find(context.TODO(), databases.Chat{Name: name})
+	cur, err := repository.GetDatabase().Chats.Find(context.TODO(), repository.Chat{Name: name})
 	if err != nil {
 		return err
 	}

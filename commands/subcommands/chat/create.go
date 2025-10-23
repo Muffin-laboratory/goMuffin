@@ -5,7 +5,7 @@ import (
 	"math/rand"
 
 	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 )
 
 func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
@@ -15,16 +15,16 @@ func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 		name = opt.StringValue()
 	}
 
-	dbUser, err := databases.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
 	if err != nil {
 		return err
 	}
 
-	if dbUser.ChattingMode == databases.ChattingMuffinMode {
+	if dbUser.ChattingMode == repository.ChattingMuffinMode {
 		return chatSendErrorMessage(i)
 	}
 
-	if _, err := databases.GetDatabase().Chats.Create(i.User.ID, name); err != nil {
+	if _, err := repository.GetDatabase().Chats.Create(i.User.ID, name); err != nil {
 		return err
 	}
 

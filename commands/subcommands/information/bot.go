@@ -5,7 +5,7 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/databases"
+	"git.wh64.net/muffin/goMuffin/repository"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -16,7 +16,7 @@ func InfoBot(i *builders.InteractionCreate) error {
 		return err
 	}
 
-	counts, err := databases.GetDatabase().Counts(i.User.ID)
+	counts, err := repository.GetDatabase().Counts(i.User.ID)
 	if err != nil {
 		return err
 	}
