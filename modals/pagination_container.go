@@ -19,12 +19,12 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 			return false
 		}
 
-		if !strings.HasPrefix(customID, utils.PaginationEmbedModal) {
+		if !strings.HasPrefix(customID, utils.PaginationContainerModal) {
 			return false
 		}
 
-		id := utils.GetPaginationEmbedID(customID)
-		userID := utils.GetPaginationEmbedUserID(id)
+		id := utils.GetPaginationContainerID(customID)
+		userID := utils.GetUserID(id)
 
 		if inter.Member.User.ID != userID {
 			return false
@@ -51,7 +51,7 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 	Run: func(inter *builders.InteractionCreate) error {
 		data := inter.ModalSubmitData()
 		customID := data.CustomID
-		id := utils.GetPaginationEmbedID(customID)
+		id := utils.GetPaginationContainerID(customID)
 		p := builders.GetPaginationContainer(id)
 		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
 
