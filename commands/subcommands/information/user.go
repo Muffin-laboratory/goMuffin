@@ -53,7 +53,7 @@ func InfoUser(i *builders.InteractionCreate) error {
 						AddText(fmt.Sprintf("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime))).
 						AddText(fmt.Sprintf("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime))),
 					builders.TextDisplayBuilder(fmt.Sprintf("- **현재 모드**\n> `%s`", dbUser.ModeString())),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **답장 멘션 사용 여부**\n> `%s`", boolToString(dbUser.ReplyUser))),
+					builders.TextDisplayBuilder(fmt.Sprintf("- **답장 멘션 사용 여부**\n> `%s`", utils.BoolToString(dbUser.ReplyUser))),
 					builders.TextDisplayBuilder(fmt.Sprintf("- **마지막 채팅 이후 12 시간이 지났을 때 새로운 채팅 생성 여부**\n> `%s`", boolToString(dbUser.CreateNewChatAfter12Hours))),
 					builders.TextDisplayBuilder(fmt.Sprintf("- **현재 채팅**\n> %s", currentChat.Name)),
 					builders.TextDisplayBuilder(fmt.Sprintf("- **총 채팅량**\n> `%d`개", chatLength)),

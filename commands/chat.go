@@ -11,13 +11,11 @@ import (
 )
 
 var (
-	chatCommandChatting                  = "하기"
-	chatCommandList                      = "목록"
-	chatCommandCreate                    = "생성"
-	chatCommandDelete                    = "삭제"
-	chatCommandSwitchMode                = "모드전환"
-	chatCommandReplyUser                 = "답장"
-	chatCommandCreateNewChatAfter12Hours = "12시간"
+	chatCommandChatting = "하기"
+	chatCommandList     = "목록"
+	chatCommandCreate   = "생성"
+	chatCommandDelete   = "삭제"
+	chatCommandSettings = "설정"
 )
 
 const chatNameMaxLength = 25
@@ -76,72 +74,8 @@ var ChatCommand *Command = &Command{
 			},
 			{
 				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        chatCommandSwitchMode,
-				Description: "채팅 방식을 변경해요. (일반 <-> AI)",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionInteger,
-						Name:        "모드",
-						Description: "무슨 모드로 바꿀지 선택하세요.",
-						Choices: []*discordgo.ApplicationCommandOptionChoice{
-							{
-								Name:  "AI 모드",
-								Value: repository.ChattingAIMode,
-							},
-							{
-								Name:  "일반 모드",
-								Value: repository.ChattingMuffinMode,
-							},
-						},
-						Required: true,
-					},
-				},
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        chatCommandReplyUser,
-				Description: "이 봇이 대답할 때 멘션을 킬지 선택해요.",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionInteger,
-						Name:        "활성화",
-						Description: "활성화 여부를 선택해요.",
-						Choices: []*discordgo.ApplicationCommandOptionChoice{
-							{
-								Name:  "활성화",
-								Value: 1,
-							},
-							{
-								Name:  "비활성화",
-								Value: 0,
-							},
-						},
-						Required: true,
-					},
-				},
-			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
-				Name:        chatCommandCreateNewChatAfter12Hours,
-				Description: "대답하고 12시간 뒤에 새로운 채팅을 시작할지 선택해요.",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionInteger,
-						Name:        "활성화",
-						Description: "활성화 여부를 선택해요.",
-						Choices: []*discordgo.ApplicationCommandOptionChoice{
-							{
-								Name:  "활성화",
-								Value: 1,
-							},
-							{
-								Name:  "비활성화",
-								Value: 0,
-							},
-						},
-						Required: true,
-					},
-				},
+				Name:        chatCommandSettings,
+				Description: "봇의 설정을 개인화 해요.",
 			},
 		},
 	},
@@ -178,30 +112,8 @@ var ChatCommand *Command = &Command{
 			}
 
 			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
-		case chatCommandSwitchMode:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
-			return subcommands.SwitchMode(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
-		case chatCommandReplyUser:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
-			return subcommands.SetReplyUser(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
-		case chatCommandCreateNewChatAfter12Hours:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
-			return subcommands.SetCreateNewChatAfter12Hours(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+		case chatCommandSettings:
+			return subcommands.Settings(inter)
 		default:
 			return nil
 		}

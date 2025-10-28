@@ -12,11 +12,11 @@ const (
 	DeleteKnowledge = "#muffin/knowledge/delete$"
 	SelectKnowledge = "#muffin/knowledge$"
 
-	PaginationEmbedPrev    = "#muffin-pages/prev$"
-	PaginationEmbedPages   = "#muffin-pages/pages$"
-	PaginationEmbedNext    = "#muffin-pages/next$"
-	PaginationEmbedModal   = "#muffin-pages/modal$"
-	PaginationEmbedSetPage = "#muffin-pages/modal/set$"
+	PaginationContainerPrev    = "#muffin-pages/prev$"
+	PaginationContainerPages   = "#muffin-pages/pages$"
+	PaginationContainerNext    = "#muffin-pages/next$"
+	PaginationContainerModal   = "#muffin-pages/modal$"
+	PaginationContainerSetPage = "#muffin-pages/modal/set$"
 
 	ServiceAgree    = "#muffin/service/agree@"
 	ServiceDisagree = "#muffin/service/disagree@"
@@ -29,6 +29,11 @@ const (
 	DeleteChatCancel = "#muffin/chat/delete/cancel@"
 
 	UserInformationDeregister = "#muffin/info/user/deregister@"
+
+	UserSettingsChattingMode = "#muffin/user/set/chatting_mode$"
+	UserSettingsReplyUser    = "#muffin/user/set/reply_user$"
+	UserSettings12Hours      = "#muffin/user/set/12hours$"
+	UserSettingsSubmit       = "#muffin/user/submit$s"
 )
 
 func MakeDeleteKnowledge(id, name, userID string) string {
@@ -54,44 +59,44 @@ func GetSelectKnowledgeCommand(customID string) string {
 	return customID[len(SelectKnowledge):]
 }
 
-func MakePaginationEmbedPrev(id string) string {
-	return fmt.Sprintf("%s%s", PaginationEmbedPrev, id)
+func MakePaginationContainerPrev(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerPrev, id)
 }
 
-func MakePaginationEmbedPages(id string) string {
-	return fmt.Sprintf("%s%s", PaginationEmbedPages, id)
+func MakePaginationContainerPages(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerPages, id)
 }
 
-func MakePaginationEmbedNext(id string) string {
-	return fmt.Sprintf("%s%s", PaginationEmbedNext, id)
+func MakePaginationContainerNext(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerNext, id)
 }
 
-func MakePaginationEmbedModal(id string) string {
-	return fmt.Sprintf("%s%s", PaginationEmbedModal, id)
+func MakePaginationContainerModal(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerModal, id)
 }
 
-func MakePaginationEmbedSetPage(id string) string {
-	return fmt.Sprintf("%s%s", PaginationEmbedSetPage, id)
+func MakePaginationContainerSetPage(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerSetPage, id)
 }
 
-func GetPaginationEmbedID(customID string) string {
+func GetPaginationContainerID(customID string) string {
 	switch {
-	case strings.HasPrefix(customID, PaginationEmbedPrev):
-		return customID[len(PaginationEmbedPrev):]
-	case strings.HasPrefix(customID, PaginationEmbedPages):
-		return customID[len(PaginationEmbedPages):]
-	case strings.HasPrefix(customID, PaginationEmbedNext):
-		return customID[len(PaginationEmbedNext):]
-	case strings.HasPrefix(customID, PaginationEmbedModal):
-		return customID[len(PaginationEmbedModal):]
-	case strings.HasPrefix(customID, PaginationEmbedSetPage):
-		return customID[len(PaginationEmbedSetPage):]
+	case strings.HasPrefix(customID, PaginationContainerPrev):
+		return customID[len(PaginationContainerPrev):]
+	case strings.HasPrefix(customID, PaginationContainerPages):
+		return customID[len(PaginationContainerPages):]
+	case strings.HasPrefix(customID, PaginationContainerNext):
+		return customID[len(PaginationContainerNext):]
+	case strings.HasPrefix(customID, PaginationContainerModal):
+		return customID[len(PaginationContainerModal):]
+	case strings.HasPrefix(customID, PaginationContainerSetPage):
+		return customID[len(PaginationContainerSetPage):]
 	default:
 		return customID
 	}
 }
 
-func GetPaginationEmbedUserID(id string) string {
+func GetUserID(id string) string {
 	return RegexpPaginationContainerID.FindAllStringSubmatch(id, 1)[0][1]
 }
 
@@ -169,4 +174,35 @@ func MakeUserInformationDeregister(userID string) string {
 
 func GetUserInformationDeregisterUserID(customID string) string {
 	return customID[len(UserInformationDeregister):]
+}
+
+func MakeUserSettingsChattingMode(id string) string {
+	return fmt.Sprintf("%s%s", UserSettingsChattingMode, id)
+}
+
+func MakeUserSettingsReplyUser(id string) string {
+	return fmt.Sprintf("%s%s", UserSettingsReplyUser, id)
+}
+
+func MakeUserSettings12Hours(id string) string {
+	return fmt.Sprintf("%s%s", UserSettings12Hours, id)
+}
+
+func MakeUserSettingsSubmit(id string) string {
+	return fmt.Sprintf("%s%s", UserSettingsSubmit, id)
+}
+
+func GetUserSettingsID(customID string) string {
+	switch {
+	case strings.HasPrefix(customID, UserSettingsChattingMode):
+		return customID[len(UserSettingsChattingMode):]
+	case strings.HasPrefix(customID, UserSettingsReplyUser):
+		return customID[len(UserSettingsReplyUser):]
+	case strings.HasPrefix(customID, UserSettings12Hours):
+		return customID[len(UserSettings12Hours):]
+	case strings.HasPrefix(customID, UserSettingsSubmit):
+		return customID[len(UserSettingsSubmit):]
+	default:
+		return customID
+	}
 }
