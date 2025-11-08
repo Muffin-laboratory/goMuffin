@@ -1,6 +1,8 @@
 package chatbot
 
 import (
+	"context"
+	"net/http"
 	"strings"
 	"time"
 
@@ -8,6 +10,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/configs"
 	"git.wh64.net/muffin/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
+	"google.golang.org/genai"
 )
 
 func ParseResult(content string, s *discordgo.Session, m any) string {
@@ -40,4 +43,36 @@ func ParseResult(content string, s *discordgo.Session, m any) string {
 	result = strings.ReplaceAll(result, "{muffin.name}", s.State.User.Username)
 	result = strings.ReplaceAll(result, "{muffin.id}", s.State.User.ID)
 	return result
+}
+
+func getFiles(client *genai.Client, attachments *[]*discordgo.MessageAttachment) (files []*genai.File, err error) {
+	for _, attachment := range *attachments {
+		var file *genai.File
+		var resp *http.Response
+
+		resp, err = http.Get(attachment.URL)
+		if err != nil {
+			break
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			resp.Body.Close()
+			break
+		}
+
+		file, err = client.Files.Upload(context.TODO(), resp.Body, &genai.UploadFileConfig{
+			MIMEType:    attachment.ContentType,
+			DisplayName: attachment.Filename,
+		})
+
+		resp.Body.Close()
+
+		if err != nil {
+			break
+		}
+
+		files = append(files, file)
+	}
+
+	return
 }

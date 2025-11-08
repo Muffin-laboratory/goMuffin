@@ -98,7 +98,7 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	return result, nil
 }
 
-func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, error) {
+func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
 	const twelveHours = 43_200
 
 	dbUser, err := repository.GetDatabase().Users.Get(user.ID)
@@ -134,6 +134,8 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 			}
 
 			dbUser.ChatID = result.InsertedID.(bson.ObjectID)
+
+			contents = []*genai.Content{}
 		}
 	}
 
@@ -142,7 +144,24 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 		return "살려주ㅅ세요", err
 	}
 
-	contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
+	if len(attachments) != 0 {
+		var parts []*genai.Part
+
+		files, err := getFiles(c.Gemini, &attachments)
+		if err != nil {
+			return "살려주ㅅ세요", err
+		}
+
+		for _, file := range files {
+			parts = append(parts, genai.NewPartFromFile(*file))
+		}
+
+		parts = append(parts, genai.NewPartFromText(question))
+		contents = append(contents, genai.NewContentFromParts(parts, genai.RoleUser))
+	} else {
+		contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
+	}
+
 	result, err := c.Gemini.Models.GenerateContent(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
 		Tools: []*genai.Tool{
@@ -165,7 +184,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string) (string, e
 	return resultText, nil
 }
 
-func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, error) {
+func (c *Chatbot) GetResponse(user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
 	mode, err := repository.GetDatabase().Users.GetUserChattingMode(user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
@@ -175,6 +194,6 @@ func (c *Chatbot) GetResponse(user *discordgo.User, question string) (string, er
 	case repository.ChattingMuffinMode:
 		return getMuffinResponse(c.s, question)
 	default:
-		return getAIResponse(c, user, question)
+		return getAIResponse(c, user, question, attachments...)
 	}
 }

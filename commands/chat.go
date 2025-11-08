@@ -55,6 +55,12 @@ var ChatCommand *Command = &Command{
 						Description: "대화할 내용",
 						Required:    true,
 					},
+					{
+						Type:        discordgo.ApplicationCommandOptionAttachment,
+						Name:        "첨부파일",
+						Description: "같이 보낼 파일",
+						Required:    false,
+					},
 				},
 			},
 			{

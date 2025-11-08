@@ -67,7 +67,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				return
 			}
 
-			str, err := chatbot.GetChatBot().GetResponse(m.Author, content)
+			str, err := chatbot.GetChatBot().GetResponse(m.Author, content, m.Attachments...)
 			if err != nil {
 				log.Println(err)
 				builders.NewMessageSender(m).
