@@ -10,7 +10,7 @@ import (
 	"git.wh64.net/muffin/goMuffin/utils"
 )
 
-var MuffinVersion = fmt.Sprintf("7.2.0-pretzel_%s.251109a", CurrentBranch)
+var MuffinVersion = fmt.Sprintf("7.2.0-pretzel_%s.251109b", CurrentBranch)
 
 var updatedString string = utils.RegexpDecimals.FindAllStringSubmatch(MuffinVersion, -1)[3][0]
 

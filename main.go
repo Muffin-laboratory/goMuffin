@@ -1,10 +1,7 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -57,19 +54,6 @@ func main() {
 	}
 
 	defer repository.GetDatabase().Disconnect()
-
-	if port := &configs.GetConfig().IntegrateMDC.Server.Port; *port != 0 {
-		go func() {
-			log.Printf("[goMuffin] Muffin debug console 사용을 위한 서버가 포트 %d로 열렸어요.", *port)
-			if err := server.Start(fmt.Sprintf(":%d", *port)); err != nil && !errors.Is(err, http.ErrServerClosed) {
-				log.Fatalln(err)
-			}
-		}()
-	} else {
-		log.Println("[goMuffin] Muffin debug console 사용을 위한 서버가 꺼졌어요.")
-	}
-
-	defer server.Close()
 
 	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MuffinVersion)
 	sc := make(chan os.Signal, 1)
