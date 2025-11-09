@@ -116,11 +116,6 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 		}
 	}
 
-	contents, err := repository.GetDatabase().Memory.Get(dbUser.ChatID)
-	if err != nil {
-		return "AI에 문제가 생겼ㅇ어요.", err
-	}
-
 	if dbUser.CreateNewChatAfter12Hours {
 		timestamp, err := repository.GetDatabase().Memory.GetLastMemoryTimestamp(dbUser.ChatID)
 		if err != nil {
@@ -134,48 +129,38 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 			}
 
 			dbUser.ChatID = result.InsertedID.(bson.ObjectID)
-
-			contents = []*genai.Content{}
 		}
 	}
 
-	prompt, err := makePrompt(c.systemPrompt, user)
+	chat, err := c.GetChat(user, dbUser.ChatID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	if len(attachments) != 0 {
-		var parts []*genai.Part
+	var parts []genai.Part
+	var files []repository.File
 
-		files, err := getFiles(c.Gemini, &attachments)
+	if len(attachments) != 0 {
+		genaiFiles, err := getFiles(c.Gemini, &attachments)
 		if err != nil {
 			return "살려주ㅅ세요", err
 		}
 
-		for _, file := range files {
-			parts = append(parts, genai.NewPartFromFile(*file))
+		for _, file := range genaiFiles {
+			parts = append(parts, *genai.NewPartFromFile(*file))
+			files = append(files, repository.File{URI: file.URI, MIMEType: file.MIMEType})
 		}
-
-		parts = append(parts, genai.NewPartFromText(question))
-		contents = append(contents, genai.NewContentFromParts(parts, genai.RoleUser))
-	} else {
-		contents = append(contents, genai.NewContentFromText(question, genai.RoleUser))
 	}
 
-	result, err := c.Gemini.Models.GenerateContent(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, contents, &genai.GenerateContentConfig{
-		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
-		Tools: []*genai.Tool{
-			{
-				GoogleSearch: &genai.GoogleSearch{},
-			},
-		},
-	})
+	parts = append(parts, *genai.NewPartFromText(question))
+
+	result, err := chat.SendMessage(context.TODO(), parts...)
 	if err != nil {
-		return "AI에 문제가 생겼ㅇ어요.", err
+		return "살려주ㅅ세요", err
 	}
 
 	resultText := result.Text()
-	if err = repository.GetDatabase().Memory.Save(dbUser.ChatID, user.ID, question, resultText); err != nil {
+	if err = repository.GetDatabase().Memory.Save(dbUser.ChatID, user.ID, question, resultText, files); err != nil {
 		return "살려주ㅅ세요", err
 	}
 

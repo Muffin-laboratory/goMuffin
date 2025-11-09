@@ -19,6 +19,12 @@ type Memory struct {
 	Answer    string        `bson:"answer,omitempty"`
 	ChatID    bson.ObjectID `bson:"chat_id,omitempty"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
+	Files     []File        `bson:"files,omitempty"`
+}
+
+type File struct {
+	URI      string `bson:"uri,omitempty"`
+	MIMEType string `bson:"mime_type,omitempty"`
 }
 
 type memoryCacheItem struct {
@@ -31,13 +37,14 @@ type MemoryCollection struct {
 	caches     *cache.CacheManager[*memoryCacheItem]
 }
 
-func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer string) error {
+func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer string, files []File) error {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
 		Answer:    answer,
 		ChatID:    chatID,
 		CreatedAt: time.Now(),
+		Files:     files,
 	}
 
 	if _, err := c.Collection.InsertOne(context.TODO(), data); err != nil {
@@ -81,6 +88,7 @@ func (c *MemoryCollection) get(chatID bson.ObjectID) (*memoryCacheItem, error) {
 }
 
 func (c *MemoryCollection) Get(chatID bson.ObjectID) ([]*genai.Content, error) {
+	var parts []*genai.Part
 	var memory []*genai.Content
 
 	item, err := c.get(chatID)
@@ -89,8 +97,17 @@ func (c *MemoryCollection) Get(chatID bson.ObjectID) ([]*genai.Content, error) {
 	}
 
 	for _, data := range *item.memory {
+		if len(data.Files) != 0 {
+
+			for _, file := range data.Files {
+				parts = append(parts, genai.NewPartFromURI(file.URI, file.MIMEType))
+			}
+
+		} else {
+			parts = append(parts, genai.NewPartFromText(data.Content))
+		}
 		memory = append(memory,
-			genai.NewContentFromText(data.Content, genai.RoleUser),
+			genai.NewContentFromParts(parts, genai.RoleUser),
 			genai.NewContentFromText(data.Answer, genai.RoleModel),
 		)
 	}
