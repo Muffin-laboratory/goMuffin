@@ -166,7 +166,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 
 	log.Printf("%s TOKEN: %d", user.ID, result.UsageMetadata.PromptTokenCount)
 
-	return resultText, nil
+	return fmt.Sprintf("%s\n`해당 문장은 AI가 생성한 것이에요.`", resultText), nil
 }
 
 func (c *Chatbot) GetResponse(user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
