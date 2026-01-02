@@ -13,7 +13,7 @@ services:
       - "DATABASE_PORT=27017"
   database:
     container_name: "goMuffin_database"
-    image: "mongo:7.0.17"
+    image: "mongo:7.0.28"
     ports:
       - "27017:27017"
     volumes:
