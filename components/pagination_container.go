@@ -36,7 +36,7 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 			return p.Prev(inter)
 		case strings.HasPrefix(customID, utils.PaginationContainerNext):
 			return p.Next(inter)
-		case strings.HasPrefix(customID, utils.PaginationContainerModal):
+		case strings.HasPrefix(customID, utils.PaginationContainerPages):
 			return p.ShowModal(inter)
 		default:
 			return nil
