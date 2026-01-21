@@ -7,18 +7,18 @@ import (
 
 	"git.wh64.net/muffin/goMuffin/builders"
 	"git.wh64.net/muffin/goMuffin/configs"
-	"github.com/google/go-github/v74/github"
+	"git.wh64.net/muffin/goMuffin/repository"
 )
 
 func InfoPatchLogs(i *builders.InteractionCreate) error {
 	var containers []*builders.Container
 
-	ghClient := github.NewClient(nil)
 	ghConfig := &configs.GetConfig().GitHub
-
 	if ghConfig.Owner == "" || ghConfig.Repository == "" {
 		return returnErrMsg(i)
 	}
+
+	ghClient := repository.GetGHClient()
 
 	releases, _, err := ghClient.Repositories.ListReleases(context.TODO(), ghConfig.Owner, ghConfig.Repository, nil)
 	if err != nil {
