@@ -15,7 +15,9 @@ import (
 var chats = cache.New[*genai.Chat](time.Hour * 12)
 
 func (c *Chatbot) GetChat(user *discordgo.User, chatID bson.ObjectID) (*genai.Chat, error) {
-	chats.Get(chatID.Hex())
+	if cache, ok := chats.Get(chatID.Hex()); ok {
+		return cache, nil
+	}
 
 	contents, err := repository.GetDatabase().Memory.Get(chatID)
 	if err != nil {
