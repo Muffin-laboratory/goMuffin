@@ -71,7 +71,7 @@ func (s *UserSettings) MakeContainer() *builders.Container {
 			builders.ActionsRowBuilder(
 				builders.ButtonBuilder().
 					SetStyle(discordgo.SuccessButton).
-					SetLabel("제출").
+					SetLabel("완료").
 					SetCustomID(utils.MakeUserSettingsSubmit(s.ID)),
 			),
 		)
