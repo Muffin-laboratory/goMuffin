@@ -12,9 +12,11 @@ const (
 	DeleteKnowledge = "#muffin/knowledge/delete$"
 	SelectKnowledge = "#muffin/knowledge$"
 
+	PaginationContainerFirst   = "#muffin-pages/first$"
 	PaginationContainerPrev    = "#muffin-pages/prev$"
 	PaginationContainerPages   = "#muffin-pages/pages$"
 	PaginationContainerNext    = "#muffin-pages/next$"
+	PaginationContainerLast    = "#muffin-pages/last$"
 	PaginationContainerModal   = "#muffin-pages/modal$"
 	PaginationContainerSetPage = "#muffin-pages/modal/set$"
 
@@ -63,12 +65,20 @@ func MakePaginationContainerPrev(id string) string {
 	return fmt.Sprintf("%s%s", PaginationContainerPrev, id)
 }
 
+func MakePaginationContainerFirst(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerFirst, id)
+}
+
 func MakePaginationContainerPages(id string) string {
 	return fmt.Sprintf("%s%s", PaginationContainerPages, id)
 }
 
 func MakePaginationContainerNext(id string) string {
 	return fmt.Sprintf("%s%s", PaginationContainerNext, id)
+}
+
+func MakePaginationContainerLast(id string) string {
+	return fmt.Sprintf("%s%s", PaginationContainerLast, id)
 }
 
 func MakePaginationContainerModal(id string) string {
@@ -81,12 +91,16 @@ func MakePaginationContainerSetPage(id string) string {
 
 func GetPaginationContainerID(customID string) string {
 	switch {
+	case strings.HasPrefix(customID, PaginationContainerFirst):
+		return customID[len(PaginationContainerFirst):]
 	case strings.HasPrefix(customID, PaginationContainerPrev):
 		return customID[len(PaginationContainerPrev):]
 	case strings.HasPrefix(customID, PaginationContainerPages):
 		return customID[len(PaginationContainerPages):]
 	case strings.HasPrefix(customID, PaginationContainerNext):
 		return customID[len(PaginationContainerNext):]
+	case strings.HasPrefix(customID, PaginationContainerLast):
+		return customID[len(PaginationContainerLast):]
 	case strings.HasPrefix(customID, PaginationContainerModal):
 		return customID[len(PaginationContainerModal):]
 	case strings.HasPrefix(customID, PaginationContainerSetPage):

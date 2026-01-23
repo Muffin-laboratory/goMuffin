@@ -12,10 +12,12 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
+		isFirst := strings.HasPrefix(customID, utils.PaginationContainerFirst)
 		isPrev := strings.HasPrefix(customID, utils.PaginationContainerPrev)
 		isNext := strings.HasPrefix(customID, utils.PaginationContainerNext)
+		isLast := strings.HasPrefix(customID, utils.PaginationContainerLast)
 		isSetPage := strings.HasPrefix(customID, utils.PaginationContainerPages)
-		if !isPrev && !isNext && !isSetPage {
+		if !isFirst && !isPrev && !isNext && !isLast && !isSetPage {
 			return false
 		}
 
@@ -32,10 +34,14 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 		p := builders.GetPaginationContainer(id)
 
 		switch {
+		case strings.HasPrefix(customID, utils.PaginationContainerFirst):
+			return p.First(inter)
 		case strings.HasPrefix(customID, utils.PaginationContainerPrev):
 			return p.Prev(inter)
 		case strings.HasPrefix(customID, utils.PaginationContainerNext):
 			return p.Next(inter)
+		case strings.HasPrefix(customID, utils.PaginationContainerLast):
+			return p.Last(inter)
 		case strings.HasPrefix(customID, utils.PaginationContainerPages):
 			return p.ShowModal(inter)
 		default:

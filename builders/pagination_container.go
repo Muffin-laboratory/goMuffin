@@ -11,7 +11,7 @@ import (
 
 const EndDuration = time.Minute * 10
 
-// PaginationContainer is container with page
+// A PaginationContainer is container with page
 type PaginationContainer struct {
 	Containers []*discordgo.Container
 	timer      *time.Timer
@@ -90,6 +90,11 @@ func makeComponents(id string, current, total int) *discordgo.ActionsRow {
 	return ActionsRowBuilder(
 		ButtonBuilder().
 			SetStyle(discordgo.PrimaryButton).
+			SetLabel("처음").
+			SetCustomID(utils.MakePaginationContainerFirst(id)).
+			SetDisabled(disabled),
+		ButtonBuilder().
+			SetStyle(discordgo.PrimaryButton).
 			SetLabel("이전").
 			SetCustomID(utils.MakePaginationContainerPrev(id)).
 			SetDisabled(disabled),
@@ -103,6 +108,11 @@ func makeComponents(id string, current, total int) *discordgo.ActionsRow {
 			SetLabel("다음").
 			SetCustomID(utils.MakePaginationContainerNext(id)).
 			SetDisabled(disabled),
+		ButtonBuilder().
+			SetStyle(discordgo.PrimaryButton).
+			SetLabel("마지막").
+			SetCustomID(utils.MakePaginationContainerLast(id)).
+			SetDisabled(disabled),
 	).
 		Build().(*discordgo.ActionsRow)
 }
@@ -112,6 +122,10 @@ func GetPaginationContainer(id string) *PaginationContainer {
 		return p
 	}
 	return nil
+}
+
+func (p *PaginationContainer) First(i *InteractionCreate) error {
+	return p.Set(i, 1)
 }
 
 func (p *PaginationContainer) Prev(i *InteractionCreate) error {
@@ -132,6 +146,10 @@ func (p *PaginationContainer) Next(i *InteractionCreate) error {
 	}
 
 	return p.Set(i, p.Current)
+}
+
+func (p *PaginationContainer) Last(i *InteractionCreate) error {
+	return p.Set(i, p.Total)
 }
 
 func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
