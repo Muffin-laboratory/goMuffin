@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/cache"
-	"git.wh64.net/muffin/goMuffin/configs"
+	"github.com/Muffin-laboratory/goMuffin/cache"
+	"github.com/Muffin-laboratory/goMuffin/configs"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )

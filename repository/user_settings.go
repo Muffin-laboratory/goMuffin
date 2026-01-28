@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/utils"
+	"github.com/Muffin-laboratory/goMuffin/builders"
+	"github.com/Muffin-laboratory/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 

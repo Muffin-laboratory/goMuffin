@@ -7,9 +7,9 @@ import (
 	"syscall"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/commands"
-	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/repository"
+	"github.com/Muffin-laboratory/goMuffin/commands"
+	"github.com/Muffin-laboratory/goMuffin/configs"
+	"github.com/Muffin-laboratory/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 )
 

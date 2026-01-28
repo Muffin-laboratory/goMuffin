@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/cache"
+	"github.com/Muffin-laboratory/goMuffin/cache"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )

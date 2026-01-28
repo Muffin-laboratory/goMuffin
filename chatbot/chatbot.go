@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/repository"
-	"git.wh64.net/muffin/goMuffin/utils"
+	"github.com/Muffin-laboratory/goMuffin/configs"
+	"github.com/Muffin-laboratory/goMuffin/repository"
+	"github.com/Muffin-laboratory/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"

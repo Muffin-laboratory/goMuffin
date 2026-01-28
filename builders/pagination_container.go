@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/utils"
+	"github.com/Muffin-laboratory/goMuffin/utils"
 	"github.com/bwmarrin/discordgo"
 )
 

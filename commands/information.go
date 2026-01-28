@@ -1,8 +1,8 @@
 package commands
 
 import (
-	"git.wh64.net/muffin/goMuffin/builders"
-	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/information"
+	"github.com/Muffin-laboratory/goMuffin/builders"
+	subcommands "github.com/Muffin-laboratory/goMuffin/commands/subcommands/information"
 	"github.com/bwmarrin/discordgo"
 )
 

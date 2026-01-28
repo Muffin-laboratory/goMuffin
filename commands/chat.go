@@ -3,9 +3,9 @@ package commands
 import (
 	"context"
 
-	"git.wh64.net/muffin/goMuffin/builders"
-	subcommands "git.wh64.net/muffin/goMuffin/commands/subcommands/chat"
-	"git.wh64.net/muffin/goMuffin/repository"
+	"github.com/Muffin-laboratory/goMuffin/builders"
+	subcommands "github.com/Muffin-laboratory/goMuffin/commands/subcommands/chat"
+	"github.com/Muffin-laboratory/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )

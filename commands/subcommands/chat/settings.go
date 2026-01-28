@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/repository"
+	"github.com/Muffin-laboratory/goMuffin/builders"
+	"github.com/Muffin-laboratory/goMuffin/repository"
 )
 
 func Settings(inter *builders.InteractionCreate) error {

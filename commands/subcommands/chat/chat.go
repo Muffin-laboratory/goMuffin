@@ -3,8 +3,8 @@ package chat
 import (
 	"log"
 
-	"git.wh64.net/muffin/goMuffin/builders"
-	"git.wh64.net/muffin/goMuffin/chatbot"
+	"github.com/Muffin-laboratory/goMuffin/builders"
+	"github.com/Muffin-laboratory/goMuffin/chatbot"
 	"github.com/bwmarrin/discordgo"
 )
 

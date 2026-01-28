@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/repository"
+	"github.com/Muffin-laboratory/goMuffin/configs"
+	"github.com/Muffin-laboratory/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 )
 

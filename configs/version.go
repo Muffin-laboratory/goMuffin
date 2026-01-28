@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/utils"
+	"github.com/Muffin-laboratory/goMuffin/utils"
 )
 
 var MuffinVersion = fmt.Sprintf("7.3.0-pretzel_%s.260121a", CurrentBranch)

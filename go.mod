@@ -1,4 +1,4 @@
-module git.wh64.net/muffin/goMuffin
+module github.com/Muffin-laboratory/goMuffin
 
 go 1.24.5
 

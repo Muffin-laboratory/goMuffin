@@ -3,12 +3,12 @@ package main
 import (
 	"log"
 
-	"git.wh64.net/muffin/goMuffin/chatbot"
-	_ "git.wh64.net/muffin/goMuffin/commands/dev"
-	_ "git.wh64.net/muffin/goMuffin/components"
-	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/handler"
-	_ "git.wh64.net/muffin/goMuffin/modals"
+	"github.com/Muffin-laboratory/goMuffin/chatbot"
+	_ "github.com/Muffin-laboratory/goMuffin/commands/dev"
+	_ "github.com/Muffin-laboratory/goMuffin/components"
+	"github.com/Muffin-laboratory/goMuffin/configs"
+	"github.com/Muffin-laboratory/goMuffin/handler"
+	_ "github.com/Muffin-laboratory/goMuffin/modals"
 	"github.com/bwmarrin/discordgo"
 )
 

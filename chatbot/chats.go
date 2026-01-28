@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
-	"git.wh64.net/muffin/goMuffin/cache"
-	"git.wh64.net/muffin/goMuffin/configs"
-	"git.wh64.net/muffin/goMuffin/repository"
+	"github.com/Muffin-laboratory/goMuffin/cache"
+	"github.com/Muffin-laboratory/goMuffin/configs"
+	"github.com/Muffin-laboratory/goMuffin/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"google.golang.org/genai"
