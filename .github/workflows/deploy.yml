@@ -22,4 +22,4 @@ jobs:
                   port: ${{ secrets.SSH_PORT }}
                   script: |
                       cd ${{ secrets.PROJECT_DIR }}
-                      ${{ secrets.PROJECT_DIR }}/scripts/update.sh
+                      ${{ secrets.PROJECT_DIR }}/internal/scripts/update.sh

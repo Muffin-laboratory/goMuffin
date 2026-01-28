@@ -6,7 +6,8 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}",
+            "program": "${workspaceFolder}/internal/cmd/bot",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
