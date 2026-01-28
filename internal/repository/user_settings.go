@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 
@@ -19,8 +20,8 @@ type UserSettings struct {
 
 var userSettings = make(map[string]*UserSettings)
 
-func NewUserSettings(user *discordgo.User) (*UserSettings, error) {
-	dbUser, err := GetDatabase().Users.Get(user.ID)
+func NewUserSettings(ctx context.Context, user *discordgo.User) (*UserSettings, error) {
+	dbUser, err := GetDatabase().Users.Get(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,8 +79,8 @@ func (s *UserSettings) MakeContainer() *builders.Container {
 
 }
 
-func (s *UserSettings) Submit() error {
-	if _, err := GetDatabase().Users.Update(s.user.ID, &UserUpdate{
+func (s *UserSettings) Submit(ctx context.Context) error {
+	if _, err := GetDatabase().Users.Update(ctx, s.user.ID, &UserUpdate{
 		ChattingMode:              &s.ChattingMode,
 		ReplyUser:                 &s.ReplyUser,
 		CreateNewChatAfter12Hours: &s.CreateNewChatAfter12Hours,

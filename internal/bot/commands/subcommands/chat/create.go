@@ -15,7 +15,7 @@ func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 		name = opt.StringValue()
 	}
 
-	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}
@@ -24,7 +24,7 @@ func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 		return chatSendErrorMessage(i)
 	}
 
-	if _, err := repository.GetDatabase().Chats.Create(i.User.ID, name); err != nil {
+	if _, err := repository.GetDatabase().Chats.Create(i.Ctx, i.User.ID, name); err != nil {
 		return err
 	}
 

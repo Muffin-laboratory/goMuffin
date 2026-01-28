@@ -13,6 +13,7 @@ import (
 )
 
 var RegisterComponent *commands.Component = &commands.Component{
+	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 		if !strings.HasPrefix(customID, utils.ServiceAgree) && !strings.HasPrefix(customID, utils.ServiceDisagree) {
@@ -25,16 +26,12 @@ var RegisterComponent *commands.Component = &commands.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		if err := inter.DeferUpdate(); err != nil {
-			return err
-		}
-
 		customID := inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
 		case strings.HasPrefix(customID, utils.ServiceAgree):
-			if _, err := repository.GetDatabase().Users.Create(inter.User.ID); err != nil {
+			if _, err := repository.GetDatabase().Users.Create(inter.Ctx, inter.User.ID); err != nil {
 				return err
 			}
 

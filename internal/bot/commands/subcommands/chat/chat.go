@@ -19,7 +19,7 @@ func Chat(i *builders.InteractionCreate, opts builders.CommandInteractionOptions
 		}
 	}
 
-	str, err := chatbot.GetChatBot().GetResponse(i.User, opts["내용"].StringValue(), attachment)
+	str, err := chatbot.GetChatBot().GetResponse(i.Ctx, i.User, opts["내용"].StringValue(), attachment)
 	if err != nil {
 		log.Println(err)
 		i.EditReply(&builders.InteractionEdit{

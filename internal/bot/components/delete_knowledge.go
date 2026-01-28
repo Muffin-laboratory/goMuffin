@@ -12,6 +12,7 @@ import (
 )
 
 var DeleteKnowledgeComponent *commands.Component = &commands.Component{
+	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
@@ -32,12 +33,8 @@ var DeleteKnowledgeComponent *commands.Component = &commands.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		if err := inter.DeferUpdate(); err != nil {
-			return err
-		}
-
 		id, itemID := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
-		if _, err := repository.GetDatabase().Knowledge.Delete(id); err != nil {
+		if _, err := repository.GetDatabase().Knowledge.Delete(inter.Ctx, id); err != nil {
 			return err
 		}
 

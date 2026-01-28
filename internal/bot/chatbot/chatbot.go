@@ -65,7 +65,7 @@ func (c *Chatbot) GetPrompt() string {
 	return c.systemPrompt
 }
 
-func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
+func getMuffinResponse(ctx context.Context, s *discordgo.Session, question string) (string, error) {
 	var data []repository.Text
 	var result string
 	x := rand.Intn(10)
@@ -81,7 +81,7 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 		return "살려주ㅅ세요", err
 	}
 
-	learnData, err := repository.GetDatabase().Knowledge.GetByCommand(question)
+	learnData, err := repository.GetDatabase().Knowledge.GetByCommand(ctx, question)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
@@ -98,17 +98,17 @@ func getMuffinResponse(s *discordgo.Session, question string) (string, error) {
 	return result, nil
 }
 
-func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
+func getAIResponse(ctx context.Context, c *Chatbot, user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
 	const twelveHours = 43_200
 
-	dbUser, err := repository.GetDatabase().Users.Get(user.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(ctx, user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
 	if err := repository.GetDatabase().Chats.FindOne(context.TODO(), repository.Chat{UserID: user.ID}).Err(); err != nil {
 		if err == mongo.ErrNoDocuments {
-			if _, err = repository.GetDatabase().Chats.Create(user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
+			if _, err = repository.GetDatabase().Chats.Create(ctx, user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
 				return "살려주ㅅ세요", err
 			}
 		} else {
@@ -117,13 +117,13 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 	}
 
 	if dbUser.CreateNewChatAfter12Hours {
-		timestamp, err := repository.GetDatabase().Memory.GetLastMemoryTimestamp(dbUser.ChatID)
+		timestamp, err := repository.GetDatabase().Memory.GetLastMemoryTimestamp(ctx, dbUser.ChatID)
 		if err != nil {
 			return "살려주세요", err
 		}
 
 		if time.Now().Unix()-timestamp > twelveHours {
-			result, err := repository.GetDatabase().Chats.Create(user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
+			result, err := repository.GetDatabase().Chats.Create(ctx, user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
 			if err != nil {
 				return "살려주ㅅ세요", err
 			}
@@ -132,7 +132,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 		}
 	}
 
-	chat, err := c.GetChat(user, dbUser.ChatID)
+	chat, err := c.GetChat(ctx, user, dbUser.ChatID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
@@ -160,7 +160,7 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 	}
 
 	resultText := result.Text()
-	if err = repository.GetDatabase().Memory.Save(dbUser.ChatID, user.ID, question, resultText, files); err != nil {
+	if err = repository.GetDatabase().Memory.Save(ctx, dbUser.ChatID, user.ID, question, resultText, files); err != nil {
 		return "살려주ㅅ세요", err
 	}
 
@@ -169,16 +169,16 @@ func getAIResponse(c *Chatbot, user *discordgo.User, question string, attachment
 	return fmt.Sprintf("%s\n`해당 문장은 AI가 생성한 것이에요.`", resultText), nil
 }
 
-func (c *Chatbot) GetResponse(user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
-	mode, err := repository.GetDatabase().Users.GetUserChattingMode(user.ID)
+func (c *Chatbot) GetResponse(ctx context.Context, user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
+	mode, err := repository.GetDatabase().Users.GetUserChattingMode(ctx, user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
 	switch mode {
 	case repository.ChattingMuffinMode:
-		return getMuffinResponse(c.s, question)
+		return getMuffinResponse(ctx, c.s, question)
 	default:
-		return getAIResponse(c, user, question, attachments...)
+		return getAIResponse(ctx, c, user, question, attachments...)
 	}
 }

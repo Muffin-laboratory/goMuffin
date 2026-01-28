@@ -45,7 +45,7 @@ const (
 	ChattingMuffinMode
 )
 
-func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
+func (c *UserCollection) Create(ctx context.Context, userID string) (*mongo.InsertOneResult, error) {
 	user := User{
 		UserID:       userID,
 		ChattingMode: ChattingAIMode,
@@ -53,7 +53,7 @@ func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
 		CreatedAt:    time.Now(),
 	}
 
-	result, err := c.Collection.InsertOne(context.TODO(), user)
+	result, err := c.Collection.InsertOne(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -63,21 +63,21 @@ func (c *UserCollection) Create(userID string) (*mongo.InsertOneResult, error) {
 	return result, nil
 }
 
-func (c *UserCollection) All() ([]*User, error) {
+func (c *UserCollection) All(ctx context.Context) ([]*User, error) {
 	var data []*User
 
 	if caches := c.caches.All(); len(caches) != 0 {
 		return caches, nil
 	}
 
-	cur, err := c.Collection.Find(context.TODO(), bson.D{})
+	cur, err := c.Collection.Find(ctx, bson.D{})
 	if err != nil {
 		return data, nil
 	}
 
-	defer cur.Close(context.TODO())
+	defer cur.Close(ctx)
 
-	if err = cur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return data, nil
 	}
 
@@ -92,14 +92,14 @@ func (c *UserCollection) All() ([]*User, error) {
 	return data, nil
 }
 
-func (c *UserCollection) Get(userID string) (*User, error) {
+func (c *UserCollection) Get(ctx context.Context, userID string) (*User, error) {
 	if user, ok := c.caches.Get(userID); ok {
 		return user, nil
 	}
 
 	var user *User
 
-	if err := c.Collection.FindOne(context.TODO(), bson.M{
+	if err := c.Collection.FindOne(ctx, bson.M{
 		"user_id": userID,
 	}).Decode(&user); err != nil {
 		return nil, err
@@ -110,8 +110,8 @@ func (c *UserCollection) Get(userID string) (*User, error) {
 	return user, nil
 }
 
-func (c *UserCollection) IsUser(userID string) bool {
-	user, err := c.Get(userID)
+func (c *UserCollection) IsUser(ctx context.Context, userID string) bool {
+	user, err := c.Get(ctx, userID)
 	if err != nil {
 		return false
 	}
@@ -121,8 +121,8 @@ func (c *UserCollection) IsUser(userID string) bool {
 	return true
 }
 
-func (c *UserCollection) IsUserBlocked(userID string) (bool, string) {
-	user, err := c.Get(userID)
+func (c *UserCollection) IsUserBlocked(ctx context.Context, userID string) (bool, string) {
+	user, err := c.Get(ctx, userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return false, ""
@@ -137,8 +137,8 @@ func (c *UserCollection) IsUserBlocked(userID string) (bool, string) {
 	return user.Blocked, user.BlockedReason
 }
 
-func (c *UserCollection) GetUserChattingMode(userID string) (ChattingMode, error) {
-	user, err := c.Get(userID)
+func (c *UserCollection) GetUserChattingMode(ctx context.Context, userID string) (ChattingMode, error) {
+	user, err := c.Get(ctx, userID)
 	if err != nil {
 		return ChattingAIMode, err
 	}
@@ -148,8 +148,8 @@ func (c *UserCollection) GetUserChattingMode(userID string) (ChattingMode, error
 	return user.ChattingMode, nil
 }
 
-func (c *UserCollection) Update(userID string, data *UserUpdate) (*mongo.UpdateResult, error) {
-	result, err := c.Collection.UpdateOne(context.TODO(), bson.M{"user_id": userID}, bson.M{
+func (c *UserCollection) Update(ctx context.Context, userID string, data *UserUpdate) (*mongo.UpdateResult, error) {
+	result, err := c.Collection.UpdateOne(ctx, bson.M{"user_id": userID}, bson.M{
 		"$set": data,
 	})
 	if err != nil {
@@ -159,15 +159,15 @@ func (c *UserCollection) Update(userID string, data *UserUpdate) (*mongo.UpdateR
 	c.caches.Delete(userID)
 
 	// 캐시 저장용
-	if _, err := c.Get(userID); err != nil {
+	if _, err := c.Get(ctx, userID); err != nil {
 		return nil, err
 	}
 
 	return result, nil
 }
 
-func (c *UserCollection) Delete(userID string) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteOne(context.TODO(), bson.M{"user_id": userID})
+func (c *UserCollection) Delete(ctx context.Context, userID string) (*mongo.DeleteResult, error) {
+	result, err := c.Collection.DeleteOne(ctx, bson.M{"user_id": userID})
 	if err != nil {
 		return nil, err
 	}

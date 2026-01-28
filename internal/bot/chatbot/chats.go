@@ -14,17 +14,17 @@ import (
 
 var chats = cache.New[*genai.Chat](time.Hour * 12)
 
-func (c *Chatbot) GetChat(user *discordgo.User, chatID bson.ObjectID) (*genai.Chat, error) {
+func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson.ObjectID) (*genai.Chat, error) {
 	if cache, ok := chats.Get(chatID.Hex()); ok {
 		return cache, nil
 	}
 
-	contents, err := repository.GetDatabase().Memory.Get(chatID)
+	contents, err := repository.GetDatabase().Memory.Get(ctx, chatID)
 	if err != nil {
 		return nil, err
 	}
 
-	prompt, err := makePrompt(c.systemPrompt, user)
+	prompt, err := makePrompt(ctx, c.systemPrompt, user)
 	if err != nil {
 		return nil, err
 	}

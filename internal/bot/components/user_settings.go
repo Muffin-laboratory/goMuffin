@@ -11,6 +11,7 @@ import (
 )
 
 var UserSettingsComponent = &commands.Component{
+	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
@@ -31,6 +32,7 @@ var UserSettingsComponent = &commands.Component{
 		return repository.GetUserSettings(id) != nil
 	},
 	Run: func(inter *builders.InteractionCreate) error {
+		flags := discordgo.MessageFlagsIsComponentsV2
 		customID := inter.MessageComponentData().CustomID
 		settings := repository.GetUserSettings(utils.GetUserSettingsID(customID))
 
@@ -44,34 +46,28 @@ var UserSettingsComponent = &commands.Component{
 
 			settings.ChattingMode = newMode
 
-			return inter.Update(&discordgo.InteractionResponseData{
-				Flags:      discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{settings.MakeContainer().Build()},
+			return inter.EditReply(&builders.InteractionEdit{
+				Flags:      &flags,
+				Components: &[]discordgo.MessageComponent{settings.MakeContainer().Build()},
 			})
 		case strings.HasPrefix(customID, utils.UserSettingsReplyUser):
 			settings.ReplyUser = !settings.ReplyUser
 
-			return inter.Update(&discordgo.InteractionResponseData{
-				Flags:      discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{settings.MakeContainer().Build()},
+			return inter.EditReply(&builders.InteractionEdit{
+				Flags:      &flags,
+				Components: &[]discordgo.MessageComponent{settings.MakeContainer().Build()},
 			})
 		case strings.HasPrefix(customID, utils.UserSettings12Hours):
 			settings.CreateNewChatAfter12Hours = !settings.CreateNewChatAfter12Hours
 
-			return inter.Update(&discordgo.InteractionResponseData{
-				Flags:      discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{settings.MakeContainer().Build()},
+			return inter.EditReply(&builders.InteractionEdit{
+				Flags:      &flags,
+				Components: &[]discordgo.MessageComponent{settings.MakeContainer().Build()},
 			})
 		case strings.HasPrefix(customID, utils.UserSettingsSubmit):
-			if err := inter.DeferUpdate(); err != nil {
+			if err := settings.Submit(inter.Ctx); err != nil {
 				return err
 			}
-
-			if err := settings.Submit(); err != nil {
-				return err
-			}
-
-			flags := discordgo.MessageFlagsIsComponentsV2
 
 			return inter.EditReply(&builders.InteractionEdit{
 				Flags: &flags,

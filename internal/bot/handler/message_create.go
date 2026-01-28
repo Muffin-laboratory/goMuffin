@@ -23,13 +23,17 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if strings.HasPrefix(m.Content, config.Bot.Prefix) {
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+		defer cancel()
+
 		m := &builders.MessageCreate{
 			MessageCreate: m,
 			Session:       s,
+			Ctx:           ctx,
 		}
 		content := strings.TrimPrefix(m.Content, config.Bot.Prefix)
 
-		if !repository.GetDatabase().Users.IsUser(m.Author.ID) {
+		if !repository.GetDatabase().Users.IsUser(m.Ctx, m.Author.ID) {
 			builders.NewMessageSender(m).
 				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 				SetComponentsV2(true).
@@ -39,7 +43,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(m.Author.ID)
+		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(m.Ctx, m.Author.ID)
 		if blocked {
 			user, _ := s.User(m.Author.ID)
 			builders.NewMessageSender(m).
@@ -53,7 +57,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.ChannelTyping(m.ChannelID)
 
-		dbUser, err := repository.GetDatabase().Users.Get(m.Author.ID)
+		dbUser, err := repository.GetDatabase().Users.Get(m.Ctx, m.Author.ID)
 		if err != nil {
 			owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 			log.Println(err)
@@ -66,7 +70,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			return
 		}
 
-		str, err := chatbot.GetChatBot().GetResponse(m.Author, content, m.Attachments...)
+		str, err := chatbot.GetChatBot().GetResponse(m.Ctx, m.Author, content, m.Attachments...)
 		if err != nil {
 			log.Println(err)
 			builders.NewMessageSender(m).

@@ -15,7 +15,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 
 	name := opts["이름"].StringValue()
 
-	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}

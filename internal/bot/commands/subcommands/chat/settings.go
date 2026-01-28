@@ -6,7 +6,7 @@ import (
 )
 
 func Settings(inter *builders.InteractionCreate) error {
-	settings, err := repository.NewUserSettings(inter.User)
+	settings, err := repository.NewUserSettings(inter.Ctx, inter.User)
 	if err != nil {
 		return err
 	}

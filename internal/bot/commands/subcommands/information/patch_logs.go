@@ -1,7 +1,6 @@
 package information
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -20,7 +19,7 @@ func InfoPatchLogs(i *builders.InteractionCreate) error {
 
 	ghClient := repository.GetGHClient()
 
-	releases, _, err := ghClient.Repositories.ListReleases(context.TODO(), ghConfig.Owner, ghConfig.Repository, nil)
+	releases, _, err := ghClient.Repositories.ListReleases(i.Ctx, ghConfig.Owner, ghConfig.Repository, nil)
 	if err != nil {
 		return err
 	}

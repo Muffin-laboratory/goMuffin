@@ -29,7 +29,7 @@ func List(i *builders.InteractionCreate, opts builders.CommandInteractionOptions
 		command = "전체"
 	}
 
-	data, err := repository.GetDatabase().Knowledge.GetByFilter(filter)
+	data, err := repository.GetDatabase().Knowledge.GetByFilter(i.Ctx, filter)
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,7 @@ func Learn(i *builders.InteractionCreate, opts builders.CommandInteractionOption
 		}
 	}
 
-	if _, err := repository.GetDatabase().Knowledge.Create(i.User.ID, command, result); err != nil {
+	if _, err := repository.GetDatabase().Knowledge.Create(i.Ctx, i.User.ID, command, result); err != nil {
 		return err
 	}
 

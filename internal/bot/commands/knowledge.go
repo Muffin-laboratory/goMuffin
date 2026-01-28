@@ -15,6 +15,10 @@ const (
 )
 
 var KnowledgeCommand = &Command{
+	Deferred: true,
+	DeferOptions: &discordgo.InteractionResponseData{
+		Flags: discordgo.MessageFlagsEphemeral,
+	},
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "지식",
 		Description: "이 봇이 사용자와 대화할 때 알면 좋은 지식을 관리하는 명령어에요.",
@@ -73,12 +77,6 @@ var KnowledgeCommand = &Command{
 	Run: func(inter *builders.InteractionCreate) error {
 		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case knowledgeLearn:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			igCommands := []string{}
 
 			for _, command := range instance.Commands {
@@ -87,20 +85,8 @@ var KnowledgeCommand = &Command{
 
 			return subcommands.Learn(inter, builders.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
 		case knowledgeList:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			return subcommands.List(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case knowledgeDelete:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		default:
 			return nil
@@ -117,7 +103,7 @@ var KnowledgeCommand = &Command{
 			}
 		}
 
-		data, err := repository.GetDatabase().Knowledge.GetByFilter(bson.M{
+		data, err := repository.GetDatabase().Knowledge.GetByFilter(inter.Ctx, bson.M{
 			"user_id": inter.User.ID,
 			"command": bson.M{
 				"$regex": focusedValue,

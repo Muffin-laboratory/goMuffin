@@ -13,6 +13,7 @@ import (
 )
 
 var DeleteChatComponent = &commands.Component{
+	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
@@ -33,19 +34,16 @@ var DeleteChatComponent = &commands.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
+		flags := discordgo.MessageFlagsIsComponentsV2
 		customId := inter.MessageComponentData().CustomID
 
 		if strings.HasPrefix(customId, utils.DeleteChatCancel) {
-			return inter.Update(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{
+			return inter.EditReply(&builders.InteractionEdit{
+				Flags: &flags,
+				Components: &[]discordgo.MessageComponent{
 					builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요."),
 				},
 			})
-		}
-
-		if err := inter.DeferUpdate(); err != nil {
-			return err
 		}
 
 		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
@@ -54,11 +52,10 @@ var DeleteChatComponent = &commands.Component{
 			return err
 		}
 
-		if _, err := repository.GetDatabase().Memory.DeleteByChatID(id); err != nil {
+		if _, err := repository.GetDatabase().Memory.DeleteByChatID(inter.Ctx, id); err != nil {
 			return err
 		}
 
-		flags := discordgo.MessageFlagsIsComponentsV2
 		return inter.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{

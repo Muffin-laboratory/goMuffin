@@ -11,6 +11,10 @@ import (
 )
 
 var RegisterCommand *Command = &Command{
+	Deferred: true,
+	DeferOptions: &discordgo.InteractionResponseData{
+		Flags: discordgo.MessageFlagsEphemeral,
+	},
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "가입",
 		Description: "이 봇에 가입해요.",
@@ -19,7 +23,7 @@ var RegisterCommand *Command = &Command{
 	Run: func(inter *builders.InteractionCreate) error {
 		userID := inter.User.ID
 
-		if repository.GetDatabase().Users.IsUser(userID) {
+		if repository.GetDatabase().Users.IsUser(inter.Ctx, userID) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 /탈퇴를 이용해주세요.")).
 				SetComponentsV2(true).

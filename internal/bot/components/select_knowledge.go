@@ -12,6 +12,10 @@ import (
 )
 
 var SelectKnowledgeComponent = &commands.Component{
+	DeferredReply: true,
+	DeferReplyOptions: &discordgo.InteractionResponseData{
+		Flags: discordgo.MessageFlagsEphemeral,
+	},
 	Parse: func(inter *builders.InteractionCreate) bool {
 		return strings.HasPrefix(inter.MessageComponentData().CustomID, utils.SelectKnowledge)
 	},
@@ -19,15 +23,9 @@ var SelectKnowledgeComponent = &commands.Component{
 		var sections []*builders.Section
 		var containers []*builders.Container
 
-		if err := inter.DeferReply(&discordgo.InteractionResponseData{
-			Flags: discordgo.MessageFlagsEphemeral,
-		}); err != nil {
-			return err
-		}
-
 		command := utils.GetSelectKnowledgeCommand(inter.MessageComponentData().CustomID)
 
-		data, err := repository.GetDatabase().Knowledge.GetByFilter(repository.Knowledge{UserID: inter.User.ID, Command: command})
+		data, err := repository.GetDatabase().Knowledge.GetByFilter(inter.Ctx, repository.Knowledge{UserID: inter.User.ID, Command: command})
 		if err != nil {
 			return err
 		}

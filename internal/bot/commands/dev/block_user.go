@@ -13,6 +13,10 @@ import (
 )
 
 var BlockCommand = &commands.Command{
+	Deferred: true,
+	DeferOptions: &discordgo.InteractionResponseData{
+		Flags: discordgo.MessageFlagsEphemeral,
+	},
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "차단",
 		Description: "유저를 차단해요.",
@@ -43,7 +47,7 @@ var BlockCommand = &commands.Command{
 			}
 		}
 
-		data, err := repository.GetDatabase().Users.All()
+		data, err := repository.GetDatabase().Users.All(inter.Ctx)
 		if err != nil {
 			return err
 		}
@@ -97,7 +101,7 @@ var BlockCommand = &commands.Command{
 			return err
 		}
 
-		if !repository.GetDatabase().Users.IsUser(userID) {
+		if !repository.GetDatabase().Users.IsUser(inter.Ctx, userID) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName))).
 				SetComponentsV2(true).
@@ -105,7 +109,7 @@ var BlockCommand = &commands.Command{
 				Send()
 		}
 
-		if _, err = repository.GetDatabase().Users.Update(userID, &repository.UserUpdate{
+		if _, err = repository.GetDatabase().Users.Update(inter.Ctx, userID, &repository.UserUpdate{
 			Blocked:       &blocked,
 			BlockedReason: &reason,
 		}); err != nil {

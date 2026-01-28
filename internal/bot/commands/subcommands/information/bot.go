@@ -16,7 +16,7 @@ func InfoBot(i *builders.InteractionCreate) error {
 		return err
 	}
 
-	counts, err := repository.GetDatabase().Counts(i.User.ID)
+	counts, err := repository.GetDatabase().Counts(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}

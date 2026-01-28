@@ -13,6 +13,10 @@ const (
 )
 
 var InformationCommand *Command = &Command{
+	Deferred: true,
+	DeferOptions: &discordgo.InteractionResponseData{
+		Flags: discordgo.MessageFlagsEphemeral,
+	},
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "정보",
 		Description: "해당 봇의 정보를 알려줘요.",
@@ -38,24 +42,10 @@ var InformationCommand *Command = &Command{
 	Run: func(inter *builders.InteractionCreate) error {
 		switch inter.ApplicationCommandData().Options[0].Name {
 		case informationCommandBot:
-			if err := inter.DeferReply(nil); err != nil {
-				return err
-			}
-
 			return subcommands.InfoBot(inter)
 		case informationCommandUser:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			return subcommands.InfoUser(inter)
 		case informationCommandPatchNotes:
-			if err := inter.DeferReply(nil); err != nil {
-				return err
-			}
-
 			return subcommands.InfoPatchLogs(inter)
 		default:
 			return nil

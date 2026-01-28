@@ -12,6 +12,7 @@ import (
 )
 
 var SelectChatComponent *commands.Component = &commands.Component{
+	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
@@ -32,13 +33,9 @@ var SelectChatComponent *commands.Component = &commands.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		if err := inter.DeferUpdate(); err != nil {
-			return err
-		}
-
 		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
 
-		if _, err := repository.GetDatabase().Users.Update(inter.User.ID, &repository.UserUpdate{
+		if _, err := repository.GetDatabase().Users.Update(inter.Ctx, inter.User.ID, &repository.UserUpdate{
 			ChatID: &id,
 		}); err != nil {
 			return err

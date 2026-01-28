@@ -27,7 +27,7 @@ func InfoUser(i *builders.InteractionCreate) error {
 
 	var currentChat repository.Chat
 
-	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}

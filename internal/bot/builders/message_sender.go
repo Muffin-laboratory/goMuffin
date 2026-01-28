@@ -1,12 +1,15 @@
 package builders
 
 import (
+	"context"
+
 	"github.com/bwmarrin/discordgo"
 )
 
 type MessageCreate struct {
 	*discordgo.MessageCreate
 	Session *discordgo.Session
+	Ctx     context.Context
 }
 
 type MessageSender struct {
@@ -74,15 +77,20 @@ func (s *MessageSender) Send() error {
 			reference = m.Reference()
 		}
 
-		_, err := m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content:         s.Content,
-			Embeds:          s.Embeds,
-			Components:      s.Components,
-			AllowedMentions: s.AllowedMentions,
-			Flags:           flags,
-			Reference:       reference,
-		})
-		return err
+		select {
+		case <-m.Ctx.Done():
+			return m.Ctx.Err()
+		default:
+			_, err := m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+				Content:         s.Content,
+				Embeds:          s.Embeds,
+				Components:      s.Components,
+				AllowedMentions: s.AllowedMentions,
+				Flags:           flags,
+				Reference:       reference,
+			})
+			return err
+		}
 	case *InteractionCreate:
 		if s.Ephemeral {
 			flags |= discordgo.MessageFlagsEphemeral

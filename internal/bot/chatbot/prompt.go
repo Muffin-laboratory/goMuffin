@@ -1,6 +1,7 @@
 package chatbot
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -18,7 +19,7 @@ func loadPrompt() (string, error) {
 	return string(bin), nil
 }
 
-func makePrompt(systemPrompt string, user *discordgo.User) (string, error) {
+func makePrompt(ctx context.Context, systemPrompt string, user *discordgo.User) (string, error) {
 	var userPrompt string
 
 	knowledgePrompt := "## Knowledge of the user\n"
@@ -37,7 +38,7 @@ func makePrompt(systemPrompt string, user *discordgo.User) (string, error) {
 		)
 	}
 
-	knowledge, err := repository.GetDatabase().Knowledge.Get(user.ID)
+	knowledge, err := repository.GetDatabase().Knowledge.Get(ctx, user.ID)
 	if err != nil {
 		return "", err
 	}

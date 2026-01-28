@@ -37,7 +37,7 @@ type MemoryCollection struct {
 	caches     *cache.CacheManager[*memoryCacheItem]
 }
 
-func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer string, files []File) error {
+func (c *MemoryCollection) Save(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) error {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
@@ -47,7 +47,7 @@ func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer st
 		Files:     files,
 	}
 
-	if _, err := c.Collection.InsertOne(context.TODO(), data); err != nil {
+	if _, err := c.Collection.InsertOne(ctx, data); err != nil {
 		return err
 	}
 
@@ -62,7 +62,7 @@ func (c *MemoryCollection) Save(chatID bson.ObjectID, userID, content, answer st
 	return nil
 }
 
-func (c *MemoryCollection) get(chatID bson.ObjectID) (*memoryCacheItem, error) {
+func (c *MemoryCollection) get(ctx context.Context, chatID bson.ObjectID) (*memoryCacheItem, error) {
 	if item, ok := c.caches.Get(chatID.Hex()); ok {
 		return item, nil
 	}
@@ -70,14 +70,14 @@ func (c *MemoryCollection) get(chatID bson.ObjectID) (*memoryCacheItem, error) {
 	var data []*Memory
 	var item *memoryCacheItem
 
-	cur, err := c.Collection.Find(context.TODO(), bson.M{"chat_id": chatID})
+	cur, err := c.Collection.Find(ctx, bson.M{"chat_id": chatID})
 	if err != nil {
 		return nil, err
 	}
 
-	defer cur.Close(context.TODO())
+	defer cur.Close(ctx)
 
-	if err = cur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return nil, err
 	}
 
@@ -87,11 +87,11 @@ func (c *MemoryCollection) get(chatID bson.ObjectID) (*memoryCacheItem, error) {
 	return item, nil
 }
 
-func (c *MemoryCollection) Get(chatID bson.ObjectID) ([]*genai.Content, error) {
+func (c *MemoryCollection) Get(ctx context.Context, chatID bson.ObjectID) ([]*genai.Content, error) {
 	var parts []*genai.Part
 	var memory []*genai.Content
 
-	item, err := c.get(chatID)
+	item, err := c.get(ctx, chatID)
 	if err != nil {
 		return memory, nil
 	}
@@ -115,8 +115,8 @@ func (c *MemoryCollection) Get(chatID bson.ObjectID) ([]*genai.Content, error) {
 	return memory, nil
 }
 
-func (c *MemoryCollection) GetLastMemoryTimestamp(chatID bson.ObjectID) (int64, error) {
-	data, err := c.get(chatID)
+func (c *MemoryCollection) GetLastMemoryTimestamp(ctx context.Context, chatID bson.ObjectID) (int64, error) {
+	data, err := c.get(ctx, chatID)
 	if err != nil {
 		return 0, err
 	}
@@ -131,16 +131,16 @@ func (c *MemoryCollection) GetLastMemoryTimestamp(chatID bson.ObjectID) (int64, 
 	return memory[len(memory)-1].CreatedAt.Unix(), nil
 }
 
-func (c *MemoryCollection) DeleteByUserID(userID string) (*mongo.DeleteResult, error) {
+func (c *MemoryCollection) DeleteByUserID(ctx context.Context, userID string) (*mongo.DeleteResult, error) {
 	var memory []Memory
 	var chatIDList []bson.ObjectID
 
-	cur, err := c.Collection.Find(context.TODO(), Memory{UserID: userID})
+	cur, err := c.Collection.Find(ctx, Memory{UserID: userID})
 	if err != nil {
 		return nil, err
 	}
 
-	if err = cur.All(context.TODO(), &memory); err != nil {
+	if err = cur.All(ctx, &memory); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +156,7 @@ func (c *MemoryCollection) DeleteByUserID(userID string) (*mongo.DeleteResult, e
 		chatIDList = append(chatIDList, memory.ChatID)
 	}
 
-	result, err := c.Collection.DeleteMany(context.TODO(), Memory{UserID: userID})
+	result, err := c.Collection.DeleteMany(ctx, Memory{UserID: userID})
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +168,8 @@ func (c *MemoryCollection) DeleteByUserID(userID string) (*mongo.DeleteResult, e
 	return result, nil
 }
 
-func (c *MemoryCollection) DeleteByChatID(chatID bson.ObjectID) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteMany(context.TODO(), Memory{ChatID: chatID})
+func (c *MemoryCollection) DeleteByChatID(ctx context.Context, chatID bson.ObjectID) (*mongo.DeleteResult, error) {
+	result, err := c.Collection.DeleteMany(ctx, Memory{ChatID: chatID})
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"context"
 	"sync"
+	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
@@ -16,7 +18,9 @@ type CommandFlags uint8
 
 type Command struct {
 	*discordgo.ApplicationCommand
+	DeferOptions *discordgo.InteractionResponseData
 	Flags        CommandFlags
+	Deferred     bool
 	Run          run
 	Autocomplete run
 }
@@ -28,13 +32,18 @@ type Discommand struct {
 }
 
 type Component struct {
-	Parse parse
-	Run   run
+	Parse             parse
+	Run               run
+	DeferredReply     bool
+	DeferReplyOptions *discordgo.InteractionResponseData
+	DeferredUpdate    bool
 }
 
 type Modal struct {
-	Parse parse
-	Run   run
+	Parse        parse
+	Run          run
+	Deferred     bool
+	DeferOptions *discordgo.InteractionResponseData
 }
 
 const (
@@ -91,6 +100,23 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
+		var ctx context.Context
+		var cancel context.CancelFunc
+		if command.Deferred {
+			ctx, cancel = context.WithTimeout(context.Background(), 15*time.Minute)
+		} else {
+			ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+		}
+		i.Ctx = ctx
+
+		defer cancel()
+
+		if command.Deferred {
+			if err := i.DeferReply(command.DeferOptions); err != nil {
+				return err
+			}
+		}
+
 		if command.Flags&CommandFlagsIsDeveloperOnlyCommand != 0 && i.User.ID != configs.GetConfig().Bot.OwnerID {
 			return builders.NewMessageSender(i).
 				AddComponents(builders.MakeDeclineContainer("이 명령어는 개발자 전용 명령어에요.")).
@@ -99,7 +125,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 				Send()
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !repository.GetDatabase().Users.IsUser(i.User.ID) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !repository.GetDatabase().Users.IsUser(ctx, i.User.ID) {
 			return builders.NewMessageSender(i).
 				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 				SetComponentsV2(true).
@@ -108,7 +134,7 @@ func (d *Discommand) ChatInputRun(name string, s *discordgo.Session, inter *disc
 				Send()
 		}
 
-		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(i.User.ID)
+		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, i.User.ID)
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			user, _ := s.User(i.User.ID)
 			return builders.NewMessageSender(i).
@@ -133,6 +159,11 @@ func (d *Discommand) ChatInputAutocomplete(name string, s *discordgo.Session, in
 	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	if command, ok := d.Commands[name]; ok {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		i.Ctx = ctx
+
+		defer cancel()
+
 		return command.Autocomplete(i)
 	}
 
@@ -150,8 +181,29 @@ func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.Interac
 	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	for _, c := range d.Components {
+		var ctx context.Context
+		var cancel context.CancelFunc
+		if c.DeferredReply || c.DeferredUpdate {
+			ctx, cancel = context.WithTimeout(context.Background(), 15*time.Minute)
+		} else {
+			ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+		}
+		i.Ctx = ctx
+
+		defer cancel()
+
 		if !c.Parse(i) {
 			continue
+		}
+
+		if c.DeferredReply {
+			if err := i.DeferReply(c.DeferReplyOptions); err != nil {
+				return err
+			}
+		} else if c.DeferredUpdate {
+			if err := i.DeferUpdate(); err != nil {
+				return err
+			}
 		}
 
 		err = c.Run(i)
@@ -169,8 +221,25 @@ func (d *Discommand) ModalRun(s *discordgo.Session, inter *discordgo.Interaction
 	}
 
 	for _, m := range d.Modals {
+		var ctx context.Context
+		var cancel context.CancelFunc
+		if m.Deferred {
+			ctx, cancel = context.WithTimeout(context.Background(), 15*time.Minute)
+		} else {
+			ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
+		}
+		i.Ctx = ctx
+
+		defer cancel()
+
 		if !m.Parse(i) {
 			continue
+		}
+
+		if m.Deferred {
+			if err := i.DeferReply(m.DeferOptions); err != nil {
+				return err
+			}
 		}
 
 		err = m.Run(i)

@@ -15,7 +15,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 
 	command := opts["단어"].StringValue()
 
-	data, err := repository.GetDatabase().Knowledge.GetByFilter(repository.Knowledge{UserID: i.User.ID, Command: command})
+	data, err := repository.GetDatabase().Knowledge.GetByFilter(i.Ctx, repository.Knowledge{UserID: i.User.ID, Command: command})
 	if err != nil {
 		return err
 	}
@@ -29,18 +29,6 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 	}
 
 	for _, data := range data {
-		// sections = append(sections, discordgo.Section{
-		// 	Accessory: discordgo.Button{
-		// 		Label:    "삭제",
-		// 		Style:    discordgo.DangerButton,
-		// 		CustomID: utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID),
-		// 	},
-		// 	Components: []discordgo.MessageComponent{
-		// 		discordgo.TextDisplay{
-		// 			Content: fmt.Sprintf("**%s**\n", data.Result),
-		// 		},
-		// 	},
-		// })
 		sections = append(sections,
 			builders.SectionBuilder().
 				SetAccessory(

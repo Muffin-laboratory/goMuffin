@@ -13,38 +13,38 @@ type CountDocuments struct {
 	UserMemory    int64
 }
 
-func (d *MuffinDatabase) Counts(userID string) (*CountDocuments, error) {
-	muffinLength, err := d.Texts.CountDocuments(context.TODO(), Text{Persona: "muffin"})
+func (d *MuffinDatabase) Counts(ctx context.Context, userID string) (*CountDocuments, error) {
+	muffinLength, err := d.Texts.CountDocuments(ctx, Text{Persona: "muffin"})
 	if err != nil {
 		return nil, err
 	}
 
-	knowledgeLength, err := d.Knowledge.Collection.EstimatedDocumentCount(context.TODO())
+	knowledgeLength, err := d.Knowledge.Collection.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	userKnowledgeLength, err := d.Knowledge.Collection.CountDocuments(context.TODO(), Knowledge{UserID: userID})
+	userKnowledgeLength, err := d.Knowledge.Collection.CountDocuments(ctx, Knowledge{UserID: userID})
 	if err != nil {
 		return nil, err
 	}
 
-	chatLength, err := d.Chats.EstimatedDocumentCount(context.TODO())
+	chatLength, err := d.Chats.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	userChatLength, err := d.Chats.CountDocuments(context.TODO(), Chat{UserID: userID})
+	userChatLength, err := d.Chats.CountDocuments(ctx, Chat{UserID: userID})
 	if err != nil {
 		return nil, err
 	}
 
-	memoryLength, err := d.Memory.Collection.EstimatedDocumentCount(context.TODO())
+	memoryLength, err := d.Memory.Collection.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	userMemoryLength, err := d.Memory.Collection.CountDocuments(context.TODO(), Memory{UserID: userID})
+	userMemoryLength, err := d.Memory.Collection.CountDocuments(ctx, Memory{UserID: userID})
 	if err != nil {
 		return nil, err
 	}

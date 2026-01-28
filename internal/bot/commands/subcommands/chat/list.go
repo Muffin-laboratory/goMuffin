@@ -16,7 +16,7 @@ func List(i *builders.InteractionCreate) error {
 	var sections []*builders.Section
 	var containers []*builders.Container
 
-	dbUser, err := repository.GetDatabase().Users.Get(i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}

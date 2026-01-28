@@ -29,7 +29,7 @@ type knowledgeCacheItem struct {
 	knowledge *[]*Knowledge
 }
 
-func (c *KnowledgeCollection) Create(userID, command, answer string) (*mongo.InsertOneResult, error) {
+func (c *KnowledgeCollection) Create(ctx context.Context, userID, command, answer string) (*mongo.InsertOneResult, error) {
 	data := Knowledge{
 		UserID:    userID,
 		Command:   command,
@@ -37,7 +37,7 @@ func (c *KnowledgeCollection) Create(userID, command, answer string) (*mongo.Ins
 		CreatedAt: time.Now(),
 	}
 
-	result, err := c.Collection.InsertOne(context.TODO(), data)
+	result, err := c.Collection.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
 	}
@@ -54,21 +54,21 @@ func (c *KnowledgeCollection) Create(userID, command, answer string) (*mongo.Ins
 	return result, nil
 }
 
-func (c *KnowledgeCollection) Get(userID string) ([]*Knowledge, error) {
+func (c *KnowledgeCollection) Get(ctx context.Context, userID string) ([]*Knowledge, error) {
 	if cache, ok := c.caches.Get(userID); ok {
 		return *cache.knowledge, nil
 	}
 
 	var data []*Knowledge
 
-	cur, err := c.Collection.Find(context.TODO(), Knowledge{UserID: userID})
+	cur, err := c.Collection.Find(ctx, Knowledge{UserID: userID})
 	if err != nil {
 		return data, err
 	}
 
-	defer cur.Close(context.TODO())
+	defer cur.Close(ctx)
 
-	if err = cur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return data, err
 	}
 
@@ -77,7 +77,7 @@ func (c *KnowledgeCollection) Get(userID string) ([]*Knowledge, error) {
 	return data, nil
 }
 
-func (c *KnowledgeCollection) GetByCommand(command string) ([]*Knowledge, error) {
+func (c *KnowledgeCollection) GetByCommand(ctx context.Context, command string) ([]*Knowledge, error) {
 	var data []*Knowledge
 
 	if caches := c.caches.All(); len(caches) != 0 {
@@ -96,16 +96,16 @@ func (c *KnowledgeCollection) GetByCommand(command string) ([]*Knowledge, error)
 		return data, nil
 	}
 
-	cur, err := c.Collection.Find(context.TODO(), Knowledge{
+	cur, err := c.Collection.Find(ctx, Knowledge{
 		Command: command,
 	})
 	if err != nil {
 		return data, err
 	}
 
-	defer cur.Close(context.TODO())
+	defer cur.Close(ctx)
 
-	if err = cur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return data, err
 	}
 
@@ -113,24 +113,24 @@ func (c *KnowledgeCollection) GetByCommand(command string) ([]*Knowledge, error)
 }
 
 // It doesn't support cache.
-func (c *KnowledgeCollection) GetByFilter(filter any) ([]*Knowledge, error) {
+func (c *KnowledgeCollection) GetByFilter(ctx context.Context, filter any) ([]*Knowledge, error) {
 	var data []*Knowledge
 
-	cur, err := c.Collection.Find(context.TODO(), filter)
+	cur, err := c.Collection.Find(ctx, filter)
 	if err != nil {
 		return data, err
 	}
 
-	defer cur.Close(context.TODO())
+	defer cur.Close(ctx)
 
-	if err = cur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return data, err
 	}
 
 	return data, nil
 }
 
-func (c *KnowledgeCollection) All() ([]*Knowledge, error) {
+func (c *KnowledgeCollection) All(ctx context.Context) ([]*Knowledge, error) {
 	var data []*Knowledge
 
 	if caches := c.caches.All(); len(caches) != 0 {
@@ -143,14 +143,14 @@ func (c *KnowledgeCollection) All() ([]*Knowledge, error) {
 		return data, nil
 	}
 
-	cur, err := c.Collection.Find(context.TODO(), bson.D{})
+	cur, err := c.Collection.Find(ctx, bson.D{})
 	if err != nil {
 		return data, err
 	}
 
-	defer cur.Close(context.TODO())
+	defer cur.Close(ctx)
 
-	if err = cur.All(context.TODO(), &data); err != nil {
+	if err = cur.All(ctx, &data); err != nil {
 		return data, err
 	}
 
@@ -172,8 +172,8 @@ func (c *KnowledgeCollection) All() ([]*Knowledge, error) {
 	return data, nil
 }
 
-func (c *KnowledgeCollection) Delete(id bson.ObjectID) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteOne(context.TODO(), Knowledge{ID: id})
+func (c *KnowledgeCollection) Delete(ctx context.Context, id bson.ObjectID) (*mongo.DeleteResult, error) {
+	result, err := c.Collection.DeleteOne(ctx, Knowledge{ID: id})
 	if err != nil {
 		return nil, err
 	}
@@ -197,8 +197,8 @@ func (c *KnowledgeCollection) Delete(id bson.ObjectID) (*mongo.DeleteResult, err
 	return result, err
 }
 
-func (c *KnowledgeCollection) DeleteByUserID(userID string) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteMany(context.TODO(), Knowledge{UserID: userID})
+func (c *KnowledgeCollection) DeleteByUserID(ctx context.Context, userID string) (*mongo.DeleteResult, error) {
+	result, err := c.Collection.DeleteMany(ctx, Knowledge{UserID: userID})
 	if err != nil {
 		return nil, err
 	}

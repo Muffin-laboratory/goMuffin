@@ -11,6 +11,7 @@ import (
 )
 
 var DeregisterComponent *commands.Component = &commands.Component{
+	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 		if !strings.HasPrefix(customID, utils.DeregisterAgree) && !strings.HasPrefix(customID, utils.DeregisterDisagree) {
@@ -23,11 +24,6 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		err := inter.DeferUpdate()
-		if err != nil {
-			return err
-		}
-
 		customID := inter.MessageComponentData().CustomID
 		flags := discordgo.MessageFlagsIsComponentsV2
 
@@ -35,15 +31,15 @@ var DeregisterComponent *commands.Component = &commands.Component{
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
 			userID := inter.User.ID
 
-			if _, err := repository.GetDatabase().Users.Delete(userID); err != nil {
+			if _, err := repository.GetDatabase().Users.Delete(inter.Ctx, userID); err != nil {
 				return err
 			}
 
-			if _, err := repository.GetDatabase().Knowledge.DeleteByUserID(userID); err != nil {
+			if _, err := repository.GetDatabase().Knowledge.DeleteByUserID(inter.Ctx, userID); err != nil {
 				return err
 			}
 
-			if _, err := repository.GetDatabase().Memory.DeleteByUserID(userID); err != nil {
+			if _, err := repository.GetDatabase().Memory.DeleteByUserID(inter.Ctx, userID); err != nil {
 				return err
 			}
 

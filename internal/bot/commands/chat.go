@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"context"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/chat"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
@@ -21,6 +19,10 @@ var (
 const chatNameMaxLength = 25
 
 var ChatCommand *Command = &Command{
+	Deferred: true,
+	DeferOptions: &discordgo.InteractionResponseData{
+		Flags: discordgo.MessageFlagsEphemeral,
+	},
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "대화",
 		Description: "이 봇이랑 대화해요.",
@@ -89,34 +91,12 @@ var ChatCommand *Command = &Command{
 	Run: func(inter *builders.InteractionCreate) error {
 		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case chatCommandChatting:
-			if err := inter.DeferReply(nil); err != nil {
-				return err
-			}
-
 			return subcommands.Chat(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandCreate:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			return subcommands.Create(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandList:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			return subcommands.List(inter)
 		case chatCommandDelete:
-			if err := inter.DeferReply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral,
-			}); err != nil {
-				return err
-			}
-
 			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
 		case chatCommandSettings:
 			return subcommands.Settings(inter)
@@ -136,14 +116,14 @@ var ChatCommand *Command = &Command{
 			}
 		}
 
-		cur, err := repository.GetDatabase().Chats.Find(context.TODO(), bson.M{"name": bson.M{"$regex": focusedValue}})
+		cur, err := repository.GetDatabase().Chats.Find(inter.Ctx, bson.M{"name": bson.M{"$regex": focusedValue}})
 		if err != nil {
 			return err
 		}
 
-		defer cur.Close(context.TODO())
+		defer cur.Close(inter.Ctx)
 
-		if err = cur.All(context.TODO(), &data); err != nil {
+		if err = cur.All(inter.Ctx, &data); err != nil {
 			return err
 		}
 
