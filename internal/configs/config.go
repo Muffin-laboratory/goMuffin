@@ -141,7 +141,7 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	if config.Chatbot.Gemini.Model == "" {
-		config.Chatbot.Gemini.Model = "gemini-2.5-flash"
+		config.Chatbot.Gemini.Model = "gemini-3-flash"
 	}
 
 	config.Service = serviceConfig{
