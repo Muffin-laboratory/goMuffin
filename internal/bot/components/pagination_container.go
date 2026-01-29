@@ -4,11 +4,11 @@ import (
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 )
 
-var PaginationContainerComponent *commands.Component = &commands.Component{
+var PaginationContainerComponent *loader.Component = &loader.Component{
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
@@ -52,5 +52,5 @@ var PaginationContainerComponent *commands.Component = &commands.Component{
 }
 
 func init() {
-	commands.GetDiscommand().LoadComponent(PaginationContainerComponent)
+	loader.GetDiscommand().LoadComponent(PaginationContainerComponent)
 }

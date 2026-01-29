@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/chat"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -18,7 +19,7 @@ var (
 
 const chatNameMaxLength = 25
 
-var ChatCommand *Command = &Command{
+var ChatCommand = &loader.Command{
 	Deferred: true,
 	DeferOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -87,7 +88,7 @@ var ChatCommand *Command = &Command{
 			},
 		},
 	},
-	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
 	Run: func(inter *builders.InteractionCreate) error {
 		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case chatCommandChatting:
@@ -139,5 +140,5 @@ var ChatCommand *Command = &Command{
 }
 
 func init() {
-	GetDiscommand().LoadCommand(ChatCommand)
+	loader.GetDiscommand().LoadCommand(ChatCommand)
 }

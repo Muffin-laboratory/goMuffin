@@ -4,13 +4,13 @@ import (
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var DeregisterComponent *commands.Component = &commands.Component{
+var DeregisterComponent = &loader.Component{
 	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
@@ -63,5 +63,5 @@ var DeregisterComponent *commands.Component = &commands.Component{
 }
 
 func init() {
-	commands.GetDiscommand().LoadComponent(DeregisterComponent)
+	loader.GetDiscommand().LoadComponent(DeregisterComponent)
 }

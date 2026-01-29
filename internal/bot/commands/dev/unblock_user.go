@@ -7,14 +7,14 @@ import (
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
-var UnblockCommand = &commands.Command{
+var UnblockCommand = &loader.Command{
 	Deferred: true,
 	DeferOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -32,7 +32,7 @@ var UnblockCommand = &commands.Command{
 			},
 		},
 	},
-	Flags: commands.CommandFlagsIsDeveloperOnlyCommand,
+	Flags: loader.CommandFlagsIsDeveloperOnlyCommand,
 	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
 		var data []*repository.User
@@ -126,5 +126,5 @@ var UnblockCommand = &commands.Command{
 }
 
 func init() {
-	commands.GetDiscommand().LoadCommand(UnblockCommand)
+	loader.GetDiscommand().LoadCommand(UnblockCommand)
 }

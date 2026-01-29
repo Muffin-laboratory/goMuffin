@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/knowledge"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -14,7 +15,7 @@ const (
 	knowledgeDelete = "삭제"
 )
 
-var KnowledgeCommand = &Command{
+var KnowledgeCommand = &loader.Command{
 	Deferred: true,
 	DeferOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -73,13 +74,13 @@ var KnowledgeCommand = &Command{
 			},
 		},
 	},
-	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
 	Run: func(inter *builders.InteractionCreate) error {
 		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case knowledgeLearn:
 			igCommands := []string{}
 
-			for _, command := range instance.Commands {
+			for _, command := range loader.GetDiscommand().Commands {
 				igCommands = append(igCommands, command.Name)
 			}
 
@@ -125,5 +126,5 @@ var KnowledgeCommand = &Command{
 }
 
 func init() {
-	GetDiscommand().LoadCommand(KnowledgeCommand)
+	loader.GetDiscommand().LoadCommand(KnowledgeCommand)
 }

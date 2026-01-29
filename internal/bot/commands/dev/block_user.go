@@ -6,13 +6,13 @@ import (
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/bwmarrin/discordgo"
 )
 
-var BlockCommand = &commands.Command{
+var BlockCommand = &loader.Command{
 	Deferred: true,
 	DeferOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -35,7 +35,7 @@ var BlockCommand = &commands.Command{
 			},
 		},
 	},
-	Flags: commands.CommandFlagsIsDeveloperOnlyCommand,
+	Flags: loader.CommandFlagsIsDeveloperOnlyCommand,
 	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
 		var focusedValue string
@@ -125,5 +125,5 @@ var BlockCommand = &commands.Command{
 }
 
 func init() {
-	commands.GetDiscommand().LoadCommand(BlockCommand)
+	loader.GetDiscommand().LoadCommand(BlockCommand)
 }

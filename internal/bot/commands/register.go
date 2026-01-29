@@ -4,13 +4,14 @@ import (
 	"fmt"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var RegisterCommand *Command = &Command{
+var RegisterCommand = &loader.Command{
 	Deferred: true,
 	DeferOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -19,7 +20,7 @@ var RegisterCommand *Command = &Command{
 		Name:        "가입",
 		Description: "이 봇에 가입해요.",
 	},
-	Flags: CommandFlagsIsBlocked,
+	Flags: loader.CommandFlagsIsBlocked,
 	Run: func(inter *builders.InteractionCreate) error {
 		userID := inter.User.ID
 
@@ -60,5 +61,5 @@ var RegisterCommand *Command = &Command{
 }
 
 func init() {
-	GetDiscommand().LoadCommand(RegisterCommand)
+	loader.GetDiscommand().LoadCommand(RegisterCommand)
 }

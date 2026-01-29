@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/bwmarrin/discordgo"
@@ -32,8 +32,8 @@ func main() {
 
 	var globalCmds []*discordgo.ApplicationCommand
 	var developerOnlyGuildCmds []*discordgo.ApplicationCommand
-	for _, cmd := range commands.GetDiscommand().Commands {
-		if cmd.Flags&commands.CommandFlagsIsDeveloperOnlyCommand != 0 {
+	for _, cmd := range loader.GetDiscommand().Commands {
+		if cmd.Flags&loader.CommandFlagsIsDeveloperOnlyCommand != 0 {
 			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.ApplicationCommand)
 			continue
 		}

@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var SelectKnowledgeComponent = &commands.Component{
+var SelectKnowledgeComponent = &loader.Component{
 	DeferredReply: true,
 	DeferReplyOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -74,5 +74,5 @@ var SelectKnowledgeComponent = &commands.Component{
 }
 
 func init() {
-	commands.GetDiscommand().LoadComponent(SelectKnowledgeComponent)
+	loader.GetDiscommand().LoadComponent(SelectKnowledgeComponent)
 }

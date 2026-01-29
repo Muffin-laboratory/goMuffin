@@ -5,13 +5,13 @@ import (
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var SelectChatComponent *commands.Component = &commands.Component{
+var SelectChatComponent = &loader.Component{
 	DeferredUpdate: true,
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
@@ -52,5 +52,5 @@ var SelectChatComponent *commands.Component = &commands.Component{
 }
 
 func init() {
-	commands.GetDiscommand().LoadComponent(SelectChatComponent)
+	loader.GetDiscommand().LoadComponent(SelectChatComponent)
 }

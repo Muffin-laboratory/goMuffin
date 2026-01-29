@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/bwmarrin/discordgo"
 )
 
-var PingCommand = &Command{
+var PingCommand = &loader.Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "핑",
 		Description: "봇의 레이턴시를 확인해요.",
@@ -54,5 +55,5 @@ var PingCommand = &Command{
 }
 
 func init() {
-	GetDiscommand().LoadCommand(PingCommand)
+	loader.GetDiscommand().LoadCommand(PingCommand)
 }

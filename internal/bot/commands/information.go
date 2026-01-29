@@ -3,6 +3,7 @@ package commands
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/information"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -12,7 +13,7 @@ const (
 	informationCommandPatchNotes = "패치내역"
 )
 
-var InformationCommand *Command = &Command{
+var InformationCommand = &loader.Command{
 	Deferred: true,
 	DeferOptions: &discordgo.InteractionResponseData{
 		Flags: discordgo.MessageFlagsEphemeral,
@@ -38,7 +39,7 @@ var InformationCommand *Command = &Command{
 			},
 		},
 	},
-	Flags: CommandFlagsIsBlocked,
+	Flags: loader.CommandFlagsIsBlocked,
 	Run: func(inter *builders.InteractionCreate) error {
 		switch inter.ApplicationCommandData().Options[0].Name {
 		case informationCommandBot:
@@ -54,5 +55,5 @@ var InformationCommand *Command = &Command{
 }
 
 func init() {
-	GetDiscommand().LoadCommand(InformationCommand)
+	loader.GetDiscommand().LoadCommand(InformationCommand)
 }

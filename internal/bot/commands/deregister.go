@@ -4,16 +4,17 @@ import (
 	"fmt"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var DeregisterCommand *Command = &Command{
+var DeregisterCommand = &loader.Command{
 	ApplicationCommand: &discordgo.ApplicationCommand{
 		Name:        "탈퇴",
 		Description: "이 봇에서 탈퇴해요.",
 	},
-	Flags: CommandFlagsIsRegistered | CommandFlagsIsBlocked,
+	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
 	Run: func(inter *builders.InteractionCreate) error {
 		userID := inter.User.ID
 
@@ -42,5 +43,5 @@ var DeregisterCommand *Command = &Command{
 }
 
 func init() {
-	GetDiscommand().LoadCommand(DeregisterCommand)
+	loader.GetDiscommand().LoadCommand(DeregisterCommand)
 }

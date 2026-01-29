@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var PaginationContainerModal *commands.Modal = &commands.Modal{
+var PaginationContainerModal = &loader.Modal{
 	Parse: func(inter *builders.InteractionCreate) bool {
 		data := inter.ModalSubmitData()
 		customID := data.CustomID
@@ -62,5 +62,5 @@ var PaginationContainerModal *commands.Modal = &commands.Modal{
 }
 
 func init() {
-	commands.GetDiscommand().LoadModal(PaginationContainerModal)
+	loader.GetDiscommand().LoadModal(PaginationContainerModal)
 }

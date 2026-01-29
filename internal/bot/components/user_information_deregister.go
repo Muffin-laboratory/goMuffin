@@ -5,11 +5,12 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/commands"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
-var UserInformationDeregisterComponent = &commands.Component{
+var UserInformationDeregisterComponent = &loader.Component{
 	Parse: func(inter *builders.InteractionCreate) bool {
 		customID := inter.MessageComponentData().CustomID
 
@@ -35,5 +36,5 @@ var UserInformationDeregisterComponent = &commands.Component{
 }
 
 func init() {
-	commands.GetDiscommand().LoadComponent(UserInformationDeregisterComponent)
+	loader.GetDiscommand().LoadComponent(UserInformationDeregisterComponent)
 }
