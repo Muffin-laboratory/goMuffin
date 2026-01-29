@@ -21,7 +21,7 @@ type UserSettings struct {
 var userSettings = make(map[string]*UserSettings)
 
 func NewUserSettings(ctx context.Context, user *discordgo.User) (*UserSettings, error) {
-	dbUser, err := GetDatabase().Users.Get(ctx, user.ID)
+	dbUser, err := GetDatabase().Users.FindByID(ctx, user.ID)
 	if err != nil {
 		return nil, err
 	}

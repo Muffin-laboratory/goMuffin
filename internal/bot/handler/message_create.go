@@ -57,7 +57,7 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		s.ChannelTyping(m.ChannelID)
 
-		dbUser, err := repository.GetDatabase().Users.Get(m.Ctx, m.Author.ID)
+		dbUser, err := repository.GetDatabase().Users.FindByID(m.Ctx, m.Author.ID)
 		if err != nil {
 			owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
 			log.Println(err)

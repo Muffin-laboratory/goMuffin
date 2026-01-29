@@ -37,7 +37,7 @@ type UserUpdate struct {
 
 type UserCollection struct {
 	Collection *mongo.Collection
-	caches     *cache.CacheManager[*User]
+	caches     *cache.CacheManager[User]
 }
 
 const (
@@ -58,13 +58,13 @@ func (c *UserCollection) Create(ctx context.Context, userID string) (*mongo.Inse
 		return nil, err
 	}
 
-	c.caches.Set(userID, &user)
+	c.caches.Set(userID, user)
 
 	return result, nil
 }
 
-func (c *UserCollection) All(ctx context.Context) ([]*User, error) {
-	var data []*User
+func (c *UserCollection) All(ctx context.Context) ([]User, error) {
+	var data []User
 
 	if caches := c.caches.All(); len(caches) != 0 {
 		return caches, nil
@@ -92,12 +92,12 @@ func (c *UserCollection) All(ctx context.Context) ([]*User, error) {
 	return data, nil
 }
 
-func (c *UserCollection) Get(ctx context.Context, userID string) (*User, error) {
+func (c *UserCollection) FindByID(ctx context.Context, userID string) (*User, error) {
 	if user, ok := c.caches.Get(userID); ok {
-		return user, nil
+		return &user, nil
 	}
 
-	var user *User
+	var user User
 
 	if err := c.Collection.FindOne(ctx, bson.M{
 		"user_id": userID,
@@ -107,22 +107,22 @@ func (c *UserCollection) Get(ctx context.Context, userID string) (*User, error) 
 
 	c.caches.Set(userID, user)
 
-	return user, nil
+	return &user, nil
 }
 
 func (c *UserCollection) IsUser(ctx context.Context, userID string) bool {
-	user, err := c.Get(ctx, userID)
+	user, err := c.FindByID(ctx, userID)
 	if err != nil {
 		return false
 	}
 
-	c.caches.Set(userID, user)
+	c.caches.Set(userID, *user)
 
 	return true
 }
 
 func (c *UserCollection) IsUserBlocked(ctx context.Context, userID string) (bool, string) {
-	user, err := c.Get(ctx, userID)
+	user, err := c.FindByID(ctx, userID)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return false, ""
@@ -132,18 +132,18 @@ func (c *UserCollection) IsUserBlocked(ctx context.Context, userID string) (bool
 		return true, "에러가 발생하여 차단한 유저를 구별 못해요. 계속 이러면 연락주세요."
 	}
 
-	c.caches.Set(userID, user)
+	c.caches.Set(userID, *user)
 
 	return user.Blocked, user.BlockedReason
 }
 
 func (c *UserCollection) GetUserChattingMode(ctx context.Context, userID string) (ChattingMode, error) {
-	user, err := c.Get(ctx, userID)
+	user, err := c.FindByID(ctx, userID)
 	if err != nil {
 		return ChattingAIMode, err
 	}
 
-	c.caches.Set(userID, user)
+	c.caches.Set(userID, *user)
 
 	return user.ChattingMode, nil
 }
@@ -159,7 +159,7 @@ func (c *UserCollection) Update(ctx context.Context, userID string, data *UserUp
 	c.caches.Delete(userID)
 
 	// 캐시 저장용
-	if _, err := c.Get(ctx, userID); err != nil {
+	if _, err := c.FindByID(ctx, userID); err != nil {
 		return nil, err
 	}
 

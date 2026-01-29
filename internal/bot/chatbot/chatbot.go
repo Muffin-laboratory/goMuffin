@@ -102,7 +102,7 @@ func getMuffinResponse(ctx context.Context, s *discordgo.Session, question strin
 func getAIResponse(ctx context.Context, c *Chatbot, user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
 	const twelveHours = 43_200
 
-	dbUser, err := repository.GetDatabase().Users.Get(ctx, user.ID)
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, user.ID)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}

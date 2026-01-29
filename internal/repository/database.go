@@ -35,7 +35,7 @@ func init() {
 		Knowledge: &KnowledgeCollection{client.Database(configs.GetConfig().Database.Name).Collection("learn"), cache.New[*knowledgeCacheItem](timeToExpire)},
 		Texts:     client.Database(configs.GetConfig().Database.Name).Collection("text"),
 		Memory:    &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory"), cache.New[*memoryCacheItem](timeToExpire)},
-		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[*User](timeToExpire)},
+		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[User](timeToExpire)},
 		Chats:     &ChatCollection{client.Database(configs.GetConfig().Database.Name).Collection("chat")},
 	}
 }

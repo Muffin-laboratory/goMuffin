@@ -13,7 +13,7 @@ import (
 func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
 	name := opts["이름"].StringValue()
 
-	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.FindByID(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}
