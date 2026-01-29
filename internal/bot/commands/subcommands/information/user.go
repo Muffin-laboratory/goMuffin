@@ -25,16 +25,13 @@ func InfoUser(i *builders.InteractionCreate) error {
 		return err
 	}
 
-	var currentChat repository.Chat
-
 	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
 	if err != nil {
 		return err
 	}
 
-	if err = repository.GetDatabase().Chats.FindOne(context.TODO(), repository.Chat{
-		ID: dbUser.ChatID,
-	}).Decode(&currentChat); err != nil {
+	currentChat, err := repository.GetDatabase().Chats.FindByID(i.Ctx, dbUser.ChatID)
+	if err != nil {
 		return err
 	}
 

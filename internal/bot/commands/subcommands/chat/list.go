@@ -1,18 +1,16 @@
 package chat
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func List(i *builders.InteractionCreate) error {
-	var data []repository.Chat
 	var sections []*builders.Section
 	var containers []*builders.Container
 
@@ -25,12 +23,8 @@ func List(i *builders.InteractionCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	cur, err := repository.GetDatabase().Chats.Find(context.TODO(), bson.M{"user_id": i.User.ID})
+	data, err := repository.GetDatabase().Chats.Find(i.Ctx, query.ChatQueryBuilder().SetUserID(i.User.ID))
 	if err != nil {
-		return err
-	}
-
-	if err = cur.All(context.TODO(), &data); err != nil {
 		return err
 	}
 

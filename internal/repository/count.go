@@ -29,12 +29,12 @@ func (d *MuffinDatabase) Counts(ctx context.Context, userID string) (*CountDocum
 		return nil, err
 	}
 
-	chatLength, err := d.Chats.EstimatedDocumentCount(ctx)
+	chatLength, err := d.Chats.coll.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	userChatLength, err := d.Chats.CountDocuments(ctx, Chat{UserID: userID})
+	userChatLength, err := d.Chats.coll.CountDocuments(ctx, Chat{UserID: userID})
 	if err != nil {
 		return nil, err
 	}

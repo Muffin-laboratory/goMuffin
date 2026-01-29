@@ -9,6 +9,7 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -106,7 +107,7 @@ func getAIResponse(ctx context.Context, c *Chatbot, user *discordgo.User, questi
 		return "살려주ㅅ세요", err
 	}
 
-	if err := repository.GetDatabase().Chats.FindOne(context.TODO(), repository.Chat{UserID: user.ID}).Err(); err != nil {
+	if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(user.ID)); err != nil {
 		if err == mongo.ErrNoDocuments {
 			if _, err = repository.GetDatabase().Chats.Create(ctx, user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
 				return "살려주ㅅ세요", err

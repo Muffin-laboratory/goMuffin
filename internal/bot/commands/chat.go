@@ -5,8 +5,8 @@ import (
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/chat"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var (
@@ -107,7 +107,6 @@ var ChatCommand = &loader.Command{
 	},
 	Autocomplete: func(inter *builders.InteractionCreate) error {
 		var choices []*discordgo.ApplicationCommandOptionChoice
-		var data []*repository.Chat
 		var focusedValue string
 
 		for _, opt := range inter.ApplicationCommandData().Options[0].Options {
@@ -117,14 +116,8 @@ var ChatCommand = &loader.Command{
 			}
 		}
 
-		cur, err := repository.GetDatabase().Chats.Find(inter.Ctx, bson.M{"name": bson.M{"$regex": focusedValue}})
+		data, err := repository.GetDatabase().Chats.Find(inter.Ctx, query.ChatQueryBuilder().SetNameByRegex(focusedValue))
 		if err != nil {
-			return err
-		}
-
-		defer cur.Close(inter.Ctx)
-
-		if err = cur.All(inter.Ctx, &data); err != nil {
 			return err
 		}
 

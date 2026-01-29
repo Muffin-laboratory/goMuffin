@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -16,11 +17,11 @@ type Chat struct {
 }
 
 type ChatCollection struct {
-	*mongo.Collection
+	coll *mongo.Collection
 }
 
 func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*mongo.InsertOneResult, error) {
-	createdChat, err := c.InsertOne(ctx, Chat{UserID: userID, Name: name, CreatedAt: time.Now()})
+	createdChat, err := c.coll.InsertOne(ctx, Chat{UserID: userID, Name: name, CreatedAt: time.Now()})
 	if err != nil {
 		return nil, err
 	}
@@ -33,4 +34,40 @@ func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*mong
 	}
 
 	return createdChat, nil
+}
+
+func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([]Chat, error) {
+	cur, err := c.coll.Find(ctx, filter.Build())
+	if err != nil {
+		return nil, err
+	}
+
+	defer cur.Close(ctx)
+
+	var chats []Chat
+
+	if err := cur.All(ctx, &chats); err != nil {
+		return nil, err
+	}
+
+	return chats, nil
+}
+
+func (c *ChatCollection) FindOne(ctx context.Context, filter query.QueryBuilder) (*Chat, error) {
+	var chat Chat
+
+	if err := c.coll.FindOne(ctx, filter.Build()).Decode(&chat); err != nil {
+		return nil, err
+	}
+
+	return &chat, nil
+}
+
+func (c *ChatCollection) FindByID(ctx context.Context, id bson.ObjectID) (*Chat, error) {
+	return c.FindOne(ctx, query.ChatQueryBuilder().SetID(id))
+}
+
+func (c *ChatCollection) DeleteByID(ctx context.Context, id bson.ObjectID) error {
+	_, err := c.coll.DeleteOne(ctx, query.ChatQueryBuilder().SetID(id))
+	return err
 }

@@ -1,7 +1,6 @@
 package components
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -48,7 +47,7 @@ var DeleteChatComponent = &loader.Component{
 
 		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
 
-		if _, err := repository.GetDatabase().Chats.DeleteOne(context.TODO(), repository.Chat{ID: id}); err != nil {
+		if err := repository.GetDatabase().Chats.DeleteByID(inter.Ctx, id); err != nil {
 			return err
 		}
 

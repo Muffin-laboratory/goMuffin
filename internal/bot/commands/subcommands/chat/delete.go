@@ -1,18 +1,16 @@
 package chat
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
 
 func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
-	var data []repository.Chat
-
 	name := opts["이름"].StringValue()
 
 	dbUser, err := repository.GetDatabase().Users.Get(i.Ctx, i.User.ID)
@@ -24,12 +22,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 		return chatSendErrorMessage(i)
 	}
 
-	cur, err := repository.GetDatabase().Chats.Find(context.TODO(), repository.Chat{Name: name})
-	if err != nil {
-		return err
-	}
-
-	err = cur.All(context.TODO(), &data)
+	data, err := repository.GetDatabase().Chats.Find(i.Ctx, query.ChatQueryBuilder().SetName(name))
 	if err != nil {
 		return err
 	}
