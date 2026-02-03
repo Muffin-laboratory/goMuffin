@@ -34,7 +34,7 @@ type memoryCacheItem struct {
 
 type MemoryCollection struct {
 	Collection *mongo.Collection
-	caches     *cache.CacheManager[*memoryCacheItem]
+	caches     *cache.CacheManager[string, *memoryCacheItem]
 }
 
 func (c *MemoryCollection) Save(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) error {

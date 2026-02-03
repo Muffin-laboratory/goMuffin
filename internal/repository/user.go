@@ -37,7 +37,7 @@ type UserUpdate struct {
 
 type UserCollection struct {
 	Collection *mongo.Collection
-	caches     *cache.CacheManager[User]
+	caches     *cache.CacheManager[string, User]
 }
 
 const (

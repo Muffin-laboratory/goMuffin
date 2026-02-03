@@ -32,10 +32,10 @@ func init() {
 
 	instance = &MuffinDatabase{
 		Client:    client,
-		Knowledge: &KnowledgeCollection{client.Database(configs.GetConfig().Database.Name).Collection("learn"), cache.New[*knowledgeCacheItem](timeToExpire)},
+		Knowledge: &KnowledgeCollection{client.Database(configs.GetConfig().Database.Name).Collection("learn"), cache.New[string, *knowledgeCacheItem](timeToExpire)},
 		Texts:     client.Database(configs.GetConfig().Database.Name).Collection("text"),
-		Memory:    &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory"), cache.New[*memoryCacheItem](timeToExpire)},
-		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[User](timeToExpire)},
+		Memory:    &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory"), cache.New[string, *memoryCacheItem](timeToExpire)},
+		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[string, User](timeToExpire)},
 		Chats:     &ChatCollection{client.Database(configs.GetConfig().Database.Name).Collection("chat")},
 	}
 }

@@ -21,7 +21,7 @@ type Knowledge struct {
 
 type KnowledgeCollection struct {
 	Collection *mongo.Collection
-	caches     *cache.CacheManager[*knowledgeCacheItem]
+	caches     *cache.CacheManager[string, *knowledgeCacheItem]
 }
 
 type knowledgeCacheItem struct {

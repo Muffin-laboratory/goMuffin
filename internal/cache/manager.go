@@ -6,16 +6,16 @@ import (
 )
 
 // CacheManager manages caches.
-type CacheManager[T any] struct {
-	data     map[string]*Item[T]
+type CacheManager[K comparable, V any] struct {
+	data     map[K]*Item[V]
 	mu       sync.RWMutex
 	Duration time.Duration
 }
 
 // New Creates new cache manager.
-func New[T any](duration time.Duration) *CacheManager[T] {
-	cacheManager := CacheManager[T]{
-		data: make(map[string]*Item[T]),
+func New[K comparable, V any](duration time.Duration) *CacheManager[K, V] {
+	cacheManager := CacheManager[K, V]{
+		data: make(map[K]*Item[V]),
 	}
 
 	cacheManager.startCleanupExpiredCaches()
@@ -24,7 +24,7 @@ func New[T any](duration time.Duration) *CacheManager[T] {
 }
 
 // Set creates new cache.
-func (m *CacheManager[T]) Set(key string, value T) {
+func (m *CacheManager[K, V]) Set(key K, value V) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -32,11 +32,11 @@ func (m *CacheManager[T]) Set(key string, value T) {
 		return
 	}
 
-	m.data[key] = &Item[T]{value, time.Now().Add(m.Duration)}
+	m.data[key] = &Item[V]{value, time.Now().Add(m.Duration)}
 }
 
 // Get returns cache.
-func (m *CacheManager[T]) Get(key string) (T, bool) {
+func (m *CacheManager[K, V]) Get(key K) (V, bool) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -44,13 +44,13 @@ func (m *CacheManager[T]) Get(key string) (T, bool) {
 		return item.Item, true
 	}
 
-	var zero T
+	var zero V
 	return zero, false
 }
 
 // All returns all caches.
-func (m *CacheManager[T]) All() []T {
-	var cacheList []T
+func (m *CacheManager[K, V]) All() []V {
+	var cacheList []V
 
 	for _, cache := range m.data {
 		cacheList = append(cacheList, cache.Item)
@@ -60,13 +60,13 @@ func (m *CacheManager[T]) All() []T {
 }
 
 // Delete deletes cache.
-func (m *CacheManager[T]) Delete(key string) {
+func (m *CacheManager[K, V]) Delete(key K) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	delete(m.data, key)
 }
 
-func (m *CacheManager[T]) startCleanupExpiredCaches() {
+func (m *CacheManager[K, V]) startCleanupExpiredCaches() {
 	ticker := time.NewTicker(time.Minute * 10)
 	go func() {
 		for range ticker.C {
