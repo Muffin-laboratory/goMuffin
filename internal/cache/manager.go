@@ -49,11 +49,11 @@ func (m *CacheManager[K, V]) Get(key K) (V, bool) {
 }
 
 // All returns all caches.
-func (m *CacheManager[K, V]) All() []V {
-	var cacheList []V
+func (m *CacheManager[K, V]) All() map[K]V {
+	cacheList := make(map[K]V, len(m.data))
 
-	for _, cache := range m.data {
-		cacheList = append(cacheList, cache.Item)
+	for key, cache := range m.data {
+		cacheList[key] = cache.Item
 	}
 
 	return cacheList

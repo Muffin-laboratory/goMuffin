@@ -12,7 +12,7 @@ import (
 	"google.golang.org/genai"
 )
 
-var chats = cache.New[*genai.Chat](time.Hour * 12)
+var chats = cache.New[string, *genai.Chat](time.Hour * 12)
 
 func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson.ObjectID) (*genai.Chat, error) {
 	if cache, ok := chats.Get(chatID.Hex()); ok {

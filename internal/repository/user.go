@@ -64,25 +64,27 @@ func (c *UserCollection) Create(ctx context.Context, userID string) (*mongo.Inse
 }
 
 func (c *UserCollection) All(ctx context.Context) ([]User, error) {
-	var data []User
-
 	if caches := c.caches.All(); len(caches) != 0 {
-		return caches, nil
+		data := make([]User, 0, len(caches))
+
+		for _, user := range caches {
+			data = append(data, user)
+		}
+
+		return data, nil
 	}
+
+	var data []User
 
 	cur, err := c.Collection.Find(ctx, bson.D{})
 	if err != nil {
-		return data, nil
+		return nil, err
 	}
 
 	defer cur.Close(ctx)
 
 	if err = cur.All(ctx, &data); err != nil {
-		return data, nil
-	}
-
-	if len(data) == 0 {
-		return data, nil
+		return nil, err
 	}
 
 	for _, data := range data {
