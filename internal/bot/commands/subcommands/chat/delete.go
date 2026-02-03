@@ -22,7 +22,8 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 		return chatSendErrorMessage(i)
 	}
 
-	data, err := repository.GetDatabase().Chats.Find(i.Ctx, query.ChatQueryBuilder().SetName(name))
+	filter := query.ChatQueryBuilder().SetUserID(dbUser.UserID).SetName(name)
+	data, err := repository.GetDatabase().Chats.Find(i.Ctx, filter)
 	if err != nil {
 		return err
 	}

@@ -20,11 +20,11 @@ type MuffinDatabase struct {
 	Chats     *ChatCollection
 }
 
+const timeToExpire = time.Hour * 12
+
 var instance *MuffinDatabase
 
 func init() {
-	const timeToExpire = time.Hour * 12
-
 	client, err := mongo.Connect(options.Client().ApplyURI(configs.GetConfig().Database.URL))
 	if err != nil {
 		log.Panicln(err)
@@ -36,7 +36,7 @@ func init() {
 		Texts:     client.Database(configs.GetConfig().Database.Name).Collection("text"),
 		Memory:    &MemoryCollection{client.Database(configs.GetConfig().Database.Name).Collection("memory"), cache.New[string, *memoryCacheItem](timeToExpire)},
 		Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[string, User](timeToExpire)},
-		Chats:     &ChatCollection{client.Database(configs.GetConfig().Database.Name).Collection("chat")},
+		Chats:     newChatCollection(client.Database(configs.GetConfig().Database.Name).Collection("chat")),
 	}
 }
 

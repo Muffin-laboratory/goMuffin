@@ -116,7 +116,8 @@ var ChatCommand = &loader.Command{
 			}
 		}
 
-		data, err := repository.GetDatabase().Chats.Find(inter.Ctx, query.ChatQueryBuilder().SetNameByRegex(focusedValue))
+		filter := query.ChatQueryBuilder().SetNameByRegex(focusedValue)
+		data, err := repository.GetDatabase().Chats.Find(inter.Ctx, filter)
 		if err != nil {
 			return err
 		}
