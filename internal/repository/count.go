@@ -39,12 +39,12 @@ func (d *MuffinDatabase) Counts(ctx context.Context, userID string) (*CountDocum
 		return nil, err
 	}
 
-	memoryLength, err := d.Memory.Collection.EstimatedDocumentCount(ctx)
+	memoryLength, err := d.Memory.coll.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	userMemoryLength, err := d.Memory.Collection.CountDocuments(ctx, Memory{UserID: userID})
+	userMemoryLength, err := d.Memory.coll.CountDocuments(ctx, Memory{UserID: userID})
 	if err != nil {
 		return nil, err
 	}

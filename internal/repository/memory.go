@@ -47,16 +47,16 @@ type File struct {
 }
 
 type MemoryCollection struct {
-	Collection *mongo.Collection
-	caches     *cache.CacheManager[bson.ObjectID, Memory]
-	indexes    *cache.CacheManager[string, *indexItem]
+	coll    *mongo.Collection
+	caches  *cache.CacheManager[bson.ObjectID, Memory]
+	indexes *cache.CacheManager[string, *indexItem]
 }
 
 func newMemoryCollection(collection *mongo.Collection) *MemoryCollection {
 	return &MemoryCollection{
-		Collection: collection,
-		caches:     cache.New[bson.ObjectID, Memory](timeToExpire),
-		indexes:    cache.New[string, *indexItem](timeToExpire),
+		coll:    collection,
+		caches:  cache.New[bson.ObjectID, Memory](timeToExpire),
+		indexes: cache.New[string, *indexItem](timeToExpire),
 	}
 }
 
@@ -92,7 +92,7 @@ func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, use
 		Files:     files,
 	}
 
-	createdMemory, err := c.Collection.InsertOne(ctx, data)
+	createdMemory, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) 
 		}
 	}
 
-	cur, err := c.Collection.Find(ctx, rawFilter)
+	cur, err := c.coll.Find(ctx, rawFilter)
 	if err != nil {
 		return nil, err
 	}
@@ -164,12 +164,12 @@ func (c *MemoryCollection) GetLastMemoryTimestamp(ctx context.Context, chatID bs
 }
 
 func (c *MemoryCollection) CountDocuments(ctx context.Context, filter query.QueryBuilder) (int64, error) {
-	return c.Collection.CountDocuments(ctx, filter.Build())
+	return c.coll.CountDocuments(ctx, filter.Build())
 }
 
 func (c *MemoryCollection) DeleteMany(ctx context.Context, filter query.QueryBuilder) error {
 	rawFilter := filter.Build()
-	_, err := c.Collection.DeleteMany(ctx, rawFilter)
+	_, err := c.coll.DeleteMany(ctx, rawFilter)
 	if err != nil {
 		return err
 	}
