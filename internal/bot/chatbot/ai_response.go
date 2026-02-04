@@ -23,6 +23,8 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user *discordgo.User, quest
 		return "살려주ㅅ세요", err
 	}
 
+	fmt.Printf("%+v\n", *dbUser)
+
 	if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(user.ID)); err != nil {
 		if err == mongo.ErrNoDocuments {
 			if _, err = repository.GetDatabase().Chats.Create(ctx, user.ID, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
@@ -71,13 +73,13 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user *discordgo.User, quest
 
 	parts = append(parts, *genai.NewPartFromText(question))
 
-	result, err := chat.SendMessage(context.TODO(), parts...)
+	result, err := chat.SendMessage(ctx, parts...)
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
 	resultText := result.Text()
-	if err = repository.GetDatabase().Memory.Save(ctx, dbUser.ChatID, user.ID, question, resultText, files); err != nil {
+	if err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, user.ID, question, resultText, files); err != nil {
 		return "살려주ㅅ세요", err
 	}
 

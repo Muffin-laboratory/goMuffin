@@ -1,12 +1,12 @@
 package information
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -35,7 +35,7 @@ func InfoUser(i *builders.InteractionCreate) error {
 		return err
 	}
 
-	chatLength, err := repository.GetDatabase().Memory.Collection.CountDocuments(context.TODO(), repository.Memory{UserID: i.User.ID})
+	chatLength, err := repository.GetDatabase().Memory.CountDocuments(i.Ctx, query.MemoryQueryBuilder().SetUserID(i.User.ID))
 	if err != nil {
 		return err
 	}

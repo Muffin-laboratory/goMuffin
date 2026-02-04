@@ -7,6 +7,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -51,7 +52,7 @@ var DeleteChatComponent = &loader.Component{
 			return err
 		}
 
-		if _, err := repository.GetDatabase().Memory.DeleteByChatID(inter.Ctx, id); err != nil {
+		if err := repository.GetDatabase().Memory.DeleteMany(inter.Ctx, query.MemoryQueryBuilder().SetChatID(id)); err != nil {
 			return err
 		}
 

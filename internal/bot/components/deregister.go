@@ -6,6 +6,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -39,7 +40,7 @@ var DeregisterComponent = &loader.Component{
 				return err
 			}
 
-			if _, err := repository.GetDatabase().Memory.DeleteByUserID(inter.Ctx, userID); err != nil {
+			if err := repository.GetDatabase().Memory.DeleteMany(inter.Ctx, query.MemoryQueryBuilder().SetUserID(userID)); err != nil {
 				return err
 			}
 

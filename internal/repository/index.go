@@ -12,8 +12,11 @@ type indexItem struct {
 	ids []bson.ObjectID
 }
 
-func indexItemBuilder(ids []bson.ObjectID) *indexItem {
-	return &indexItem{&sync.RWMutex{}, ids}
+func indexItemBuilder(ids ...bson.ObjectID) *indexItem {
+	return &indexItem{
+		mu:  &sync.RWMutex{},
+		ids: ids,
+	}
 }
 
 type chatIndex struct {
@@ -44,6 +47,39 @@ func (c *chatIndex) build() string {
 
 	if c.name != nil {
 		index += fmt.Sprintf("&name:%s", *c.name)
+	}
+
+	return index
+}
+
+type memoryIndex struct {
+	chatID *bson.ObjectID
+	userID *string
+}
+
+func memoryIndexBuilder() *memoryIndex {
+	return &memoryIndex{}
+}
+
+func (m *memoryIndex) setChatID(chatID bson.ObjectID) *memoryIndex {
+	m.chatID = &chatID
+	return m
+}
+
+func (m *memoryIndex) setUserID(userID string) *memoryIndex {
+	m.userID = &userID
+	return m
+}
+
+func (m *memoryIndex) build() string {
+	index := "memory:"
+
+	if m.chatID != nil {
+		index += fmt.Sprintf("chatID:%s", m.chatID.Hex())
+	}
+
+	if m.userID != nil {
+		index += fmt.Sprintf("&userID:%s", *m.userID)
 	}
 
 	return index

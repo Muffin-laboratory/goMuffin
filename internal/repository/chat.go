@@ -41,7 +41,7 @@ func (c *ChatCollection) createCache(chat Chat) {
 		cache.ids = append(cache.ids, chat.ID)
 		cache.mu.Unlock()
 	} else {
-		c.indexes.Set(index.build(), indexItemBuilder([]bson.ObjectID{chat.ID}))
+		c.indexes.Set(index.build(), indexItemBuilder(chat.ID))
 	}
 
 	index.setName(chat.Name)
@@ -50,7 +50,7 @@ func (c *ChatCollection) createCache(chat Chat) {
 		cache.ids = append(cache.ids, chat.ID)
 		cache.mu.Unlock()
 	} else {
-		c.indexes.Set(index.build(), indexItemBuilder([]bson.ObjectID{chat.ID}))
+		c.indexes.Set(index.build(), indexItemBuilder(chat.ID))
 	}
 
 }
@@ -76,7 +76,6 @@ func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*mong
 }
 
 func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([]Chat, error) {
-
 	rawFilter := filter.Build()
 	index := chatIndexBuilder()
 	for _, filter := range rawFilter {
@@ -84,7 +83,9 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 		case "user_id":
 			index.setUserID(filter.Value.(string))
 		case "name":
-			index.setName(filter.Value.(string))
+			if value, ok := filter.Value.(string); ok {
+				index.setName(value)
+			}
 		}
 	}
 
@@ -121,7 +122,7 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 		ids = append(ids, chat.ID)
 	}
 
-	c.indexes.Set(index.build(), indexItemBuilder(ids))
+	c.indexes.Set(index.build(), indexItemBuilder(ids...))
 
 	return chats, nil
 }
@@ -158,13 +159,17 @@ func (c *ChatCollection) DeleteByID(ctx context.Context, id bson.ObjectID) error
 		return err
 	}
 
-	for _, cache := range c.indexes.All() {
+	for key, cache := range c.indexes.All() {
 		if slices.Contains(cache.ids, id) {
 			cache.mu.Lock()
 			cache.ids = slices.DeleteFunc(cache.ids, func(cache bson.ObjectID) bool {
 				return cache == id
 			})
 			cache.mu.Unlock()
+		}
+
+		if len(cache.ids) == 0 {
+			c.indexes.Delete(key)
 		}
 	}
 

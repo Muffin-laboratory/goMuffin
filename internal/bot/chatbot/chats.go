@@ -7,6 +7,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/bwmarrin/discordgo"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"google.golang.org/genai"
@@ -19,7 +20,7 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson
 		return &cache, nil
 	}
 
-	contents, err := repository.GetDatabase().Memory.Get(ctx, chatID)
+	memory, err := repository.GetDatabase().Memory.Find(ctx, query.MemoryQueryBuilder().SetChatID(chatID))
 	if err != nil {
 		return nil, err
 	}
@@ -29,6 +30,11 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson
 		return nil, err
 	}
 
+	var content []*genai.Content
+	for _, memory := range memory {
+		content = append(content, memory.ToContents()...)
+	}
+
 	chat, err := c.Gemini.Chats.Create(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
 		Tools: []*genai.Tool{
@@ -36,7 +42,7 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson
 				GoogleSearch: &genai.GoogleSearch{},
 			},
 		},
-	}, contents)
+	}, content)
 	if err != nil {
 		return nil, err
 	}

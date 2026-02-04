@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-	"slices"
-	"sync"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"google.golang.org/genai"
@@ -22,22 +21,68 @@ type Memory struct {
 	Files     []File        `bson:"files,omitempty"`
 }
 
+func (c *Memory) ToContents() []*genai.Content {
+	var parts []*genai.Part
+	var memory []*genai.Content
+
+	if len(c.Files) != 0 {
+		for _, file := range c.Files {
+			parts = append(parts, genai.NewPartFromURI(file.URI, file.MIMEType))
+		}
+	} else {
+		parts = append(parts, genai.NewPartFromText(c.Content))
+	}
+
+	memory = append(memory,
+		genai.NewContentFromParts(parts, genai.RoleUser),
+		genai.NewContentFromText(c.Answer, genai.RoleModel),
+	)
+
+	return memory
+}
+
 type File struct {
 	URI      string `bson:"uri,omitempty"`
 	MIMEType string `bson:"mime_type,omitempty"`
 }
 
-type memoryCacheItem struct {
-	mu     sync.RWMutex
-	memory *[]*Memory
-}
-
 type MemoryCollection struct {
 	Collection *mongo.Collection
-	caches     *cache.CacheManager[string, *memoryCacheItem]
+	caches     *cache.CacheManager[bson.ObjectID, Memory]
+	indexes    *cache.CacheManager[string, *indexItem]
 }
 
-func (c *MemoryCollection) Save(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) error {
+func newMemoryCollection(collection *mongo.Collection) *MemoryCollection {
+	return &MemoryCollection{
+		Collection: collection,
+		caches:     cache.New[bson.ObjectID, Memory](timeToExpire),
+		indexes:    cache.New[string, *indexItem](timeToExpire),
+	}
+}
+
+func (c *MemoryCollection) createCache(memory Memory) {
+	c.caches.Set(memory.ID, memory)
+
+	index := memoryIndexBuilder().setChatID(memory.ChatID)
+	if cache, ok := c.indexes.Get(index.build()); ok {
+		cache.mu.Lock()
+		cache.ids = append(cache.ids, memory.ID)
+		cache.mu.Unlock()
+	} else {
+		c.indexes.Set(index.build(), indexItemBuilder(memory.ID))
+	}
+
+	index.setUserID(memory.UserID)
+	if cache, ok := c.indexes.Get(index.build()); ok {
+		cache.mu.Lock()
+		cache.ids = append(cache.ids, memory.ID)
+		cache.mu.Unlock()
+	} else {
+		c.indexes.Set(index.build(), indexItemBuilder(memory.ID))
+	}
+}
+
+func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) error {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
@@ -47,133 +92,108 @@ func (c *MemoryCollection) Save(ctx context.Context, chatID bson.ObjectID, userI
 		Files:     files,
 	}
 
-	if _, err := c.Collection.InsertOne(ctx, data); err != nil {
+	createdMemory, err := c.Collection.InsertOne(ctx, data)
+	if err != nil {
 		return err
 	}
 
-	if item, ok := c.caches.Get(chatID.Hex()); ok {
-		item.mu.Lock()
-		defer item.mu.Unlock()
-		*item.memory = append(*item.memory, &data)
-	} else {
-		c.caches.Set(data.ChatID.Hex(), &memoryCacheItem{memory: &[]*Memory{&data}})
-	}
+	data.ID = createdMemory.InsertedID.(bson.ObjectID)
+
+	c.createCache(data)
 
 	return nil
 }
 
-func (c *MemoryCollection) get(ctx context.Context, chatID bson.ObjectID) (*memoryCacheItem, error) {
-	if item, ok := c.caches.Get(chatID.Hex()); ok {
-		return item, nil
+func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) ([]Memory, error) {
+	rawFilter := filter.Build()
+	index := memoryIndexBuilder()
+	for _, filter := range rawFilter {
+		switch filter.Key {
+		case "chat_id":
+			index.setChatID(filter.Value.(bson.ObjectID))
+		case "user_id":
+			index.setUserID(filter.Value.(string))
+		}
 	}
 
-	var data []*Memory
-	var item *memoryCacheItem
+	if idx, ok := c.indexes.Get(index.build()); ok {
+		var memory []Memory
 
-	cur, err := c.Collection.Find(ctx, bson.M{"chat_id": chatID})
+		for _, id := range idx.ids {
+			if cache, ok := c.caches.Get(id); ok {
+				memory = append(memory, cache)
+			}
+		}
+
+		if len(memory) > 0 {
+			return memory, nil
+		}
+	}
+
+	cur, err := c.Collection.Find(ctx, rawFilter)
 	if err != nil {
 		return nil, err
 	}
 
 	defer cur.Close(ctx)
 
-	if err = cur.All(ctx, &data); err != nil {
+	var memory []Memory
+	var ids []bson.ObjectID
+
+	if err := cur.All(ctx, &memory); err != nil {
 		return nil, err
 	}
 
-	item = &memoryCacheItem{memory: &data}
-	c.caches.Set(chatID.Hex(), item)
-
-	return item, nil
-}
-
-func (c *MemoryCollection) Get(ctx context.Context, chatID bson.ObjectID) ([]*genai.Content, error) {
-	var parts []*genai.Part
-	var memory []*genai.Content
-
-	item, err := c.get(ctx, chatID)
-	if err != nil {
-		return memory, nil
+	for _, memory := range memory {
+		c.caches.Set(memory.ID, memory)
+		ids = append(ids, memory.ID)
 	}
 
-	for _, data := range *item.memory {
-		if len(data.Files) != 0 {
-
-			for _, file := range data.Files {
-				parts = append(parts, genai.NewPartFromURI(file.URI, file.MIMEType))
-			}
-
-		} else {
-			parts = append(parts, genai.NewPartFromText(data.Content))
-		}
-		memory = append(memory,
-			genai.NewContentFromParts(parts, genai.RoleUser),
-			genai.NewContentFromText(data.Answer, genai.RoleModel),
-		)
-	}
+	c.indexes.Set(index.build(), indexItemBuilder(ids...))
 
 	return memory, nil
 }
 
 func (c *MemoryCollection) GetLastMemoryTimestamp(ctx context.Context, chatID bson.ObjectID) (int64, error) {
-	data, err := c.get(ctx, chatID)
+	memory, err := c.Find(ctx, query.MemoryQueryBuilder().SetChatID(chatID))
 	if err != nil {
 		return 0, err
 	}
 
-	data.mu.RLock()
-	defer data.mu.RUnlock()
-
-	memory := *data.memory
-	if len(memory) == 0 {
-		return 0, nil
-	}
 	return memory[len(memory)-1].CreatedAt.Unix(), nil
 }
 
-func (c *MemoryCollection) DeleteByUserID(ctx context.Context, userID string) (*mongo.DeleteResult, error) {
-	var memory []Memory
-	var chatIDList []bson.ObjectID
-
-	cur, err := c.Collection.Find(ctx, Memory{UserID: userID})
-	if err != nil {
-		return nil, err
-	}
-
-	if err = cur.All(ctx, &memory); err != nil {
-		return nil, err
-	}
-
-	if len(memory) == 0 {
-		return nil, nil
-	}
-
-	for _, memory := range memory {
-		if slices.Contains(chatIDList, memory.ChatID) {
-			continue
-		}
-
-		chatIDList = append(chatIDList, memory.ChatID)
-	}
-
-	result, err := c.Collection.DeleteMany(ctx, Memory{UserID: userID})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, id := range chatIDList {
-		c.caches.Delete(id.Hex())
-	}
-
-	return result, nil
+func (c *MemoryCollection) CountDocuments(ctx context.Context, filter query.QueryBuilder) (int64, error) {
+	return c.Collection.CountDocuments(ctx, filter.Build())
 }
 
-func (c *MemoryCollection) DeleteByChatID(ctx context.Context, chatID bson.ObjectID) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteMany(ctx, Memory{ChatID: chatID})
+func (c *MemoryCollection) DeleteMany(ctx context.Context, filter query.QueryBuilder) error {
+	rawFilter := filter.Build()
+	_, err := c.Collection.DeleteMany(ctx, rawFilter)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	c.caches.Delete(chatID.Hex())
-	return result, err
+	var ids []bson.ObjectID
+
+	index := memoryIndexBuilder()
+	for _, filter := range rawFilter {
+		switch filter.Key {
+		case "chat_id":
+			index.setChatID(filter.Value.(bson.ObjectID))
+		case "user_id":
+			index.setUserID(filter.Value.(string))
+		}
+	}
+
+	if idx, ok := c.indexes.Get(index.build()); ok {
+		ids = append(ids, idx.ids...)
+		c.indexes.Delete(index.build())
+	}
+
+	for _, id := range ids {
+		c.caches.Delete(id)
+	}
+
+	return nil
 }
