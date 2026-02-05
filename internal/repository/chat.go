@@ -82,11 +82,13 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 	if idx, ok := c.indexes.Get(index.build()); ok {
 		var chats []Chat
 
+		idx.mu.RLock()
 		for _, id := range idx.ids {
 			if cache, ok := c.caches.Get(id); ok {
 				chats = append(chats, cache)
 			}
 		}
+		idx.mu.RUnlock()
 
 		if len(chats) > 0 {
 			return chats, nil

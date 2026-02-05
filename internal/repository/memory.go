@@ -107,11 +107,13 @@ func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) 
 	if idx, ok := c.indexes.Get(index.build()); ok {
 		var memory []Memory
 
+		idx.mu.RLock()
 		for _, id := range idx.ids {
 			if cache, ok := c.caches.Get(id); ok {
 				memory = append(memory, cache)
 			}
 		}
+		idx.mu.RUnlock()
 
 		if len(memory) > 0 {
 			return memory, nil
