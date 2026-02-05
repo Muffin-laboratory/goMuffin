@@ -7,6 +7,7 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -38,7 +39,7 @@ func makePrompt(ctx context.Context, systemPrompt string, user *discordgo.User) 
 		)
 	}
 
-	knowledge, err := repository.GetDatabase().Knowledge.Get(ctx, user.ID)
+	knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetUserID(user.ID))
 	if err != nil {
 		return "", err
 	}

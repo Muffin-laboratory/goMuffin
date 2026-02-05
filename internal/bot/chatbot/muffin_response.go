@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
@@ -26,13 +27,13 @@ func (c *Chatbot) getMuffinResponse(ctx context.Context, question string) (strin
 		return "살려주ㅅ세요", err
 	}
 
-	learnData, err := repository.GetDatabase().Knowledge.GetByCommand(ctx, question)
+	knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetCommand(question))
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	if x > 2 && len(learnData) != 0 {
-		data := learnData[rand.Intn(len(learnData))]
+	if x > 2 && len(knowledge) != 0 {
+		data := knowledge[rand.Intn(len(knowledge))]
 		user, _ := c.s.User(data.UserID)
 
 		result =

@@ -5,8 +5,8 @@ import (
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/knowledge"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 const (
@@ -104,12 +104,8 @@ var KnowledgeCommand = &loader.Command{
 			}
 		}
 
-		data, err := repository.GetDatabase().Knowledge.GetByFilter(inter.Ctx, bson.M{
-			"user_id": inter.User.ID,
-			"command": bson.M{
-				"$regex": focusedValue,
-			},
-		})
+		filter := query.KnowledgeQueryBuilder().SetUserID(inter.User.ID).SetCommandByRegex(focusedValue)
+		data, err := repository.GetDatabase().Knowledge.Find(inter.Ctx, filter)
 		if err != nil {
 			return err
 		}

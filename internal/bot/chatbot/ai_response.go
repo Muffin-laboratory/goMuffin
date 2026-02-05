@@ -10,7 +10,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"google.golang.org/genai"
 )
@@ -47,7 +46,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user *discordgo.User, quest
 				return "살려주ㅅ세요", err
 			}
 
-			dbUser.ChatID = result.InsertedID.(bson.ObjectID)
+			dbUser.ChatID = result.ID
 		}
 	}
 
@@ -79,7 +78,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user *discordgo.User, quest
 	}
 
 	resultText := result.Text()
-	if err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, user.ID, question, resultText, files); err != nil {
+	if _, err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, user.ID, question, resultText, files); err != nil {
 		return "살려주ㅅ세요", err
 	}
 

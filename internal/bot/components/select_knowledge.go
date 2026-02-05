@@ -7,6 +7,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -25,7 +26,8 @@ var SelectKnowledgeComponent = &loader.Component{
 
 		command := utils.GetSelectKnowledgeCommand(inter.MessageComponentData().CustomID)
 
-		data, err := repository.GetDatabase().Knowledge.GetByFilter(inter.Ctx, repository.Knowledge{UserID: inter.User.ID, Command: command})
+		filter := query.KnowledgeQueryBuilder().SetUserID(inter.User.ID).SetCommand(command)
+		data, err := repository.GetDatabase().Knowledge.Find(inter.Ctx, filter)
 		if err != nil {
 			return err
 		}

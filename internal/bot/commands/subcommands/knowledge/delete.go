@@ -5,6 +5,7 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,7 +16,8 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 
 	command := opts["단어"].StringValue()
 
-	data, err := repository.GetDatabase().Knowledge.GetByFilter(i.Ctx, repository.Knowledge{UserID: i.User.ID, Command: command})
+	filter := query.KnowledgeQueryBuilder().SetUserID(i.User.ID).SetCommand(command)
+	data, err := repository.GetDatabase().Knowledge.Find(i.Ctx, filter)
 	if err != nil {
 		return err
 	}

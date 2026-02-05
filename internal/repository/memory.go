@@ -64,25 +64,13 @@ func (c *MemoryCollection) createCache(memory Memory) {
 	c.caches.Set(memory.ID, memory)
 
 	index := memoryIndexBuilder().setChatID(memory.ChatID)
-	if cache, ok := c.indexes.Get(index.build()); ok {
-		cache.mu.Lock()
-		cache.ids = append(cache.ids, memory.ID)
-		cache.mu.Unlock()
-	} else {
-		c.indexes.Set(index.build(), indexItemBuilder(memory.ID))
-	}
+	createIndexCache(c.indexes, memory.ID, index)
 
 	index.setUserID(memory.UserID)
-	if cache, ok := c.indexes.Get(index.build()); ok {
-		cache.mu.Lock()
-		cache.ids = append(cache.ids, memory.ID)
-		cache.mu.Unlock()
-	} else {
-		c.indexes.Set(index.build(), indexItemBuilder(memory.ID))
-	}
+	createIndexCache(c.indexes, memory.ID, index)
 }
 
-func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) error {
+func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) (*Memory, error) {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
@@ -94,14 +82,14 @@ func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, use
 
 	createdMemory, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	data.ID = createdMemory.InsertedID.(bson.ObjectID)
 
 	c.createCache(data)
 
-	return nil
+	return &data, nil
 }
 
 func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) ([]Memory, error) {

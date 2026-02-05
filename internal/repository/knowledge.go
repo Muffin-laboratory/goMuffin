@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"slices"
-	"sync"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
@@ -20,16 +20,33 @@ type Knowledge struct {
 }
 
 type KnowledgeCollection struct {
-	Collection *mongo.Collection
-	caches     *cache.CacheManager[string, *knowledgeCacheItem]
+	coll    *mongo.Collection
+	caches  *cache.CacheManager[bson.ObjectID, Knowledge]
+	indexes *cache.CacheManager[string, *indexItem]
 }
 
-type knowledgeCacheItem struct {
-	mu        sync.RWMutex
-	knowledge *[]*Knowledge
+func newKnowledgeCollection(coll *mongo.Collection) *KnowledgeCollection {
+	return &KnowledgeCollection{
+		coll:    coll,
+		caches:  cache.New[bson.ObjectID, Knowledge](timeToExpire),
+		indexes: cache.New[string, *indexItem](timeToExpire),
+	}
 }
 
-func (c *KnowledgeCollection) Create(ctx context.Context, userID, command, answer string) (*mongo.InsertOneResult, error) {
+func (c *KnowledgeCollection) createCache(data Knowledge) {
+	c.caches.Set(data.ID, data)
+
+	userIDIndex := knowledgeIndexBuilder().setUserID(data.UserID)
+	createIndexCache(c.indexes, data.ID, userIDIndex)
+
+	commandIndex := knowledgeIndexBuilder().setCommand(data.Command)
+	createIndexCache(c.indexes, data.ID, commandIndex)
+
+	index := knowledgeIndexBuilder().setUserID(data.UserID).setCommand(data.Command)
+	createIndexCache(c.indexes, data.ID, index)
+}
+
+func (c *KnowledgeCollection) Create(ctx context.Context, userID, command, answer string) (*Knowledge, error) {
 	data := Knowledge{
 		UserID:    userID,
 		Command:   command,
@@ -37,173 +54,123 @@ func (c *KnowledgeCollection) Create(ctx context.Context, userID, command, answe
 		CreatedAt: time.Now(),
 	}
 
-	result, err := c.Collection.InsertOne(ctx, data)
+	result, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
 	}
 
-	if item, ok := c.caches.Get(userID); ok {
-		item.mu.Lock()
-		defer item.mu.Unlock()
+	data.ID = result.InsertedID.(bson.ObjectID)
+	c.createCache(data)
 
-		*item.knowledge = append(*item.knowledge, &data)
-	} else {
-		c.caches.Set(userID, &knowledgeCacheItem{knowledge: &[]*Knowledge{&data}})
-	}
-
-	return result, nil
+	return &data, nil
 }
 
-func (c *KnowledgeCollection) Get(ctx context.Context, userID string) ([]*Knowledge, error) {
-	if cache, ok := c.caches.Get(userID); ok {
-		return *cache.knowledge, nil
-	}
-
-	var data []*Knowledge
-
-	cur, err := c.Collection.Find(ctx, Knowledge{UserID: userID})
-	if err != nil {
-		return data, err
-	}
-
-	defer cur.Close(ctx)
-
-	if err = cur.All(ctx, &data); err != nil {
-		return data, err
-	}
-
-	c.caches.Set(userID, &knowledgeCacheItem{knowledge: &data})
-
-	return data, nil
-}
-
-func (c *KnowledgeCollection) GetByCommand(ctx context.Context, command string) ([]*Knowledge, error) {
-	var data []*Knowledge
-
-	if caches := c.caches.All(); len(caches) != 0 {
-		for _, cache := range caches {
-			cache.mu.RLock()
-
-			for _, knowledge := range *cache.knowledge {
-				if knowledge.Command == command {
-					data = append(data, knowledge)
-				}
+func (c *KnowledgeCollection) Find(ctx context.Context, filter query.QueryBuilder) ([]Knowledge, error) {
+	rawFilter := filter.Build()
+	index := knowledgeIndexBuilder()
+	for _, filter := range rawFilter {
+		switch filter.Key {
+		case "user_id":
+			index.setUserID(filter.Value.(string))
+		case "command":
+			if value, ok := filter.Value.(string); ok {
+				index.setCommand(value)
 			}
-
-			cache.mu.RUnlock()
 		}
-
-		return data, nil
 	}
 
-	cur, err := c.Collection.Find(ctx, Knowledge{
-		Command: command,
-	})
-	if err != nil {
-		return data, err
-	}
+	if idx, ok := c.indexes.Get(index.build()); ok {
+		var knowledge []Knowledge
 
-	defer cur.Close(ctx)
-
-	if err = cur.All(ctx, &data); err != nil {
-		return data, err
-	}
-
-	return data, nil
-}
-
-// It doesn't support cache.
-func (c *KnowledgeCollection) GetByFilter(ctx context.Context, filter any) ([]*Knowledge, error) {
-	var data []*Knowledge
-
-	cur, err := c.Collection.Find(ctx, filter)
-	if err != nil {
-		return data, err
-	}
-
-	defer cur.Close(ctx)
-
-	if err = cur.All(ctx, &data); err != nil {
-		return data, err
-	}
-
-	return data, nil
-}
-
-func (c *KnowledgeCollection) All(ctx context.Context) ([]*Knowledge, error) {
-	var data []*Knowledge
-
-	if caches := c.caches.All(); len(caches) != 0 {
-		for _, cache := range caches {
-			cache.mu.RLock()
-			data = append(data, *cache.knowledge...)
-			cache.mu.RUnlock()
+		idx.mu.RLock()
+		for _, id := range idx.ids {
+			if cache, ok := c.caches.Get(id); ok {
+				knowledge = append(knowledge, cache)
+			}
 		}
+		idx.mu.RUnlock()
 
-		return data, nil
-	}
-
-	cur, err := c.Collection.Find(ctx, bson.D{})
-	if err != nil {
-		return data, err
-	}
-
-	defer cur.Close(ctx)
-
-	if err = cur.All(ctx, &data); err != nil {
-		return data, err
-	}
-
-	dataMap := make(map[string]*[]*Knowledge)
-
-	for _, data := range data {
-		if list, ok := dataMap[data.UserID]; ok {
-			*list = append(*list, data)
-			continue
+		if len(knowledge) > 0 {
+			return knowledge, nil
 		}
-
-		dataMap[data.UserID] = &[]*Knowledge{data}
 	}
 
-	for k, v := range dataMap {
-		c.caches.Set(k, &knowledgeCacheItem{knowledge: v})
-	}
+	var knowledge []Knowledge
+	var ids []bson.ObjectID
 
-	return data, nil
-}
-
-func (c *KnowledgeCollection) Delete(ctx context.Context, id bson.ObjectID) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteOne(ctx, Knowledge{ID: id})
+	cur, err := c.coll.Find(ctx, rawFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	caches := c.caches.All()
+	defer cur.Close(ctx)
 
-	if len(caches) == 0 {
-		return result, err
-	}
-
-	for _, cache := range caches {
-		cache.mu.Lock()
-
-		*cache.knowledge = slices.DeleteFunc(*cache.knowledge, func(data *Knowledge) bool {
-			return data.ID == id
-		})
-
-		cache.mu.Unlock()
-	}
-
-	return result, err
-}
-
-func (c *KnowledgeCollection) DeleteByUserID(ctx context.Context, userID string) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteMany(ctx, Knowledge{UserID: userID})
-	if err != nil {
+	if err = cur.All(ctx, &knowledge); err != nil {
 		return nil, err
 	}
 
-	c.caches.Delete(userID)
+	for _, data := range knowledge {
+		c.caches.Set(data.ID, data)
+		ids = append(ids, data.ID)
+	}
 
-	return result, nil
+	c.indexes.Set(index.build(), indexItemBuilder(ids...))
+
+	return knowledge, nil
+}
+
+func (c *KnowledgeCollection) DeleteMany(ctx context.Context, filter query.QueryBuilder) error {
+	rawFilter := filter.Build()
+	_, err := c.coll.DeleteMany(ctx, rawFilter)
+	if err != nil {
+		return err
+	}
+
+	var ids []bson.ObjectID
+
+	index := knowledgeIndexBuilder()
+	for _, filter := range rawFilter {
+		switch filter.Key {
+		case "user_id":
+			index.setUserID(filter.Value.(string))
+		case "command":
+			index.setCommand(filter.Value.(string))
+		}
+	}
+
+	if idx, ok := c.indexes.Get(index.build()); ok {
+		ids = append(ids, idx.ids...)
+		c.indexes.Delete(index.build())
+	}
+
+	for _, id := range ids {
+		c.caches.Delete(id)
+	}
+
+	return nil
+}
+
+func (c *KnowledgeCollection) DeleteByID(ctx context.Context, id bson.ObjectID) error {
+	_, err := c.coll.DeleteOne(ctx, query.KnowledgeQueryBuilder().SetID(id))
+	if err != nil {
+		return err
+	}
+
+	for key, cache := range c.indexes.All() {
+		if slices.Contains(cache.ids, id) {
+			cache.mu.Lock()
+			cache.ids = slices.DeleteFunc(cache.ids, func(cache bson.ObjectID) bool {
+				return cache == id
+			})
+			cache.mu.Unlock()
+		}
+
+		if len(cache.ids) == 0 {
+			c.indexes.Delete(key)
+		}
+	}
+
+	c.caches.Delete(id)
+
+	return nil
 }

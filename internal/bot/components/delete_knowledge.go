@@ -34,7 +34,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 	},
 	Run: func(inter *builders.InteractionCreate) error {
 		id, itemID := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
-		if _, err := repository.GetDatabase().Knowledge.Delete(inter.Ctx, id); err != nil {
+		if err := repository.GetDatabase().Knowledge.DeleteByID(inter.Ctx, id); err != nil {
 			return err
 		}
 

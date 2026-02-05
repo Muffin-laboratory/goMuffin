@@ -35,34 +35,24 @@ func newChatCollection(collection *mongo.Collection) *ChatCollection {
 func (c *ChatCollection) createCache(chat Chat) {
 	c.caches.Set(chat.ID, chat)
 
-	index := chatIndexBuilder().setUserID(chat.UserID)
-	if cache, ok := c.indexes.Get(index.build()); ok {
-		cache.mu.Lock()
-		cache.ids = append(cache.ids, chat.ID)
-		cache.mu.Unlock()
-	} else {
-		c.indexes.Set(index.build(), indexItemBuilder(chat.ID))
-	}
+	userIDIndex := chatIndexBuilder().setUserID(chat.UserID)
+	createIndexCache(c.indexes, chat.ID, userIDIndex)
 
-	index.setName(chat.Name)
-	if cache, ok := c.indexes.Get(index.build()); ok {
-		cache.mu.Lock()
-		cache.ids = append(cache.ids, chat.ID)
-		cache.mu.Unlock()
-	} else {
-		c.indexes.Set(index.build(), indexItemBuilder(chat.ID))
-	}
+	nameIndex := chatIndexBuilder().setName(chat.Name)
+	createIndexCache(c.indexes, chat.ID, nameIndex)
 
+	index := chatIndexBuilder().setUserID(chat.UserID).setName(chat.Name)
+	createIndexCache(c.indexes, chat.ID, index)
 }
 
-func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*mongo.InsertOneResult, error) {
+func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*Chat, error) {
 	data := Chat{UserID: userID, Name: name, CreatedAt: time.Now()}
-	createdChat, err := c.coll.InsertOne(ctx, data)
+	result, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
 	}
 
-	chatID := createdChat.InsertedID.(bson.ObjectID)
+	chatID := result.InsertedID.(bson.ObjectID)
 	data.ID = chatID
 	if _, err := GetDatabase().Users.Update(ctx, userID, &UserUpdate{
 		ChatID: &chatID,
@@ -72,7 +62,7 @@ func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*mong
 
 	c.createCache(data)
 
-	return createdChat, nil
+	return &data, nil
 }
 
 func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([]Chat, error) {

@@ -12,6 +12,10 @@ type indexItem struct {
 	ids []bson.ObjectID
 }
 
+type indexBuilder interface {
+	build() string
+}
+
 func indexItemBuilder(ids ...bson.ObjectID) *indexItem {
 	return &indexItem{
 		mu:  &sync.RWMutex{},
@@ -80,6 +84,39 @@ func (m *memoryIndex) build() string {
 
 	if m.userID != nil {
 		index += fmt.Sprintf("&userID:%s", *m.userID)
+	}
+
+	return index
+}
+
+type knowledgeIndex struct {
+	userID  *string
+	command *string
+}
+
+func knowledgeIndexBuilder() *knowledgeIndex {
+	return &knowledgeIndex{}
+}
+
+func (k *knowledgeIndex) setUserID(userID string) *knowledgeIndex {
+	k.userID = &userID
+	return k
+}
+
+func (k *knowledgeIndex) setCommand(command string) *knowledgeIndex {
+	k.command = &command
+	return k
+}
+
+func (k *knowledgeIndex) build() string {
+	index := "knowledge:"
+
+	if k.userID != nil {
+		index += fmt.Sprintf("userID:%s", *k.userID)
+	}
+
+	if k.command != nil {
+		index += fmt.Sprintf("&command:%s", *k.command)
 	}
 
 	return index

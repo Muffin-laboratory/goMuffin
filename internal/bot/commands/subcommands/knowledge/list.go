@@ -6,9 +6,9 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func List(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
@@ -21,15 +21,15 @@ func List(i *builders.InteractionCreate, opts builders.CommandInteractionOptions
 		command = opt.StringValue()
 	}
 
-	filter := bson.D{{Key: "user_id", Value: i.User.ID}}
+	filter := query.KnowledgeQueryBuilder().SetUserID(i.User.ID)
 
 	if command != "" {
-		filter = append(filter, bson.E{Key: "command", Value: bson.M{"$regex": command}})
+		filter.SetCommandByRegex(command)
 	} else {
 		command = "전체"
 	}
 
-	data, err := repository.GetDatabase().Knowledge.GetByFilter(i.Ctx, filter)
+	data, err := repository.GetDatabase().Knowledge.Find(i.Ctx, filter)
 	if err != nil {
 		return err
 	}

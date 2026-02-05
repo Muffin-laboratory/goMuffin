@@ -36,7 +36,7 @@ var DeregisterComponent = &loader.Component{
 				return err
 			}
 
-			if _, err := repository.GetDatabase().Knowledge.DeleteByUserID(inter.Ctx, userID); err != nil {
+			if err := repository.GetDatabase().Knowledge.DeleteMany(inter.Ctx, query.KnowledgeQueryBuilder().SetUserID(userID)); err != nil {
 				return err
 			}
 

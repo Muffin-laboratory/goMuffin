@@ -19,12 +19,12 @@ func (d *MuffinDatabase) Counts(ctx context.Context, userID string) (*CountDocum
 		return nil, err
 	}
 
-	knowledgeLength, err := d.Knowledge.Collection.EstimatedDocumentCount(ctx)
+	knowledgeLength, err := d.Knowledge.coll.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	userKnowledgeLength, err := d.Knowledge.Collection.CountDocuments(ctx, Knowledge{UserID: userID})
+	userKnowledgeLength, err := d.Knowledge.coll.CountDocuments(ctx, Knowledge{UserID: userID})
 	if err != nil {
 		return nil, err
 	}

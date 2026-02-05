@@ -7,7 +7,7 @@ type ChatQuery struct {
 }
 
 func ChatQueryBuilder() *ChatQuery {
-	return &ChatQuery{bson.D{}}
+	return &ChatQuery{}
 }
 
 func (b *ChatQuery) SetUserID(userID string) *ChatQuery {

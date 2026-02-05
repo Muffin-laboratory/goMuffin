@@ -8,6 +8,7 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
+	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -35,7 +36,7 @@ func GetDatabase() *MuffinDatabase {
 
 		instance = &MuffinDatabase{
 			Client:    client,
-			Knowledge: &KnowledgeCollection{client.Database(configs.GetConfig().Database.Name).Collection("learn"), cache.New[string, *knowledgeCacheItem](timeToExpire)},
+			Knowledge: newKnowledgeCollection(client.Database(configs.GetConfig().Database.Name).Collection("learn")),
 			Texts:     client.Database(configs.GetConfig().Database.Name).Collection("text"),
 			Memory:    newMemoryCollection(client.Database(configs.GetConfig().Database.Name).Collection("memory")),
 			Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[string, User](timeToExpire)},
@@ -47,4 +48,14 @@ func GetDatabase() *MuffinDatabase {
 
 func (d *MuffinDatabase) Disconnect() {
 	GetDatabase().Client.Disconnect(context.TODO())
+}
+
+func createIndexCache(im *cache.CacheManager[string, *indexItem], id bson.ObjectID, index indexBuilder) {
+	if cache, ok := im.Get(index.build()); ok {
+		cache.mu.Lock()
+		cache.ids = append(cache.ids, id)
+		cache.mu.Unlock()
+	} else {
+		im.Set(index.build(), indexItemBuilder(id))
+	}
 }

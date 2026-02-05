@@ -7,7 +7,7 @@ type MemoryQuery struct {
 }
 
 func MemoryQueryBuilder() *MemoryQuery {
-	return &MemoryQuery{bson.D{}}
+	return &MemoryQuery{}
 }
 
 func (q *MemoryQuery) SetChatID(chatID bson.ObjectID) *MemoryQuery {
