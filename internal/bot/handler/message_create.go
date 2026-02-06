@@ -22,9 +22,10 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+	defer cancel()
+
 	if strings.HasPrefix(m.Content, config.Bot.Prefix) {
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-		defer cancel()
 
 		m := &builders.MessageCreate{
 			MessageCreate: m,
@@ -98,19 +99,11 @@ func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				RepliedUser: dbUser.ReplyUser,
 			}).
 			Send()
-
-		return
 	} else {
 		if m.Author.ID == config.Chatbot.Train.UserID {
-			if _, err := repository.GetDatabase().Texts.InsertOne(context.TODO(), repository.Text{
-				Text:      m.Content,
-				Persona:   "muffin",
-				CreatedAt: time.Now(),
-			}); err != nil {
-				log.Fatalln(err)
+			if _, err := repository.GetDatabase().Texts.Create(ctx, m.Content); err != nil {
+				log.Println(err)
 			}
 		}
-
-		return
 	}
 }
