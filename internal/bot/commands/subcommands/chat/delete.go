@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"fmt"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
@@ -10,8 +8,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
-	name := opts["이름"].StringValue()
+func Delete(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
+	name := opts.GetOption("이름").StringValue()
 
 	dbUser, err := repository.GetDatabase().Users.FindByID(i.Ctx, i.User.ID)
 	if err != nil {
@@ -49,14 +47,14 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 							SetLabel("삭제").
 							SetCustomID(utils.MakeDeleteChat(data.ID.Hex(), data.Name, i.User.ID)),
 					).
-					AddText(fmt.Sprintf("- **%s**\n", data.Name)),
+					AddText("- **%s**\n", data.Name),
 			)
 		}
 
-		textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", i.User.GlobalName))
+		textDisplay := builders.TextDisplayBuilder("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", i.User.GlobalName)
 		container := builders.ContainerBuilder().AddComponents(textDisplay)
 		for i, section := range sections {
-			container.Components = append(container.Components, section, discordgo.Separator{})
+			container.AddComponents(section, builders.SeparatorBuilder())
 
 			if (i+1)%10 == 0 {
 				containers = append(containers, container)
@@ -65,7 +63,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 			}
 		}
 
-		if len(container.Components) > 1 {
+		if container.GetComponentsLength() > 1 {
 			containers = append(containers, container)
 		}
 
@@ -75,26 +73,23 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 	}
 
 	return builders.NewMessageSender(i).
-		AddComponents(discordgo.Container{
-			Components: []discordgo.MessageComponent{
-				discordgo.TextDisplay{Content: fmt.Sprintf("### 채팅 %s 삭제", name)},
-				discordgo.TextDisplay{Content: "- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**"},
-				discordgo.ActionsRow{
-					Components: []discordgo.MessageComponent{
-						discordgo.Button{
-							Label:    "삭제",
-							Style:    discordgo.DangerButton,
-							CustomID: utils.MakeDeleteChat(data[0].ID.Hex(), name, i.User.ID),
-						},
-						discordgo.Button{
-							Label:    "취소",
-							Style:    discordgo.PrimaryButton,
-							CustomID: utils.MakeDeleteChatCancel(i.User.ID),
-						},
-					},
-				},
-			},
-		}).
+		AddComponents(
+			builders.ContainerBuilder().
+				AddText("### 채팅 %s 삭제", name).
+				AddText("- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**").
+				AddComponents(
+					builders.ActionsRowBuilder(
+						builders.ButtonBuilder().
+							SetLabel("삭제").
+							SetStyle(discordgo.DangerButton).
+							SetCustomID(utils.MakeDeleteChat(data[0].ID.Hex(), name, i.User.ID)),
+						builders.ButtonBuilder().
+							SetLabel("취소").
+							SetStyle(discordgo.PrimaryButton).
+							SetCustomID(utils.MakeDeleteChatCancel(i.User.ID)),
+					),
+				),
+		).
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()

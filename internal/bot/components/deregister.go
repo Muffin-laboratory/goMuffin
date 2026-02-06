@@ -26,7 +26,6 @@ var DeregisterComponent = &loader.Component{
 	},
 	Run: func(inter *builders.InteractionCreate) error {
 		customID := inter.MessageComponentData().CustomID
-		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
@@ -44,17 +43,17 @@ var DeregisterComponent = &loader.Component{
 				return err
 			}
 
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags: &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{
-					builders.MakeSuccessContainer("탈퇴를 했어요."),
+					builders.MakeSuccessContainer("탈퇴를 했어요.").Build(),
 				},
 			})
 		case strings.HasPrefix(customID, utils.DeregisterDisagree):
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags: &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{
-					builders.MakeCanceledContainer("탈퇴를 거부했어요."),
+					builders.MakeCanceledContainer("탈퇴를 거부했어요.").Build(),
 				},
 			})
 		default:

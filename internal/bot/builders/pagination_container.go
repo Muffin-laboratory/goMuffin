@@ -9,23 +9,23 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const EndDuration = time.Minute * 10
-
-// A PaginationContainer is container with page
+// PaginationContainer is container with page
 type PaginationContainer struct {
-	Containers []*discordgo.Container
-	timer      *time.Timer
+	Containers []Container
 	Current    int
 	Total      int
 	ID         string
 	m          any
+	timer      *time.Timer
 }
 
 var paginationContainers = make(map[string]*PaginationContainer)
 
+const endDuration = 10 * time.Minute
+
+// PaginationContainerBuilder creates a new PaginationContainer
 func PaginationContainerBuilder(m any) *PaginationContainer {
 	var userID string
-	var p PaginationContainer
 
 	switch m := m.(type) {
 	case *MessageCreate:
@@ -35,52 +35,49 @@ func PaginationContainerBuilder(m any) *PaginationContainer {
 	}
 
 	id := fmt.Sprintf("%s/%d", userID, rand.Intn(100))
-	p = PaginationContainer{
+	return &PaginationContainer{
 		Current: 1,
 		ID:      id,
 		m:       m,
-		timer:   time.NewTimer(EndDuration),
+		timer:   time.NewTimer(endDuration),
 	}
-
-	p.startTimer()
-
-	return &p
 }
 
-func (p *PaginationContainer) startTimer() {
-	go func() {
-		<-p.timer.C
-		delete(paginationContainers, p.ID)
-	}()
+func (p *PaginationContainer) waitTimerEnd() {
+	<-p.timer.C
+	delete(paginationContainers, p.ID)
 }
 
 func (p *PaginationContainer) resetTimer() {
-	p.timer.Reset(EndDuration)
+	p.timer.Reset(endDuration)
 }
 
+// AddContainers adds containers
 func (p *PaginationContainer) AddContainers(containers ...*Container) *PaginationContainer {
 	p.Total += len(containers)
 	for _, container := range containers {
-		p.Containers = append(p.Containers, container.Build().(*discordgo.Container))
+		p.Containers = append(p.Containers, *container)
 	}
 	return p
 }
 
+// Start starts the paginated-container
 func (p *PaginationContainer) Start() error {
-	container := *p.Containers[0]
-	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
-
+	container := p.Containers[0]
+	container.AddComponents(makeComponents(p.ID, p.Current, p.Total))
 	paginationContainers[p.ID] = p
 
+	go p.waitTimerEnd()
+
 	return NewMessageSender(p.m).
-		AddComponents(container).
+		AddComponents(&container).
 		SetReply(true).
 		SetEphemeral(true).
 		SetComponentsV2(true).
 		Send()
 }
 
-func makeComponents(id string, current, total int) *discordgo.ActionsRow {
+func makeComponents(id string, current, total int) *ActionsRow {
 	disabled := false
 
 	if total == 1 {
@@ -113,10 +110,10 @@ func makeComponents(id string, current, total int) *discordgo.ActionsRow {
 			SetLabel("마지막").
 			SetCustomID(utils.MakePaginationContainerLast(id)).
 			SetDisabled(disabled),
-	).
-		Build().(*discordgo.ActionsRow)
+	)
 }
 
+// GetPaginationContainer gets PaginationContainer
 func GetPaginationContainer(id string) *PaginationContainer {
 	if p, ok := paginationContainers[id]; ok {
 		return p
@@ -124,10 +121,12 @@ func GetPaginationContainer(id string) *PaginationContainer {
 	return nil
 }
 
+// First moves to first page
 func (p *PaginationContainer) First(i *InteractionCreate) error {
 	return p.Set(i, 1)
 }
 
+// Prev move to previous page
 func (p *PaginationContainer) Prev(i *InteractionCreate) error {
 	if p.Current == 1 {
 		p.Current = p.Total
@@ -138,6 +137,7 @@ func (p *PaginationContainer) Prev(i *InteractionCreate) error {
 	return p.Set(i, p.Current)
 }
 
+// Next moves to next page
 func (p *PaginationContainer) Next(i *InteractionCreate) error {
 	if p.Current >= p.Total {
 		p.Current = 1
@@ -148,10 +148,12 @@ func (p *PaginationContainer) Next(i *InteractionCreate) error {
 	return p.Set(i, p.Current)
 }
 
+// Last moves to last page
 func (p *PaginationContainer) Last(i *InteractionCreate) error {
 	return p.Set(i, p.Total)
 }
 
+// Set sets to page
 func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
 	p.resetTimer()
 
@@ -163,31 +165,34 @@ func (p *PaginationContainer) Set(i *InteractionCreate, page int) error {
 		p.Current = page
 	}
 
-	container := *p.Containers[p.Current-1]
-	container.Components = append(container.Components, makeComponents(p.ID, p.Current, p.Total))
+	container := p.Containers[p.Current-1]
+	container.container.Components = container.container.Components[:container.GetComponentsLength()-1]
+	container.AddComponents(makeComponents(p.ID, p.Current, p.Total))
 
 	return i.Update(&discordgo.InteractionResponseData{
 		Flags:      discordgo.MessageFlagsIsComponentsV2,
-		Components: []discordgo.MessageComponent{container},
+		Components: []discordgo.MessageComponent{container.Build()},
 	})
 }
 
+// ShowModal show discord's modal
 func (p *PaginationContainer) ShowModal(i *InteractionCreate) error {
-	return i.ShowModal(&ModalData{
-		CustomId: utils.MakePaginationContainerModal(p.ID),
-		Title:    fmt.Sprintf("%s의 리스트", i.Session.State.User.Username),
-		Components: []discordgo.MessageComponent{
-			discordgo.ActionsRow{
-				Components: []discordgo.MessageComponent{
-					discordgo.TextInput{
-						CustomID:    utils.MakePaginationContainerSetPage(p.ID),
-						Label:       "페이지",
-						Style:       discordgo.TextInputShort,
-						Placeholder: "이동할 페이지를 여기에 적어주세요.",
-						Required:    true,
-					},
-				},
-			},
-		},
-	})
+	return i.ShowModal(
+		ModalBuilder().
+			SetCustomID(utils.MakePaginationContainerModal(p.ID)).
+			SetTitle("페이지 설정").
+			AddComponents(
+				LabelBuilder().
+					SetLabel("이동할 페이지").
+					SetDescription("이동할 페이지의 번호를 입력해 주세요.").
+					SetComponent(
+						TextInputBuilder().
+							SetCustomID(utils.MakePaginationContainerSetPage(p.ID)).
+							SetStyle(discordgo.TextInputShort).
+							SetPlaceholder("페이지 번호를 여기에 입력...").
+							SetValue(fmt.Sprint(p.Current)).
+							SetRequired(true),
+					),
+			),
+	)
 }

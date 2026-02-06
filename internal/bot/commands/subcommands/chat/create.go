@@ -6,12 +6,13 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/bwmarrin/discordgo"
 )
 
-func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
+func Create(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
 	var name = fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))
 
-	if opt, ok := opts["이름"]; ok {
+	if opt := opts.GetOption("이름"); opt != nil {
 		name = opt.StringValue()
 	}
 
@@ -29,7 +30,7 @@ func Create(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 	}
 
 	return builders.NewMessageSender(i).
-		AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("%s를 생성했어요. 이제 현재 채팅은 %s에요.", name, name))).
+		AddComponents(builders.MakeSuccessContainer("%s를 생성했어요. 이제 현재 채팅은 %s에요.", name, name)).
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()

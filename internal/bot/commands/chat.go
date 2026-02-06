@@ -92,13 +92,13 @@ var ChatCommand = &loader.Command{
 	Run: func(inter *builders.InteractionCreate) error {
 		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
 		case chatCommandChatting:
-			return subcommands.Chat(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Chat(inter, opt)
 		case chatCommandCreate:
-			return subcommands.Create(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Create(inter, opt)
 		case chatCommandList:
 			return subcommands.List(inter)
 		case chatCommandDelete:
-			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Delete(inter, opt)
 		case chatCommandSettings:
 			return subcommands.Settings(inter)
 		default:

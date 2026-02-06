@@ -1,7 +1,6 @@
 package dev
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
@@ -81,10 +80,11 @@ var BlockCommand = &loader.Command{
 	},
 	Run: func(inter *builders.InteractionCreate) error {
 		reason := "없음"
-		userID := inter.Options["유저"].StringValue()
+		commandData := inter.ApplicationCommandData()
+		userID := commandData.GetOption("유저").StringValue()
 		blocked := true
 
-		if opt, ok := inter.Options["이유"]; ok {
+		if opt := commandData.GetOption("이유"); opt != nil {
 			reason = opt.StringValue()
 		}
 
@@ -103,7 +103,7 @@ var BlockCommand = &loader.Command{
 
 		if !repository.GetDatabase().Users.IsUser(inter.Ctx, userID) {
 			return builders.NewMessageSender(inter).
-				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName))).
+				AddComponents(builders.MakeErrorContainer("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName)).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
@@ -117,7 +117,7 @@ var BlockCommand = &loader.Command{
 		}
 
 		return builders.NewMessageSender(inter).
-			AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("유저 %s 성공적으로 차단했어요.", hangul.GetJosa(user.GlobalName, hangul.EUL_REUL)))).
+			AddComponents(builders.MakeSuccessContainer("유저 %s 성공적으로 차단했어요.", hangul.GetJosa(user.GlobalName, hangul.EUL_REUL))).
 			SetComponentsV2(true).
 			SetEphemeral(true).
 			Send()

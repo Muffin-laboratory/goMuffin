@@ -32,8 +32,11 @@ func (s *MessageSender) AddEmbeds(embeds ...*discordgo.MessageEmbed) *MessageSen
 	return s
 }
 
-func (s *MessageSender) AddComponents(components ...discordgo.MessageComponent) *MessageSender {
-	s.Components = append(s.Components, components...)
+func (s *MessageSender) AddComponents(components ...ComponentBuilder) *MessageSender {
+	for _, cmp := range components {
+		s.Components = append(s.Components, cmp.Build())
+	}
+
 	return s
 }
 
@@ -77,31 +80,26 @@ func (s *MessageSender) Send() error {
 			reference = m.Reference()
 		}
 
-		select {
-		case <-m.Ctx.Done():
-			return m.Ctx.Err()
-		default:
-			_, err := m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-				Content:         s.Content,
-				Embeds:          s.Embeds,
-				Components:      s.Components,
-				AllowedMentions: s.AllowedMentions,
-				Flags:           flags,
-				Reference:       reference,
-			})
-			return err
-		}
+		_, err := m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content:         s.Content,
+			Embeds:          s.Embeds,
+			Components:      s.Components,
+			AllowedMentions: s.AllowedMentions,
+			Flags:           flags,
+			Reference:       reference,
+		})
+		return err
 	case *InteractionCreate:
 		if s.Ephemeral {
 			flags |= discordgo.MessageFlagsEphemeral
 		}
 
 		if m.Replied || m.Deferred {
-			return m.EditReply(&InteractionEdit{
+			return m.EditReply(&discordgo.WebhookEdit{
 				Content:    &s.Content,
 				Embeds:     &s.Embeds,
 				Components: &s.Components,
-				Flags:      &flags,
+				Flags:      flags,
 			})
 		}
 

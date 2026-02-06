@@ -2,51 +2,61 @@ package builders
 
 import "github.com/bwmarrin/discordgo"
 
+// A Button is builder for button
 type Button struct {
-	*discordgo.Button
+	button *discordgo.Button
 }
 
+// ButtonBuilder creates a new Button
 func ButtonBuilder() *Button {
 	return &Button{
-		Button: &discordgo.Button{},
+		button: &discordgo.Button{},
 	}
 }
 
+// SetLabel sets label
 func (b *Button) SetLabel(label string) *Button {
-	b.Button.Label = label
+	b.button.Label = label
 	return b
 }
 
+// SetStyle sets button style
 func (b *Button) SetStyle(style discordgo.ButtonStyle) *Button {
-	b.Button.Style = style
+	b.button.Style = style
 	return b
 }
 
+// SetDisabled sets disabled
 func (b *Button) SetDisabled(disabled bool) *Button {
-	b.Button.Disabled = disabled
+	b.button.Disabled = disabled
 	return b
 }
 
+// SetEmoji sets emoji
 func (b *Button) SetEmoji(emoji discordgo.ComponentEmoji) *Button {
-	b.Button.Emoji = &emoji
+	b.button.Emoji = &emoji
 	return b
 }
 
+// SetURL sets url
 func (b *Button) SetURL(url string) *Button {
-	b.Button.URL = url
+	b.button.URL = url
 	return b
 }
 
+// SetCustomID sets custom id
 func (b *Button) SetCustomID(customID string) *Button {
-	b.Button.CustomID = customID
+	b.button.CustomID = customID
 	return b
 }
 
+// SetSKUID sets sku id
 func (b *Button) SetSKUID(skuID string) *Button {
-	b.Button.SKUID = skuID
+	b.button.SKUID = skuID
 	return b
 }
 
+// Build returns discordgo.Button(discordgo.MessageComponent)
 func (b *Button) Build() discordgo.MessageComponent {
-	return b.Button
+	return b.button
 }

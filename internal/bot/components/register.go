@@ -1,8 +1,6 @@
 package components
 
 import (
-	"fmt"
-
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -27,7 +25,6 @@ var RegisterComponent = &loader.Component{
 	},
 	Run: func(inter *builders.InteractionCreate) error {
 		customID := inter.MessageComponentData().CustomID
-		flags := discordgo.MessageFlagsIsComponentsV2
 
 		switch {
 		case strings.HasPrefix(customID, utils.ServiceAgree):
@@ -35,17 +32,17 @@ var RegisterComponent = &loader.Component{
 				return err
 			}
 
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags: &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{
-					builders.MakeSuccessContainer(fmt.Sprintf("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", inter.Session.State.User.Username)),
+					builders.MakeSuccessContainer("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", inter.Session.State.User.Username).Build(),
 				},
 			})
 		case strings.HasPrefix(customID, utils.ServiceDisagree):
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags: &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{
-					builders.MakeDeclineContainer("가입을 거부했어요."),
+					builders.MakeDeclineContainer("가입을 거부했어요.").Build(),
 				},
 			})
 		default:

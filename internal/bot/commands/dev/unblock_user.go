@@ -87,7 +87,7 @@ var UnblockCommand = &loader.Command{
 		var blocked bool
 		var reason string
 
-		userID := inter.Options["유저"].StringValue()
+		userID := inter.ApplicationCommandData().GetOption("유저").StringValue()
 
 		if userID == configs.GetConfig().Bot.OwnerID {
 			return builders.NewMessageSender(inter).

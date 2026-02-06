@@ -84,11 +84,11 @@ var KnowledgeCommand = &loader.Command{
 				igCommands = append(igCommands, command.Name)
 			}
 
-			return subcommands.Learn(inter, builders.MakeCommandInteractionOptionsMap(opt.Options), igCommands)
+			return subcommands.Learn(inter, opt, igCommands)
 		case knowledgeList:
-			return subcommands.List(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.List(inter, opt)
 		case knowledgeDelete:
-			return subcommands.Delete(inter, builders.MakeCommandInteractionOptionsMap(opt.Options))
+			return subcommands.Delete(inter, opt)
 		default:
 			return nil
 		}

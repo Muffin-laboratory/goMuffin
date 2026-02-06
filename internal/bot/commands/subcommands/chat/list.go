@@ -1,8 +1,6 @@
 package chat
 
 import (
-	"fmt"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
@@ -49,7 +47,7 @@ func List(i *builders.InteractionCreate) error {
 			sections = append([]*builders.Section{
 				builders.SectionBuilder().
 					SetAccessory(button).
-					AddText(fmt.Sprintf("**%s (선택됨)**", data.Name)),
+					AddText("**%s (선택됨)**", data.Name),
 			}, sections...)
 
 			continue
@@ -58,14 +56,14 @@ func List(i *builders.InteractionCreate) error {
 		sections = append(sections,
 			builders.SectionBuilder().
 				SetAccessory(button).
-				AddText(fmt.Sprintf("%s\n", data.Name)),
+				AddText("%s\n", data.Name),
 		)
 	}
 
-	textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s님의 채팅목록", i.User.GlobalName))
+	textDisplay := builders.TextDisplayBuilder("### %s님의 채팅목록", i.User.GlobalName)
 	container := builders.ContainerBuilder().AddComponents(textDisplay)
 	for i, section := range sections {
-		container.Components = append(container.Components, section, discordgo.Separator{})
+		container.AddComponents(section, builders.SeparatorBuilder())
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)
@@ -75,7 +73,7 @@ func List(i *builders.InteractionCreate) error {
 		}
 	}
 
-	if len(container.Components) > 1 {
+	if container.GetComponentsLength() > 1 {
 		containers = append(containers, container)
 	}
 

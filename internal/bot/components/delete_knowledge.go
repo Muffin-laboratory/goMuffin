@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -25,7 +24,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
 				},
 			})
 			return false
@@ -38,11 +37,10 @@ var DeleteKnowledgeComponent = &loader.Component{
 			return err
 		}
 
-		flags := discordgo.MessageFlagsIsComponentsV2
-		return inter.EditReply(&builders.InteractionEdit{
-			Flags: &flags,
+		return inter.EditReply(&discordgo.WebhookEdit{
+			Flags: discordgo.MessageFlagsIsComponentsV2,
 			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer(fmt.Sprintf("%d번을 삭제했어요.", itemID)),
+				builders.MakeSuccessContainer("%d번을 삭제했어요.", itemID).Build(),
 			},
 		})
 	},

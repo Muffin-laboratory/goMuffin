@@ -1,8 +1,6 @@
 package knowledge
 
 import (
-	"fmt"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
@@ -10,11 +8,11 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
+func Delete(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
 	var sections []*builders.Section
 	var containers []*builders.Container
 
-	command := opts["단어"].StringValue()
+	command := opts.GetOption("단어").StringValue()
 
 	filter := query.KnowledgeQueryBuilder().SetUserID(i.User.ID).SetCommand(command)
 	data, err := repository.GetDatabase().Knowledge.Find(i.Ctx, filter)
@@ -39,14 +37,14 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 						SetLabel("삭제").
 						SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID)),
 				).
-				AddText(fmt.Sprintf("**%s**\n", data.Result)),
+				AddText("**%s**\n", data.Result),
 		)
 	}
 
-	textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s 삭제", command))
+	textDisplay := builders.TextDisplayBuilder("### %s 삭제", command)
 	container := builders.ContainerBuilder().AddComponents(textDisplay)
 	for i, section := range sections {
-		container.Components = append(container.Components, section, discordgo.Separator{})
+		container.AddComponents(section, builders.SeparatorBuilder())
 
 		if (i+1)%10 == 0 {
 			containers = append(containers, container)
@@ -55,7 +53,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 		}
 	}
 
-	if len(container.Components) > 1 {
+	if container.GetComponentsLength() > 1 {
 		containers = append(containers, container)
 	}
 

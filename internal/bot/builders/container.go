@@ -1,76 +1,86 @@
 package builders
 
 import (
-	"fmt"
-
 	"github.com/bwmarrin/discordgo"
 )
 
+// A Container is builder for container
 type Container struct {
-	*discordgo.Container
+	container *discordgo.Container
 }
 
+// ContainerBuilder creates a new container
 func ContainerBuilder() *Container {
 	return &Container{
-		Container: &discordgo.Container{},
+		container: &discordgo.Container{},
 	}
 }
 
+// SetAccentColor sets accent color
 func (c *Container) SetAccentColor(color int) *Container {
-	c.Container.AccentColor = &color
+	c.container.AccentColor = &color
 	return c
 }
 
+// SetSpoiler sets spoiler
 func (c *Container) SetSpoiler(spoiler bool) *Container {
-	c.Container.Spoiler = spoiler
+	c.container.Spoiler = spoiler
 	return c
 }
 
+// AddComponents adds components
 func (c *Container) AddComponents(components ...ComponentBuilder) *Container {
 	for _, cmp := range components {
-		c.Container.Components = append(c.Container.Components, cmp.Build())
+		c.container.Components = append(c.container.Components, cmp.Build())
 	}
 	return c
 }
 
-func (c *Container) AddText(text string) *Container {
-	c.AddComponents(TextDisplayBuilder(text))
+// AddText adds a text
+func (c *Container) AddText(format string, a ...any) *Container {
+	c.AddComponents(TextDisplayBuilder(format, a...))
 	return c
 }
 
+// GetComponentsLength returns its components length
+func (c *Container) GetComponentsLength() int {
+	return len(c.container.Components)
+}
+
+// Build returns discordgo.Container(discordgo.MessageComponent)
 func (c *Container) Build() discordgo.MessageComponent {
-	return c.Container
+	return c.container
 }
 
-func MakeErrorContainer(text string) *Container {
+func MakeErrorContainer(format string, a ...any) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			TextDisplayBuilder("### ❌ 오류"),
-			TextDisplayBuilder(text),
+			TextDisplayBuilder("### ❌ Error"),
+			TextDisplayBuilder(format, a...),
 		)
 }
 
-func MakeDeclineContainer(text string) *Container {
+func MakeDeclineContainer(format string, a ...any) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			TextDisplayBuilder("### ❌ 거부"),
-			TextDisplayBuilder(text),
+			TextDisplayBuilder("### ❌ Declined"),
+			TextDisplayBuilder(format, a...),
 		)
 }
 
-func MakeCanceledContainer(text string) *Container {
+func MakeCanceledContainer(format string, a ...any) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			TextDisplayBuilder("### ❌ 취소"),
-			TextDisplayBuilder(text),
+			TextDisplayBuilder("### ❌ Canceled"),
+			TextDisplayBuilder(format, a...),
 		)
 }
 
-func MakeSuccessContainer(text string) *Container {
+func MakeSuccessContainer(format string, a ...any) *Container {
 	return ContainerBuilder().
 		AddComponents(
-			TextDisplayBuilder("### ✅ 성공"),
-			TextDisplayBuilder(text),
+			TextDisplayBuilder("### ✅ Success"),
+			TextDisplayBuilder(format, a...),
 		)
 }
 
@@ -79,5 +89,5 @@ func MakeUserIsNotRegisteredErrContainer() *Container {
 }
 
 func MakeUserIsBlockedContainer(globalName, reason string) *Container {
-	return MakeDeclineContainer(fmt.Sprintf("- %s님은 서비스에서 차단되었어요.\n> 사유: %s", globalName, reason))
+	return MakeDeclineContainer("- %s님은 서비스에서 차단되었어요.\n> 사유: %s", globalName, reason)
 }

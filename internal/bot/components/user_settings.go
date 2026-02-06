@@ -32,7 +32,6 @@ var UserSettingsComponent = &loader.Component{
 		return repository.GetUserSettings(id) != nil
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		flags := discordgo.MessageFlagsIsComponentsV2
 		customID := inter.MessageComponentData().CustomID
 		settings := repository.GetUserSettings(utils.GetUserSettingsID(customID))
 
@@ -46,22 +45,22 @@ var UserSettingsComponent = &loader.Component{
 
 			settings.ChattingMode = newMode
 
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags:      &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags:      discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{settings.MakeContainer().Build()},
 			})
 		case strings.HasPrefix(customID, utils.UserSettingsReplyUser):
 			settings.ReplyUser = !settings.ReplyUser
 
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags:      &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags:      discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{settings.MakeContainer().Build()},
 			})
 		case strings.HasPrefix(customID, utils.UserSettings12Hours):
 			settings.CreateNewChatAfter12Hours = !settings.CreateNewChatAfter12Hours
 
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags:      &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags:      discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{settings.MakeContainer().Build()},
 			})
 		case strings.HasPrefix(customID, utils.UserSettingsSubmit):
@@ -69,15 +68,16 @@ var UserSettingsComponent = &loader.Component{
 				return err
 			}
 
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags: &flags,
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{
 					builders.ContainerBuilder().
 						AddComponents(
 							builders.SectionBuilder().
 								SetAccessory(builders.ThumbnailBuilder(inter.User.AvatarURL("512"))).
 								AddText("### 채팅 설정\n- 봇의 설정을 성공적으로 바꾸었어요."),
-						),
+						).
+						Build(),
 				},
 			})
 		default:

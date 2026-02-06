@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -26,7 +25,7 @@ var DeleteChatComponent = &loader.Component{
 			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
 				},
 			})
 			return false
@@ -34,14 +33,13 @@ var DeleteChatComponent = &loader.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		flags := discordgo.MessageFlagsIsComponentsV2
-		customId := inter.MessageComponentData().CustomID
+		customID := inter.MessageComponentData().CustomID
 
-		if strings.HasPrefix(customId, utils.DeleteChatCancel) {
-			return inter.EditReply(&builders.InteractionEdit{
-				Flags: &flags,
+		if strings.HasPrefix(customID, utils.DeleteChatCancel) {
+			return inter.EditReply(&discordgo.WebhookEdit{
+				Flags: discordgo.MessageFlagsIsComponentsV2,
 				Components: &[]discordgo.MessageComponent{
-					builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요."),
+					builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요.").Build(),
 				},
 			})
 		}
@@ -56,10 +54,10 @@ var DeleteChatComponent = &loader.Component{
 			return err
 		}
 
-		return inter.EditReply(&builders.InteractionEdit{
-			Flags: &flags,
+		return inter.EditReply(&discordgo.WebhookEdit{
+			Flags: discordgo.MessageFlagsIsComponentsV2,
 			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer(fmt.Sprintf("`%s`번을 삭제했어요.", name)),
+				builders.MakeSuccessContainer("`%s`번을 삭제했어요.", name).Build(),
 			},
 		})
 	},

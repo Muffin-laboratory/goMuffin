@@ -1,7 +1,6 @@
 package information
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -30,8 +29,8 @@ func InfoPatchLogs(i *builders.InteractionCreate) error {
 				AddComponents(
 					builders.SectionBuilder().
 						SetAccessory(builders.ThumbnailBuilder(i.Session.State.User.AvatarURL("512"))).
-						AddText(fmt.Sprintf("# %s", *release.TagName)).
-						AddText(strings.ReplaceAll(*release.Body, "#", "##")),
+						AddText("# %s", *release.TagName).
+						AddText("%s", strings.ReplaceAll(*release.Body, "#", "##")),
 				),
 		)
 	}

@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -49,14 +48,14 @@ var SelectKnowledgeComponent = &loader.Component{
 							SetLabel("삭제").
 							SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, inter.User.ID)),
 					).
-					AddText(fmt.Sprintf("**%s**\n", data.Result)),
+					AddText("**%s**\n", data.Result),
 			)
 		}
 
-		textDisplay := builders.TextDisplayBuilder(fmt.Sprintf("### %s에 대한 목록", command))
+		textDisplay := builders.TextDisplayBuilder("### %s에 대한 목록", command)
 		container := builders.ContainerBuilder().AddComponents(textDisplay)
 		for i, section := range sections {
-			container.Components = append(container.Components, section, discordgo.Separator{})
+			container.AddComponents(section, builders.SeparatorBuilder())
 
 			if (i+1)%10 == 0 {
 				containers = append(containers, container)
@@ -65,7 +64,7 @@ var SelectKnowledgeComponent = &loader.Component{
 			}
 		}
 
-		if len(container.Components) > 1 {
+		if container.GetComponentsLength() > 1 {
 			containers = append(containers, container)
 		}
 

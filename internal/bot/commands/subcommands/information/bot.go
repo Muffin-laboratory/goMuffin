@@ -1,8 +1,6 @@
 package information
 
 import (
-	"fmt"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
@@ -29,11 +27,11 @@ func InfoBot(i *builders.InteractionCreate) error {
 				AddComponents(
 					builders.SectionBuilder().
 						SetAccessory(thumbnail).
-						AddText(fmt.Sprintf("### %s의 정보", i.Session.State.User.Username)).
-						AddText(fmt.Sprintf("- **제작자**\n> %s", owner.Username)).
-						AddText(fmt.Sprintf("- **버전**\n> %s", configs.MuffinVersion)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **최근에 업데이트된 날짜**\n> %s", utils.Time(configs.UpdatedAt, utils.RelativeTime))),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **봇이 시작한 시각**\n> %s", utils.Time(configs.StartedAt, utils.RelativeTime))),
+						AddText("### %s의 정보", i.Session.State.User.Username).
+						AddText("- **제작자**\n> %s", owner.Username).
+						AddText("- **버전**\n> %s", configs.MuffinVersion),
+					builders.TextDisplayBuilder("- **최근에 업데이트된 날짜**\n> %s", utils.Time(configs.UpdatedAt, utils.RelativeTime)),
+					builders.TextDisplayBuilder("- **봇이 시작한 시각**\n> %s", utils.Time(configs.StartedAt, utils.RelativeTime)),
 					builders.ActionsRowBuilder(
 						builders.ButtonBuilder().
 							SetStyle(discordgo.LinkButton).
@@ -52,14 +50,14 @@ func InfoBot(i *builders.InteractionCreate) error {
 				AddComponents(
 					builders.SectionBuilder().
 						SetAccessory(thumbnail).
-						AddText(fmt.Sprintf("### 저장된 데이터 개수\n총합: `%d`개", counts.All)).
-						AddText(fmt.Sprintf("- **머핀 데이터 개수**\n> `%d`개", counts.Muffin)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **총 지식 개수**\n> `%d`개", counts.Knowledge)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **%s님이 가르쳐준 지식 개수**\n> `%d`개", i.User.GlobalName, counts.UserKnowledge)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **총 채팅방 개수**\n> `%d`개", counts.Chat)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **%s님의 채팅방 개수**\n> `%d`개", i.User.GlobalName, counts.UserChat)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **지금까지 한 채팅 개수**\n> `%d`개", counts.Memory)),
-					builders.TextDisplayBuilder(fmt.Sprintf("- **%s님이랑 지금까지 한 채팅 개수**\n> `%d`개", i.User.GlobalName, counts.UserMemory)),
+						AddText("### 저장된 데이터 개수\n총합: `%d`개", counts.All).
+						AddText("- **머핀 데이터 개수**\n> `%d`개", counts.Muffin),
+					builders.TextDisplayBuilder("- **총 지식 개수**\n> `%d`개", counts.Knowledge),
+					builders.TextDisplayBuilder("- **%s님이 가르쳐준 지식 개수**\n> `%d`개", i.User.GlobalName, counts.UserKnowledge),
+					builders.TextDisplayBuilder("- **총 채팅방 개수**\n> `%d`개", counts.Chat),
+					builders.TextDisplayBuilder("- **%s님의 채팅방 개수**\n> `%d`개", i.User.GlobalName, counts.UserChat),
+					builders.TextDisplayBuilder("- **지금까지 한 채팅 개수**\n> `%d`개", counts.Memory),
+					builders.TextDisplayBuilder("- **%s님이랑 지금까지 한 채팅 개수**\n> `%d`개", i.User.GlobalName, counts.UserMemory),
 					builders.SeparatorBuilder(),
 				),
 		).

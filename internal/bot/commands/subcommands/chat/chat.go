@@ -8,10 +8,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func Chat(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap) error {
+func Chat(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
 	var attachment *discordgo.MessageAttachment
 
-	if opt, ok := opts["첨부파일"]; ok {
+	if opt := opts.GetOption("첨부파일"); opt != nil {
 		id := opt.Value.(string)
 
 		if resolvedData := i.ApplicationCommandData().Resolved; resolvedData != nil && resolvedData.Attachments != nil {
@@ -19,17 +19,17 @@ func Chat(i *builders.InteractionCreate, opts builders.CommandInteractionOptions
 		}
 	}
 
-	str, err := chatbot.GetChatBot().GetResponse(i.Ctx, i.User, opts["내용"].StringValue(), attachment)
+	content, err := chatbot.GetChatBot().GetResponse(i.Ctx, i.User, opts.GetOption("내용").StringValue(), attachment)
 	if err != nil {
 		log.Println(err)
-		i.EditReply(&builders.InteractionEdit{
-			Content: &str,
+		i.EditReply(&discordgo.WebhookEdit{
+			Content: &content,
 		})
 		return nil
 	}
 
-	result := chatbot.ParseResult(str, i.Session, i)
-	return i.EditReply(&builders.InteractionEdit{
+	result := chatbot.ParseResult(content, i.Session, i)
+	return i.EditReply(&discordgo.WebhookEdit{
 		Content: &result,
 		AllowedMentions: &discordgo.MessageAllowedMentions{
 			Parse: []discordgo.AllowedMentionType{},

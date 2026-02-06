@@ -1,29 +1,34 @@
 package builders
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/bwmarrin/discordgo"
+)
 
+// A Section is builder for section
 type Section struct {
-	*discordgo.Section
+	section *discordgo.Section
 }
 
+// SectionBuilder creates a new section
 func SectionBuilder() *Section {
 	return &Section{
-		Section: &discordgo.Section{},
+		section: &discordgo.Section{},
 	}
 }
 
+// SetAccessory sets accessory
 func (s *Section) SetAccessory(accessory ComponentBuilder) *Section {
-	s.Section.Accessory = accessory.Build()
+	s.section.Accessory = accessory.Build()
 	return s
 }
 
-func (s *Section) AddText(text string) *Section {
-	s.Components = append(s.Components, discordgo.TextDisplay{
-		Content: text,
-	})
+// AddText adds a text
+func (s *Section) AddText(format string, a ...any) *Section {
+	s.section.Components = append(s.section.Components, TextDisplayBuilder(format, a...).Build())
 	return s
 }
 
+// Build returns discordgo.Section(discordgo.MessageComponent)
 func (s *Section) Build() discordgo.MessageComponent {
-	return s.Section
+	return s.section
 }

@@ -34,12 +34,12 @@ var PaginationContainerModal = &loader.Modal{
 			return false
 		}
 
-		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
+		cmp := data.Components[0].(*discordgo.Label).Component.(*discordgo.TextInput)
 
 		if _, err := strconv.Atoi(cmp.Value); err != nil {
 			inter.Reply(&discordgo.InteractionResponseData{
 				Components: []discordgo.MessageComponent{
-					builders.MakeErrorContainer("해당 값은 숫자여야해요."),
+					builders.MakeErrorContainer("해당 값은 숫자여야해요.").Build(),
 				},
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 			})
@@ -53,7 +53,7 @@ var PaginationContainerModal = &loader.Modal{
 		customID := data.CustomID
 		id := utils.GetPaginationContainerID(customID)
 		p := builders.GetPaginationContainer(id)
-		cmp := data.Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput)
+		cmp := data.Components[0].(*discordgo.Label).Component.(*discordgo.TextInput)
 
 		page, _ := strconv.Atoi(cmp.Value)
 

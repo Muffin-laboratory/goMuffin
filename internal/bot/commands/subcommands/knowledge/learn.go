@@ -8,11 +8,12 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/bwmarrin/discordgo"
 )
 
-func Learn(i *builders.InteractionCreate, opts builders.CommandInteractionOptionsMap, igCommands []string) error {
-	command := opts["단어"].StringValue()
-	result := opts["대답"].StringValue()
+func Learn(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption, igCommands []string) error {
+	command := opts.GetOption("단어").StringValue()
+	result := opts.GetOption("대답").StringValue()
 
 	ignores := []string{"미간", "Migan", "migan", "간미"}
 	ignores = append(ignores, igCommands...)
@@ -48,7 +49,7 @@ func Learn(i *builders.InteractionCreate, opts builders.CommandInteractionOption
 	}
 
 	return builders.NewMessageSender(i).
-		AddComponents(builders.MakeSuccessContainer(fmt.Sprintf("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)))).
+		AddComponents(builders.MakeSuccessContainer("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL))).
 		SetComponentsV2(true).
 		SetReply(true).
 		Send()

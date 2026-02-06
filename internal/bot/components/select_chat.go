@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -25,7 +24,7 @@ var SelectChatComponent = &loader.Component{
 			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
 				},
 			})
 			return false
@@ -41,11 +40,10 @@ var SelectChatComponent = &loader.Component{
 			return err
 		}
 
-		flags := discordgo.MessageFlagsIsComponentsV2
-		return inter.EditReply(&builders.InteractionEdit{
-			Flags: &flags,
+		return inter.EditReply(&discordgo.WebhookEdit{
+			Flags: discordgo.MessageFlagsIsComponentsV2,
 			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer(fmt.Sprintf("`%s`으로 채팅을 변경했어요.", name)),
+				builders.MakeSuccessContainer("`%s`으로 채팅을 변경했어요.", name).Build(),
 			},
 		})
 	},

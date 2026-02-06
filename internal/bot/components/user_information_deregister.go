@@ -23,7 +23,7 @@ var UserInformationDeregisterComponent = &loader.Component{
 			inter.Reply(&discordgo.InteractionResponseData{
 				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
 				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
 				},
 			})
 			return false
