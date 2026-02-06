@@ -1,0 +1,46 @@
+package handler
+
+import (
+	"fmt"
+	"log"
+
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/configs"
+	"github.com/Muffin-laboratory/goMuffin/internal/utils"
+	"github.com/bwmarrin/discordgo"
+)
+
+func InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	switch i.Type {
+	case discordgo.InteractionApplicationCommand:
+		if err := loader.GetDiscommand().ChatInputRun(i.ApplicationCommandData().Name, s, i); err != nil {
+			returnErr(s, i, err)
+		}
+	case discordgo.InteractionMessageComponent:
+		if err := loader.GetDiscommand().ComponentRun(s, i); err != nil {
+			returnErr(s, i, err)
+		}
+	case discordgo.InteractionModalSubmit:
+		if err := loader.GetDiscommand().ModalRun(s, i); err != nil {
+			returnErr(s, i, err)
+		}
+	case discordgo.InteractionApplicationCommandAutocomplete:
+		if err := loader.GetDiscommand().ChatInputAutocomplete(i.ApplicationCommandData().Name, s, i); err != nil {
+			returnErr(s, i, err)
+		}
+	}
+}
+
+func returnErr(s *discordgo.Session, i *discordgo.InteractionCreate, err error) {
+	owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
+	builders.NewMessageSender(&builders.InteractionCreate{
+		InteractionCreate: i,
+		Session:           s,
+	}).
+		AddComponents(builders.MakeErrorContainer(fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username)))).
+		SetComponentsV2(true).
+		SetReply(true).
+		Send()
+	log.Println(err)
+}

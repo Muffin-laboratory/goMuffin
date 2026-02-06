@@ -7,7 +7,7 @@ ifeq ($(OS),Windows_NT)
 endif
 
 BIN := $(BIN_DIR)/$(APP_NAME)$(EXT)
-PKG := git.wh64.net/muffin/goMuffin
+PKG := ./internal/cmd/bot
 
 .PHONY: all build run fmt vet deps
 
