@@ -46,7 +46,7 @@ var PingCommand = &loader.Command{
 		}
 
 		createdTimestamp := inter.ID().Time()
-		discordPing := message.ID.Time().Sub(createdTimestamp)
+		discordPing := message.ID.Time().Sub(createdTimestamp).Milliseconds()
 
 		return builders.NewMessageSender(inter).
 			AddComponents(
