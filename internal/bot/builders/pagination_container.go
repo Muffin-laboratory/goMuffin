@@ -138,7 +138,7 @@ func (p *PaginationContainer) Last(i *events.ComponentInteractionCreate) error {
 }
 
 // Set sets to page
-func (p *PaginationContainer) Set(i *events.ComponentInteractionCreate, page int) error {
+func (p *PaginationContainer) Set(i any, page int) error {
 	p.resetTimer()
 
 	if page <= 0 {
@@ -150,12 +150,24 @@ func (p *PaginationContainer) Set(i *events.ComponentInteractionCreate, page int
 	}
 
 	container := p.Containers[p.Current-1].AddComponents(makeComponents(p.ID, p.Current, p.Total))
-	return i.UpdateMessage(
-		discord.NewMessageUpdateBuilder().
-			SetIsComponentsV2(true).
-			SetComponents(container).
-			Build(),
-	)
+	switch i := i.(type) {
+	case *events.ComponentInteractionCreate:
+		return i.UpdateMessage(
+			discord.NewMessageUpdateBuilder().
+				SetIsComponentsV2(true).
+				SetComponents(container).
+				Build(),
+		)
+	case *events.ModalSubmitInteractionCreate:
+		return i.UpdateMessage(
+			discord.NewMessageUpdateBuilder().
+				SetIsComponentsV2(true).
+				SetComponents(container).
+				Build(),
+		)
+	default:
+		return nil
+	}
 }
 
 // ShowModal show discord's modal
