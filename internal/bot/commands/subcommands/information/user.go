@@ -8,7 +8,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
 	"github.com/disgoorg/disgo/discord"
 )
 
@@ -21,10 +20,7 @@ func boolToString(k bool) string {
 }
 
 func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
-	accCreatedTimestamp, err := discordgo.SnowflakeTimestamp(i.User().ID.String())
-	if err != nil {
-		return err
-	}
+	accCreatedTimestamp := i.User().ID.Time()
 
 	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
 	if err != nil {

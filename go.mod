@@ -4,7 +4,6 @@ go 1.24.5
 
 require (
 	github.com/LoperLee/golang-hangul-toolkit v1.1.0
-	github.com/bwmarrin/discordgo v0.29.1-0.20251229161010-9f6aa8159fc6
 	github.com/disgoorg/disgo v0.19.0-rc.15.0.20260202141706-d5987dc8bc1a
 	github.com/disgoorg/snowflake/v2 v2.0.3
 	github.com/google/go-github/v74 v74.0.0
