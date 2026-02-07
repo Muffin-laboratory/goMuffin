@@ -6,6 +6,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/dev"
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/components"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/handler"
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/modals"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/disgoorg/disgo"
@@ -25,6 +26,11 @@ func init() {
 				gateway.IntentMessageContent,
 			),
 		),
+		bot.WithEventListenerFunc(handler.OnApplicationCommandInteractionCreate),
+		bot.WithEventListenerFunc(handler.OnComponentInteractionCreate),
+		bot.WithEventListenerFunc(handler.OnModalSubmitInteractionCreate),
+		bot.WithEventListenerFunc(handler.OnAutocompleteInteractionCreate),
+		bot.WithEventListenerFunc(handler.OnMessageCreate),
 	)
 	if err != nil {
 		log.Fatalln(err)
