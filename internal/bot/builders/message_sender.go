@@ -16,6 +16,11 @@ type MessageSender struct {
 	m               any
 }
 
+type CommandCreate struct {
+	*events.ApplicationCommandInteractionCreate
+	Responded bool
+}
+
 func NewMessageSender(m any) *MessageSender {
 	return &MessageSender{m: m}
 }
@@ -71,8 +76,22 @@ func (s *MessageSender) Send() error {
 		)
 
 		return err
-	case *events.ApplicationCommandInteractionCreate:
-		return m.CreateMessage(
+	case *CommandCreate:
+		if m.Responded {
+			_, err := m.Client().Rest.UpdateInteractionResponse(
+				m.ApplicationID(),
+				m.Token(),
+				discord.NewMessageUpdateBuilder().
+					SetContent(s.Content).
+					AddEmbeds(s.Embeds...).
+					AddComponents(s.Components...).
+					SetIsComponentsV2(s.ComponentsV2).
+					Build(),
+			)
+			return err
+		}
+
+		err := m.CreateMessage(
 			discord.NewMessageCreateBuilder().
 				SetContent(s.Content).
 				AddEmbeds(s.Embeds...).
@@ -81,6 +100,11 @@ func (s *MessageSender) Send() error {
 				SetEphemeral(s.Ephemeral).
 				Build(),
 		)
+		if err != nil {
+			return err
+		}
+
+		m.Responded = true
 	}
 	return nil
 }

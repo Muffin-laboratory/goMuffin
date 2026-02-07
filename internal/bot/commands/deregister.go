@@ -1,39 +1,32 @@
 package commands
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
 var DeregisterCommand = &loader.Command{
-	ApplicationCommand: &discordgo.ApplicationCommand{
+	SlashCommandCreate: &discord.SlashCommandCreate{
 		Name:        "탈퇴",
 		Description: "이 봇에서 탈퇴해요.",
 	},
 	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
-	Run: func(inter *builders.InteractionCreate) error {
-		userID := inter.User.ID
+	Run: func(ctx context.Context, inter *builders.CommandCreate) error {
+		userID := inter.User().ID.String()
+		bot, _ := inter.Client().Caches.SelfUser()
 
 		return builders.NewMessageSender(inter).
 			AddComponents(
-				builders.ContainerBuilder().
-					AddComponents(
-						builders.TextDisplayBuilder(fmt.Sprintf("### %s 탈퇴\n- 정말로 해당 서비스에서 탈퇴하시겠어요?\n> 주의: **모든 데이터는 삭제되어요.**", inter.Session.State.User.Username)),
-						builders.ActionsRowBuilder(
-							builders.ButtonBuilder().
-								SetStyle(discordgo.DangerButton).
-								SetLabel("탈퇴").
-								SetCustomID(utils.MakeDeregisterAgree(userID)),
-							builders.ButtonBuilder().
-								SetStyle(discordgo.PrimaryButton).
-								SetLabel("취소").
-								SetCustomID(utils.MakeDeregisterDisagree(userID)),
-						),
-					),
+				discord.NewContainer(
+					discord.NewTextDisplayf("### %s 탈퇴\n- 정말로 해당 서비스에서 탈퇴하시겠어요?\n> 주의: **모든 데이터는 삭제되어요.**", bot.Username)),
+				discord.NewActionRow(
+					discord.NewDangerButton("탈퇴", utils.MakeDeregisterAgree(userID)),
+					discord.NewPrimaryButton("취소", utils.MakeDeregisterDisagree(userID)),
+				),
 			).
 			SetComponentsV2(true).
 			SetEphemeral(true).

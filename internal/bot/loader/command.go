@@ -18,7 +18,7 @@ type Command struct {
 	Flags            CommandFlags
 	Deferred         bool
 	IsDeferEphemeral bool
-	Run              func(ctx context.Context, i *events.ApplicationCommandInteractionCreate) error
+	Run              func(ctx context.Context, i *builders.CommandCreate) error
 	Autocomplete     func(ctx context.Context, i *events.AutocompleteInteractionCreate) error
 }
 
@@ -78,7 +78,10 @@ func (d *Discommand) ChatInputRun(name string, i *events.ApplicationCommandInter
 				Send()
 		}
 
-		return command.Run(ctx, i)
+		return command.Run(ctx, &builders.CommandCreate{
+			ApplicationCommandInteractionCreate: i,
+			Responded:                           command.Deferred,
+		})
 
 	}
 	return nil

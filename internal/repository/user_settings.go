@@ -19,7 +19,7 @@ type UserSettings struct {
 
 var userSettings = make(map[string]*UserSettings)
 
-func NewUserSettings(ctx context.Context, user *discord.User) (*UserSettings, error) {
+func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, error) {
 	dbUser, err := GetDatabase().Users.FindByID(ctx, user.ID.String())
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func NewUserSettings(ctx context.Context, user *discord.User) (*UserSettings, er
 	id := fmt.Sprintf("%s/%d", user.ID, rand.Intn(100))
 	s := UserSettings{
 		ID:                        id,
-		user:                      user,
+		user:                      &user,
 		ChattingMode:              dbUser.ChattingMode,
 		ReplyUser:                 dbUser.ReplyUser,
 		CreateNewChatAfter12Hours: dbUser.CreateNewChatAfter12Hours,

@@ -1,21 +1,23 @@
 package knowledge
 
 import (
+	"context"
+
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
-func Delete(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
-	var sections []*builders.Section
-	var containers []*builders.Container
+func Delete(ctx context.Context, i *builders.CommandCreate) error {
+	var sections []discord.SectionComponent
+	var containers []discord.ContainerComponent
 
-	command := opts.GetOption("단어").StringValue()
+	command := i.SlashCommandInteractionData().String("단어")
 
-	filter := query.KnowledgeQueryBuilder().SetUserID(i.User.ID).SetCommand(command)
-	data, err := repository.GetDatabase().Knowledge.Find(i.Ctx, filter)
+	filter := query.KnowledgeQueryBuilder().SetUserID(i.User().ID.String()).SetCommand(command)
+	data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -30,30 +32,28 @@ func Delete(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInt
 
 	for _, data := range data {
 		sections = append(sections,
-			builders.SectionBuilder().
-				SetAccessory(
-					builders.ButtonBuilder().
-						SetStyle(discordgo.DangerButton).
-						SetLabel("삭제").
-						SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID)),
-				).
-				AddText("**%s**\n", data.Result),
+			discord.NewSection(
+				discord.NewTextDisplayf("**%s**\n", data.Result),
+			).
+				WithAccessory(
+					discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User().ID.String())),
+				),
 		)
 	}
 
-	textDisplay := builders.TextDisplayBuilder("### %s 삭제", command)
-	container := builders.ContainerBuilder().AddComponents(textDisplay)
+	textDisplay := discord.NewTextDisplayf("### %s 삭제", command)
+	container := discord.NewContainer(textDisplay)
 	for i, section := range sections {
-		container.AddComponents(section, builders.SeparatorBuilder())
+		container.AddComponents(section, discord.NewSmallSeparator())
 
 		if (i+1)%10 == 0 {
 			containers = append(containers, container)
-			container = builders.ContainerBuilder().AddComponents(textDisplay)
+			container = container.WithComponents(textDisplay)
 			continue
 		}
 	}
 
-	if container.GetComponentsLength() > 1 {
+	if len(container.Components) > 1 {
 		containers = append(containers, container)
 	}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
@@ -25,7 +26,7 @@ func ParseResult(content string, m any) string {
 		bot, _ = m.Client().Caches.SelfUser()
 		user = m.Message.Author
 		joinedAt = m.Message.Member.JoinedAt
-	case *events.ApplicationCommandInteractionCreate:
+	case *builders.CommandCreate:
 		user = m.User()
 
 		joinedAt = m.Member().JoinedAt

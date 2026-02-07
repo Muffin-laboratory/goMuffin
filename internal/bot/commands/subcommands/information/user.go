@@ -1,12 +1,15 @@
 package information
 
 import (
+	"context"
+
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
 func boolToString(k bool) string {
@@ -17,58 +20,51 @@ func boolToString(k bool) string {
 	return "비활성화"
 }
 
-func InfoUser(i *builders.InteractionCreate) error {
-	accCreatedTimestamp, err := discordgo.SnowflakeTimestamp(i.User.ID)
+func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
+	accCreatedTimestamp, err := discordgo.SnowflakeTimestamp(i.User().ID.String())
 	if err != nil {
 		return err
 	}
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(i.Ctx, i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
 	if err != nil {
 		return err
 	}
 
-	currentChat, err := repository.GetDatabase().Chats.FindByID(i.Ctx, dbUser.ChatID)
+	currentChat, err := repository.GetDatabase().Chats.FindByID(ctx, dbUser.ChatID)
 	if err != nil {
 		return err
 	}
 
-	chatLength, err := repository.GetDatabase().Memory.CountDocuments(i.Ctx, query.MemoryQueryBuilder().SetUserID(i.User.ID))
+	chatLength, err := repository.GetDatabase().Memory.CountDocuments(ctx, query.MemoryQueryBuilder().SetUserID(i.User().ID.String()))
 	if err != nil {
 		return err
 	}
+
+	bot, _ := i.Client().Caches.SelfUser()
 
 	return builders.NewMessageSender(i).
 		AddComponents(
-			builders.ContainerBuilder().
-				AddComponents(
-					builders.SectionBuilder().
-						SetAccessory(builders.ThumbnailBuilder(i.User.AvatarURL("512"))).
-						AddText("### %s님의 정보", i.User.GlobalName).
-						AddText("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime)).
-						AddText("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime)),
-					builders.TextDisplayBuilder("- **현재 모드**\n> `%s`", dbUser.ModeString()),
-					builders.TextDisplayBuilder("- **답장 멘션 사용 여부**\n> `%s`", utils.BoolToString(dbUser.ReplyUser)),
-					builders.TextDisplayBuilder("- **마지막 채팅 이후 12 시간이 지났을 때 새로운 채팅 생성 여부**\n> `%s`", boolToString(dbUser.CreateNewChatAfter12Hours)),
-					builders.TextDisplayBuilder("- **현재 채팅**\n> %s", currentChat.Name),
-					builders.TextDisplayBuilder("- **총 채팅량**\n> `%d`개", chatLength),
-					builders.ActionsRowBuilder(
-						builders.ButtonBuilder().
-							SetStyle(discordgo.LinkButton).
-							SetLabel("개인정보처리방침").
-							SetURL(configs.GetConfig().Service.PrivacyPolicyURL).
-							SetEmoji(discordgo.ComponentEmoji{Name: "🔗"}),
-						builders.ButtonBuilder().
-							SetStyle(discordgo.LinkButton).
-							SetLabel("서비스 이용약관").
-							SetURL(configs.GetConfig().Service.TermOfServiceURL).
-							SetEmoji(discordgo.ComponentEmoji{Name: "🔗"}),
-						builders.ButtonBuilder().
-							SetStyle(discordgo.DangerButton).
-							SetLabel("탈퇴").
-							SetCustomID(utils.MakeUserInformationDeregister(i.User.ID)),
-					),
+			discord.NewContainer(
+				discord.NewSection(
+					discord.NewTextDisplayf("### %s님의 정보", *i.User().GlobalName),
+					discord.NewTextDisplayf("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime)),
+					discord.NewTextDisplayf("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime)),
+				).
+					WithAccessory(discord.NewThumbnail(*bot.AvatarURL())),
+				discord.NewTextDisplayf("- **현재 모드**\n> `%s`", dbUser.ModeString()),
+				discord.NewTextDisplayf("- **답장 멘션 사용 여부**\n> `%s`", utils.BoolToString(dbUser.ReplyUser)),
+				discord.NewTextDisplayf("- **마지막 채팅 이후 12 시간이 지났을 때 새로운 채팅 생성 여부**\n> `%s`", boolToString(dbUser.CreateNewChatAfter12Hours)),
+				discord.NewTextDisplayf("- **현재 채팅**\n> %s", currentChat.Name),
+				discord.NewTextDisplayf("- **총 채팅량**\n> `%d`개", chatLength),
+				discord.NewActionRow(
+					discord.NewLinkButton("개인정보처리방침", configs.GetConfig().Service.PrivacyPolicyURL).
+						WithEmoji(discord.NewComponentEmoji("🔗")),
+					discord.NewLinkButton("서비스 이용약관", configs.GetConfig().Service.TermOfServiceURL).
+						WithEmoji(discord.NewComponentEmoji("🔗")),
+					discord.NewDangerButton("탈퇴", utils.MakeUserInformationDeregister(i.User().ID.String())),
 				),
+			),
 		).
 		SetComponentsV2(true).
 		SetEphemeral(true).

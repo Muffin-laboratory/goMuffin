@@ -1,6 +1,7 @@
 package dev
 
 import (
+	"context"
 	"regexp"
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
@@ -8,45 +9,43 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/snowflake/v2"
 )
 
 var BlockCommand = &loader.Command{
-	Deferred: true,
-	DeferOptions: &discordgo.InteractionResponseData{
-		Flags: discordgo.MessageFlagsEphemeral,
-	},
-	ApplicationCommand: &discordgo.ApplicationCommand{
+	Deferred:         true,
+	IsDeferEphemeral: true,
+	SlashCommandCreate: &discord.SlashCommandCreate{
 		Name:        "차단",
 		Description: "유저를 차단해요.",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:         discordgo.ApplicationCommandOptionString,
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionString{
 				Name:         "유저",
 				Description:  "차단할 유저를 선택해요.",
 				Required:     true,
 				Autocomplete: true,
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
+			discord.ApplicationCommandOptionString{
 				Name:        "이유",
 				Description: "해당 유저를 차단하는 이유를 적어주세요.",
 			},
 		},
 	},
 	Flags: loader.CommandFlagsIsDeveloperOnlyCommand,
-	Autocomplete: func(inter *builders.InteractionCreate) error {
-		var choices []*discordgo.ApplicationCommandOptionChoice
+	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
+		var choices []discord.AutocompleteChoice
 		var focusedValue string
 
-		for _, opt := range inter.ApplicationCommandData().Options {
+		for _, opt := range inter.Data.Options {
 			if opt.Focused {
-				focusedValue = opt.StringValue()
+				focusedValue = opt.String()
 				break
 			}
 		}
 
-		data, err := repository.GetDatabase().Users.All(inter.Ctx)
+		data, err := repository.GetDatabase().Users.All(ctx)
 		if err != nil {
 			return err
 		}
@@ -56,39 +55,39 @@ var BlockCommand = &loader.Command{
 				continue
 			}
 
-			user, err := inter.Session.User(data.UserID)
+			user, err := inter.Client().Rest.GetUser(snowflake.MustParse(data.UserID))
 			if err != nil {
 				return err
 			}
 
 			if focusedValue == "" {
-				choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
-					Name:  user.GlobalName,
-					Value: user.ID,
+				choices = append(choices, discord.AutocompleteChoiceString{
+					Name:  user.Username,
+					Value: user.ID.String(),
 				})
 			} else {
-				if regexp.MustCompile(focusedValue).Match([]byte(user.GlobalName)) {
-					choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
-						Name:  user.GlobalName,
-						Value: user.ID,
+				if regexp.MustCompile(focusedValue).Match([]byte(user.Username)) {
+					choices = append(choices, discord.AutocompleteChoiceString{
+						Name:  user.Username,
+						Value: user.ID.String(),
 					})
 				}
 			}
 		}
 
-		return inter.Autocomplete(choices)
+		return inter.AutocompleteResult(choices)
 	},
-	Run: func(inter *builders.InteractionCreate) error {
+	Run: func(ctx context.Context, inter *builders.CommandCreate) error {
 		reason := "없음"
-		commandData := inter.ApplicationCommandData()
-		userID := commandData.GetOption("유저").StringValue()
+		commandData := inter.SlashCommandInteractionData()
+		userID := commandData.Snowflake("유저")
 		blocked := true
 
-		if opt := commandData.GetOption("이유"); opt != nil {
-			reason = opt.StringValue()
+		if opt, ok := commandData.OptString("이유"); ok {
+			reason = opt
 		}
 
-		if userID == configs.GetConfig().Bot.OwnerID {
+		if userID.String() == configs.GetConfig().Bot.OwnerID {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("개발자는 차단을 할 수 없어요.")).
 				SetComponentsV2(true).
@@ -96,20 +95,20 @@ var BlockCommand = &loader.Command{
 				Send()
 		}
 
-		user, err := inter.Session.User(userID)
+		user, err := inter.Client().Rest.GetUser(userID)
 		if err != nil {
 			return err
 		}
 
-		if !repository.GetDatabase().Users.IsUser(inter.Ctx, userID) {
+		if !repository.GetDatabase().Users.IsUser(ctx, userID.String()) {
 			return builders.NewMessageSender(inter).
-				AddComponents(builders.MakeErrorContainer("유저 %s은/는 해당 봇 이용자가 아니에요.", user.GlobalName)).
+				AddComponents(builders.MakeErrorContainer("유저 %s은/는 해당 봇 이용자가 아니에요.", user.Username)).
 				SetComponentsV2(true).
 				SetEphemeral(true).
 				Send()
 		}
 
-		if _, err = repository.GetDatabase().Users.Update(inter.Ctx, userID, &repository.UserUpdate{
+		if _, err = repository.GetDatabase().Users.Update(ctx, userID.String(), &repository.UserUpdate{
 			Blocked:       &blocked,
 			BlockedReason: &reason,
 		}); err != nil {
@@ -117,7 +116,7 @@ var BlockCommand = &loader.Command{
 		}
 
 		return builders.NewMessageSender(inter).
-			AddComponents(builders.MakeSuccessContainer("유저 %s 성공적으로 차단했어요.", hangul.GetJosa(user.GlobalName, hangul.EUL_REUL))).
+			AddComponents(builders.MakeSuccessContainer("유저 %s 성공적으로 차단했어요.", hangul.GetJosa(user.Username, hangul.EUL_REUL))).
 			SetComponentsV2(true).
 			SetEphemeral(true).
 			Send()

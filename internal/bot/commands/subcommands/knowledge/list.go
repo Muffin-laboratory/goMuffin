@@ -1,26 +1,27 @@
 package knowledge
 
 import (
+	"context"
 	"slices"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
-func List(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
+func List(ctx context.Context, i *builders.CommandCreate) error {
 	var command string
 	var items []string
-	var sections []*builders.Section
-	var containers []*builders.Container
+	var sections []discord.SectionComponent
+	var containers []discord.ContainerComponent
 
-	if opt := opts.GetOption("단어"); opt != nil {
-		command = opt.StringValue()
+	if value, ok := i.SlashCommandInteractionData().OptString("단어"); ok {
+		command = value
 	}
 
-	filter := query.KnowledgeQueryBuilder().SetUserID(i.User.ID)
+	filter := query.KnowledgeQueryBuilder().SetUserID(i.User().ID.String())
 
 	if command != "" {
 		filter.SetCommandByRegex(command)
@@ -28,7 +29,7 @@ func List(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInter
 		command = "전체"
 	}
 
-	data, err := repository.GetDatabase().Knowledge.Find(i.Ctx, filter)
+	data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
 	if err != nil {
 		return err
 	}
@@ -51,35 +52,34 @@ func List(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInter
 
 	for _, item := range items {
 		sections = append(sections,
-			builders.SectionBuilder().
-				SetAccessory(
-					builders.ButtonBuilder().
-						SetStyle(discordgo.PrimaryButton).
-						SetLabel("자세히 보기").
-						SetCustomID(utils.MakeSelectKnowledge(item)),
-				).
-				AddText("- **%s**", item),
+			discord.NewSection(
+				discord.NewTextDisplayf("- **%s**", item),
+			).
+				WithAccessory(
+					discord.NewPrimaryButton("자세히 보기", utils.MakeSelectKnowledge(item)),
+				),
 		)
 	}
 
-	title := builders.SectionBuilder().
-		SetAccessory(builders.ThumbnailBuilder(i.User.AvatarURL("512"))).
-		AddText("### %s님에 대한 지식", i.User.GlobalName).
-		AddText("- 총 `%d`개", len(items)).
-		AddText("> %s에 대한 검색 결과", command)
-	container := builders.ContainerBuilder().AddComponents(title, builders.SeparatorBuilder())
+	title := discord.NewSection(
+		discord.NewTextDisplayf("### %s님에 대한 지식", *i.User().GlobalName),
+		discord.NewTextDisplayf("- 총 `%d`개", len(items)),
+		discord.NewTextDisplayf("> %s에 대한 검색 결과", command),
+	).
+		WithAccessory(discord.NewThumbnail(*i.User().AvatarURL()))
+	container := discord.NewContainer(title, discord.NewSmallSeparator())
 
 	for i, section := range sections {
-		container.AddComponents(section, builders.SeparatorBuilder())
+		container.AddComponents(section, discord.NewSmallSeparator())
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)
-			container = builders.ContainerBuilder().AddComponents(title, builders.SeparatorBuilder())
+			container = container.WithComponents(title, discord.NewSmallSeparator())
 			continue
 		}
 	}
 
-	if container.GetComponentsLength() > 1 {
+	if len(container.Components) > 1 {
 		containers = append(containers, container)
 	}
 

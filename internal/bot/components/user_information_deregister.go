@@ -34,11 +34,12 @@ var UserInformationDeregisterComponent = &loader.Component{
 		return true
 	},
 	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		return commands.DeregisterCommand.Run(ctx, &events.ApplicationCommandInteractionCreate{
-			GenericEvent:                  inter.GenericEvent,
-			ApplicationCommandInteraction: discord.ApplicationCommandInteraction{},
-			Respond:                       inter.Respond,
-		})
+		return commands.DeregisterCommand.Run(ctx, &builders.CommandCreate{
+			ApplicationCommandInteractionCreate: &events.ApplicationCommandInteractionCreate{
+				GenericEvent:                  inter.GenericEvent,
+				ApplicationCommandInteraction: discord.ApplicationCommandInteraction{},
+				Respond:                       inter.Respond,
+			}})
 	},
 }
 
