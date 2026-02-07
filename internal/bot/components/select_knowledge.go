@@ -53,11 +53,11 @@ var SelectKnowledgeComponent = &loader.Component{
 		textDisplay := discord.NewTextDisplayf("### %s에 대한 목록", command)
 		container := discord.NewContainer().WithComponents(textDisplay)
 		for i, section := range sections {
-			container.AddComponents(section, discord.NewSeparator(discord.SeparatorSpacingSizeSmall))
+			container = container.AddComponents(section, discord.NewSeparator(discord.SeparatorSpacingSizeSmall))
 
 			if (i+1)%10 == 0 {
 				containers = append(containers, container)
-				container.WithComponents(textDisplay)
+				container = container.WithComponents(textDisplay)
 				continue
 			}
 		}

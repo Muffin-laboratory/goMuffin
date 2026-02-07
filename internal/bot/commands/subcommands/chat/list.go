@@ -64,7 +64,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 	textDisplay := discord.NewTextDisplayf("### %s님의 채팅목록", *i.User().GlobalName)
 	container := discord.NewContainer(textDisplay)
 	for i, section := range sections {
-		container.AddComponents(section, discord.NewSmallSeparator())
+		container = container.AddComponents(section, discord.NewSmallSeparator())
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)

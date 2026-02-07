@@ -54,7 +54,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 		textDisplay := discord.NewTextDisplayf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", *i.User().GlobalName)
 		container := discord.NewContainer(textDisplay)
 		for i, section := range sections {
-			container.AddComponents(section, discord.NewSmallSeparator())
+			container = container.AddComponents(section, discord.NewSmallSeparator())
 
 			if (i+1)%10 == 0 {
 				containers = append(containers, container)

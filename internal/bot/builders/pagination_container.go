@@ -31,7 +31,7 @@ func PaginationContainerBuilder(m any) *PaginationContainer {
 	switch m := m.(type) {
 	case *events.MessageCreate:
 		userID = m.Message.Author.ID.String()
-	case *events.ApplicationCommandInteractionCreate:
+	case *CommandCreate:
 		userID = m.User().ID.String()
 	}
 
@@ -62,8 +62,7 @@ func (p *PaginationContainer) AddContainers(containers ...discord.ContainerCompo
 
 // Start starts the paginated-container
 func (p *PaginationContainer) Start() error {
-	container := p.Containers[0]
-	container.AddComponents(makeComponents(p.ID, p.Current, p.Total))
+	container := p.Containers[0].AddComponents(makeComponents(p.ID, p.Current, p.Total))
 	paginationContainers[p.ID] = p
 
 	go p.waitTimerEnd()

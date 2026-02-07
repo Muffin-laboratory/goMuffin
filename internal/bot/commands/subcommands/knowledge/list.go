@@ -70,7 +70,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 	container := discord.NewContainer(title, discord.NewSmallSeparator())
 
 	for i, section := range sections {
-		container.AddComponents(section, discord.NewSmallSeparator())
+		container = container.AddComponents(section, discord.NewSmallSeparator())
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)

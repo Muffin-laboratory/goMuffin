@@ -22,8 +22,6 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question
 		return "살려주ㅅ세요", err
 	}
 
-	fmt.Printf("%+v\n", *dbUser)
-
 	if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(user.ID.String())); err != nil {
 		if err == mongo.ErrNoDocuments {
 			if _, err = repository.GetDatabase().Chats.Create(ctx, user.ID.String(), fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {

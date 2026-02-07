@@ -44,7 +44,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 	textDisplay := discord.NewTextDisplayf("### %s 삭제", command)
 	container := discord.NewContainer(textDisplay)
 	for i, section := range sections {
-		container.AddComponents(section, discord.NewSmallSeparator())
+		container = container.AddComponents(section, discord.NewSmallSeparator())
 
 		if (i+1)%10 == 0 {
 			containers = append(containers, container)
