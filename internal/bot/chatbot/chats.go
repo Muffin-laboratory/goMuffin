@@ -8,14 +8,14 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"google.golang.org/genai"
 )
 
 var chats = cache.New[bson.ObjectID, genai.Chat](time.Hour * 12)
 
-func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson.ObjectID) (*genai.Chat, error) {
+func (c *Chatbot) GetChat(ctx context.Context, user *discord.User, chatID bson.ObjectID) (*genai.Chat, error) {
 	if cache, ok := chats.Get(chatID); ok {
 		return &cache, nil
 	}

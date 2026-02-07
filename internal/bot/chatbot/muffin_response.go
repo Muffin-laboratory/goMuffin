@@ -7,7 +7,7 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
+	"github.com/disgoorg/snowflake/v2"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
@@ -34,10 +34,10 @@ func (c *Chatbot) getMuffinResponse(ctx context.Context, question string) (strin
 
 	if x > 2 && len(knowledge) != 0 {
 		data := knowledge[rand.Intn(len(knowledge))]
-		user, _ := c.s.User(data.UserID)
+		user, _ := c.s.Rest.GetUser(snowflake.MustParse(data.UserID))
 
 		result =
-			fmt.Sprintf("%s\n%s", data.Result, utils.InlineCode(fmt.Sprintf("%s님이 알려주셨어요.", user.Username)))
+			fmt.Sprintf("%s\n`%s님이 알려주셨어요.`", data.Result, user.Username)
 	} else {
 		result = data[rand.Intn(len(data))].Text
 	}
