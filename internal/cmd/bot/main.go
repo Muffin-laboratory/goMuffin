@@ -12,6 +12,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/gateway"
 	"github.com/disgoorg/snowflake/v2"
 )
 
@@ -27,7 +28,7 @@ func main() {
 	// 봇의 상태메세지 변경
 	go func() {
 		for {
-			session.UpdateCustomStatus("ㅅ살려주세요..!")
+			session.SetPresence(context.Background(), gateway.WithCustomActivity("ㅅ살려주세요..!"))
 			time.Sleep(time.Minute * 10)
 		}
 	}()
@@ -36,11 +37,11 @@ func main() {
 	var developerOnlyGuildCmds []discord.ApplicationCommandCreate
 	for _, cmd := range loader.GetDiscommand().Commands {
 		if cmd.Flags&loader.CommandFlagsIsDeveloperOnlyCommand != 0 {
-			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.ApplicationCommand)
+			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.SlashCommandCreate)
 			continue
 		}
 
-		globalCmds = append(globalCmds, cmd.ApplicationCommand)
+		globalCmds = append(globalCmds, cmd.SlashCommandCreate)
 	}
 
 	_, err = session.Rest.SetGlobalCommands(session.ApplicationID, globalCmds)

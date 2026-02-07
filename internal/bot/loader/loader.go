@@ -1,13 +1,6 @@
 package loader
 
-import (
-	"sync"
-
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-)
-
-type run func(inter *builders.InteractionCreate) error
-type parse func(inter *builders.InteractionCreate) bool
+import "sync"
 
 type Discommand struct {
 	Commands   map[string]*Command

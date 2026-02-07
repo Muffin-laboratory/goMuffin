@@ -4,15 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/events"
 )
 
+type modalFunc[T any] func(ctx context.Context, i *events.ModalSubmitInteractionCreate) T
+
 type Modal struct {
-	Parse        parse
-	Run          run
-	Deferred     bool
-	DeferOptions *discordgo.InteractionResponseData
+	Parse            modalFunc[bool]
+	Run              modalFunc[error]
+	Deferred         bool
+	IsDeferEphemeral bool
 }
 
 func (d *Discommand) LoadModal(m *Modal) {
@@ -21,13 +22,8 @@ func (d *Discommand) LoadModal(m *Modal) {
 	d.Modals = append(d.Modals, m)
 }
 
-func (d *Discommand) ModalRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+func (d *Discommand) ModalRun(i *events.ModalSubmitInteractionCreate) error {
 	var err error
-
-	i := &builders.InteractionCreate{
-		InteractionCreate: inter,
-		Session:           s,
-	}
 
 	for _, m := range d.Modals {
 		var ctx context.Context
@@ -37,21 +33,19 @@ func (d *Discommand) ModalRun(s *discordgo.Session, inter *discordgo.Interaction
 		} else {
 			ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 		}
-		i.Ctx = ctx
-
 		defer cancel()
 
-		if !m.Parse(i) {
+		if !m.Parse(ctx, i) {
 			continue
 		}
 
 		if m.Deferred {
-			if err := i.DeferReply(m.DeferOptions); err != nil {
+			if err := i.DeferCreateMessage(m.IsDeferEphemeral); err != nil {
 				return err
 			}
 		}
 
-		err = m.Run(i)
+		err = m.Run(ctx, i)
 		break
 	}
 	return err

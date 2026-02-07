@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
 type UserSettings struct {
 	ID                        string
-	user                      *discordgo.User
+	user                      *discord.User
 	ChattingMode              ChattingMode
 	ReplyUser                 bool
 	CreateNewChatAfter12Hours bool
@@ -20,8 +19,8 @@ type UserSettings struct {
 
 var userSettings = make(map[string]*UserSettings)
 
-func NewUserSettings(ctx context.Context, user *discordgo.User) (*UserSettings, error) {
-	dbUser, err := GetDatabase().Users.FindByID(ctx, user.ID)
+func NewUserSettings(ctx context.Context, user *discord.User) (*UserSettings, error) {
+	dbUser, err := GetDatabase().Users.FindByID(ctx, user.ID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -44,43 +43,41 @@ func GetUserSettings(id string) *UserSettings {
 	return userSettings[id]
 }
 
-func (s *UserSettings) MakeContainer() *builders.Container {
-	return builders.ContainerBuilder().
-		AddComponents(
-			builders.SectionBuilder().
-				SetAccessory(builders.ThumbnailBuilder(s.user.AvatarURL("512"))).
-				AddText("### 채팅 설정\n- 설정을 개인화 해주세요.").
-				AddText("- **모드**\n> 해당 봇이 답을 하는 방식이에요. (AI <-> 일반)").
-				AddText("- **답장 멘션**\n> 해당 봇이 답할 때 답장 멘션 여부를 정해요."),
+func (s *UserSettings) MakeContainer() discord.ContainerComponent {
+	return discord.NewContainer(
+		discord.NewSection(
+			discord.NewTextDisplay("### 채팅 설정\n- 설정을 개인화 해주세요."),
+			discord.NewTextDisplay("- **모드**\n> 해당 봇이 답을 하는 방식이에요. (AI <-> 일반)"),
+			discord.NewTextDisplay("- **답장 멘션**\n> 해당 봇이 답할 때 답장 멘션 여부를 정해요."),
 		).
-		AddText("- **12 시간 후 새로운 채팅**\n> 해당 봇과 대화하고 12시간 뒤에 새로운 대화를 시작할지 여부를 정해요.").
-		AddComponents(
-			builders.ActionsRowBuilder(
-				builders.ButtonBuilder().
-					SetStyle(discordgo.PrimaryButton).
-					SetLabel(fmt.Sprintf("모드: %s", ModeString(s.ChattingMode))).
-					SetCustomID(utils.MakeUserSettingsChattingMode(s.ID)),
-				builders.ButtonBuilder().
-					SetStyle(utils.GetStyleFromBool(s.ReplyUser)).
-					SetLabel(fmt.Sprintf("답장 멘션: %s", utils.BoolToString(s.ReplyUser))).
-					SetCustomID(utils.MakeUserSettingsReplyUser(s.ID)),
-				builders.ButtonBuilder().
-					SetStyle(utils.GetStyleFromBool(s.CreateNewChatAfter12Hours)).
-					SetLabel(fmt.Sprintf("12 시간 후 새로운 채팅: %s", utils.BoolToString(s.CreateNewChatAfter12Hours))).
-					SetCustomID(utils.MakeUserSettings12Hours(s.ID)),
+			WithAccessory(
+				discord.NewThumbnail(*s.user.AvatarURL()),
 			),
-			builders.ActionsRowBuilder(
-				builders.ButtonBuilder().
-					SetStyle(discordgo.SuccessButton).
-					SetLabel("완료").
-					SetCustomID(utils.MakeUserSettingsSubmit(s.ID)),
+		discord.NewTextDisplay("- **12 시간 후 새로운 채팅**\n> 해당 봇과 대화하고 12시간 뒤에 새로운 대화를 시작할지 여부를 정해요."),
+		discord.NewActionRow(
+			discord.NewPrimaryButton(
+				fmt.Sprintf("모드: %s", ModeString(s.ChattingMode)),
+				utils.MakeUserSettingsChattingMode(s.ID),
 			),
-		)
-
+			discord.NewButton(
+				utils.GetStyleFromBool(s.ReplyUser),
+				fmt.Sprintf("답장 멘션: %s", utils.BoolToString(s.ReplyUser)),
+				utils.MakeUserSettingsReplyUser(s.ID), "", 0,
+			),
+			discord.NewButton(
+				utils.GetStyleFromBool(s.CreateNewChatAfter12Hours),
+				fmt.Sprintf("12 시간 후 새로운 채팅: %s", utils.BoolToString(s.CreateNewChatAfter12Hours)),
+				utils.MakeUserSettings12Hours(s.ID), "", 0,
+			),
+		),
+		discord.NewActionRow(
+			discord.NewSuccessButton("완료", utils.MakeUserSettingsSubmit(s.ID)),
+		),
+	)
 }
 
 func (s *UserSettings) Submit(ctx context.Context) error {
-	if _, err := GetDatabase().Users.Update(ctx, s.user.ID, &UserUpdate{
+	if _, err := GetDatabase().Users.Update(ctx, s.user.ID.String(), &UserUpdate{
 		ChattingMode:              &s.ChattingMode,
 		ReplyUser:                 &s.ReplyUser,
 		CreateNewChatAfter12Hours: &s.CreateNewChatAfter12Hours,
