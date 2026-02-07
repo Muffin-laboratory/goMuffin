@@ -16,17 +16,18 @@ import (
 func ParseResult(content string, m any) string {
 	result := content
 
-	var user, bot *discord.User
+	var user discord.User
+	var bot discord.OAuth2User
 	var joinedAt *time.Time
 
 	switch m := m.(type) {
 	case *events.MessageCreate:
-		bot, _ = m.Client().Rest.GetUser(m.Client().ApplicationID)
-		user = &m.Message.Author
+		bot, _ = m.Client().Caches.SelfUser()
+		user = m.Message.Author
 		joinedAt = m.Message.Member.JoinedAt
 	case *events.ApplicationCommandInteractionCreate:
-		userData := m.User()
-		user = &userData
+		user = m.User()
+
 		joinedAt = m.Member().JoinedAt
 	}
 

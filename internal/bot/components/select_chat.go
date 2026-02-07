@@ -1,51 +1,58 @@
 package components
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 )
 
 var SelectChatComponent = &loader.Component{
 	DeferredUpdate: true,
-	Parse: func(inter *builders.InteractionCreate) bool {
-		customID := inter.MessageComponentData().CustomID
+	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
+		customID := inter.Data.CustomID()
 
 		if !strings.HasPrefix(customID, utils.SelectChat) {
 			return false
 		}
 
 		userID := utils.GetChatUserID(customID)
-		if inter.User.ID != userID {
-			inter.Reply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
-				},
-			})
+		if inter.User().ID.String() != userID {
+			inter.Client().Rest.UpdateInteractionResponse(
+				inter.ApplicationID(),
+				inter.Token(),
+				discord.NewMessageUpdateBuilder().
+					SetComponents(builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.")).
+					SetIsComponentsV2(true).
+					Build(),
+			)
 			return false
 		}
 		return true
 	},
-	Run: func(inter *builders.InteractionCreate) error {
-		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
+	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
+		id, name := utils.GetChatID(inter.Data.CustomID())
 
-		if _, err := repository.GetDatabase().Users.Update(inter.Ctx, inter.User.ID, &repository.UserUpdate{
+		if _, err := repository.GetDatabase().Users.Update(ctx, inter.User().ID.String(), &repository.UserUpdate{
 			ChatID: &id,
 		}); err != nil {
 			return err
 		}
 
-		return inter.EditReply(&discordgo.WebhookEdit{
-			Flags: discordgo.MessageFlagsIsComponentsV2,
-			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer("`%s`으로 채팅을 변경했어요.", name).Build(),
-			},
-		})
+		_, err := inter.Client().Rest.UpdateInteractionResponse(
+			inter.ApplicationID(),
+			inter.Token(),
+			discord.NewMessageUpdateBuilder().
+				SetComponents(builders.MakeSuccessContainer("`%s`으로 채팅을 변경했어요.", name)).
+				SetIsComponentsV2(true).
+				Build(),
+		)
+		return err
 	},
 }
 

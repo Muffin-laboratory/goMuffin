@@ -1,48 +1,55 @@
 package components
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 )
 
 var DeleteKnowledgeComponent = &loader.Component{
 	DeferredUpdate: true,
-	Parse: func(inter *builders.InteractionCreate) bool {
-		customID := inter.MessageComponentData().CustomID
+	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
+		customID := inter.Data.CustomID()
 
 		if !strings.HasPrefix(customID, utils.DeleteKnowledge) {
 			return false
 		}
 
 		userID := utils.GetDeleteKnowledgeUserID(customID)
-		if inter.Member.User.ID != userID {
-			inter.Reply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
-				},
-			})
+		if inter.User().ID.String() != userID {
+			inter.CreateMessage(
+				discord.NewMessageCreateBuilder().
+					SetComponents(builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.")).
+					SetIsComponentsV2(true).
+					SetEphemeral(true).
+					Build(),
+			)
 			return false
 		}
 		return true
 	},
-	Run: func(inter *builders.InteractionCreate) error {
-		id, itemID := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
-		if err := repository.GetDatabase().Knowledge.DeleteByID(inter.Ctx, id); err != nil {
+	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
+		id, itemID := utils.GetDeleteKnowledgeID(inter.Data.CustomID())
+		if err := repository.GetDatabase().Knowledge.DeleteByID(ctx, id); err != nil {
 			return err
 		}
 
-		return inter.EditReply(&discordgo.WebhookEdit{
-			Flags: discordgo.MessageFlagsIsComponentsV2,
-			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer("%d번을 삭제했어요.", itemID).Build(),
-			},
-		})
+		_, err := inter.Client().Rest.UpdateInteractionResponse(
+			inter.ApplicationID(),
+			inter.Token(),
+			discord.NewMessageUpdateBuilder().
+				SetComponents(builders.MakeSuccessContainer("%d번을 삭제했어요.", itemID)).
+				SetIsComponentsV2(true).
+				Build(),
+		)
+
+		return err
 	},
 }
 

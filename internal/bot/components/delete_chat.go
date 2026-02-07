@@ -1,6 +1,7 @@
 package components
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -8,58 +9,67 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 )
 
 var DeleteChatComponent = &loader.Component{
 	DeferredUpdate: true,
-	Parse: func(inter *builders.InteractionCreate) bool {
-		customID := inter.MessageComponentData().CustomID
+	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
+		customID := inter.Data.CustomID()
 
 		if !strings.HasPrefix(customID, utils.DeleteChat) && !strings.HasPrefix(customID, utils.DeleteChatCancel) {
 			return false
 		}
 
 		userID := utils.GetChatUserID(customID)
-		if inter.Member.User.ID != userID {
-			inter.Reply(&discordgo.InteractionResponseData{
-				Flags: discordgo.MessageFlagsEphemeral | discordgo.MessageFlagsIsComponentsV2,
-				Components: []discordgo.MessageComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.").Build(),
-				},
-			})
+		if inter.User().ID.String() != userID {
+			inter.CreateMessage(
+				discord.NewMessageCreateBuilder().
+					SetComponents(builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.")).
+					SetIsComponentsV2(true).
+					SetEphemeral(true).
+					Build(),
+			)
+
 			return false
 		}
 		return true
 	},
-	Run: func(inter *builders.InteractionCreate) error {
-		customID := inter.MessageComponentData().CustomID
+	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
+		customID := inter.Data.CustomID()
 
 		if strings.HasPrefix(customID, utils.DeleteChatCancel) {
-			return inter.EditReply(&discordgo.WebhookEdit{
-				Flags: discordgo.MessageFlagsIsComponentsV2,
-				Components: &[]discordgo.MessageComponent{
-					builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요.").Build(),
-				},
-			})
-		}
-
-		id, name := utils.GetChatID(inter.MessageComponentData().CustomID)
-
-		if err := repository.GetDatabase().Chats.DeleteByID(inter.Ctx, id); err != nil {
+			_, err := inter.Client().Rest.UpdateInteractionResponse(
+				inter.ApplicationID(),
+				inter.Token(),
+				discord.NewMessageUpdateBuilder().
+					SetComponents(builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요.")).
+					SetIsComponentsV2(true).
+					Build(),
+			)
 			return err
 		}
 
-		if err := repository.GetDatabase().Memory.DeleteMany(inter.Ctx, query.MemoryQueryBuilder().SetChatID(id)); err != nil {
+		id, name := utils.GetChatID(inter.Data.CustomID())
+
+		if err := repository.GetDatabase().Chats.DeleteByID(ctx, id); err != nil {
 			return err
 		}
 
-		return inter.EditReply(&discordgo.WebhookEdit{
-			Flags: discordgo.MessageFlagsIsComponentsV2,
-			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer("`%s`번을 삭제했어요.", name).Build(),
-			},
-		})
+		if err := repository.GetDatabase().Memory.DeleteMany(ctx, query.MemoryQueryBuilder().SetChatID(id)); err != nil {
+			return err
+		}
+
+		_, err := inter.Client().Rest.UpdateInteractionResponse(
+			inter.ApplicationID(),
+			inter.Token(),
+			discord.NewMessageUpdateBuilder().
+				SetComponents(builders.MakeSuccessContainer("`%s`번을 삭제했어요.", name)).
+				SetIsComponentsV2(true).
+				Build(),
+		)
+		return err
 	},
 }
 
