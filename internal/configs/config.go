@@ -110,6 +110,21 @@ func getValue(key string) string {
 	return os.Getenv(key)
 }
 
+func getValueToSnowflake(key string) snowflake.ID {
+	value := getValue(key)
+	if value == "" {
+		return 0
+	}
+
+	id, err := snowflake.Parse(value)
+	if err != nil {
+		slog.Error("[Fatal] failed to snowflake env value.", "key", key, "value", value)
+		os.Exit(1)
+	}
+
+	return id
+}
+
 func getValueToInt(key string) int {
 	value := getValue(key)
 	if value == "" {
@@ -150,8 +165,12 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	config.Chatbot = chatbotConfig{
-		Gemini: geminiConfig{Token: getValue("CHATBOT_GEMINI_TOKEN"), PromptPath: getValue("CHATBOT_GEMINI_PROMPT_PATH"), Model: getValue("CHATBOT_GEMINI_MODEL")},
-		Train:  trainConfig{UserID: getRequiredValueToSnowflake("CHATBOT_TRAIN_USER_ID")},
+		Gemini: geminiConfig{
+			Token:      getValue("CHATBOT_GEMINI_TOKEN"),
+			PromptPath: getValue("CHATBOT_GEMINI_PROMPT_PATH"),
+			Model:      getValue("CHATBOT_GEMINI_MODEL"),
+		},
+		Train: trainConfig{UserID: getValueToSnowflake("CHATBOT_TRAIN_USER_ID")},
 	}
 
 	if config.Chatbot.Gemini.Model == "" {
