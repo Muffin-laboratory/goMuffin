@@ -1,22 +1,23 @@
 package chat
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/bwmarrin/discordgo"
 )
 
-func Create(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
-	var name = fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))
+func Create(ctx context.Context, i *builders.CommandCreate) error {
+	name := fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))
+	commandData := i.SlashCommandInteractionData()
 
-	if opt := opts.GetOption("이름"); opt != nil {
-		name = opt.StringValue()
+	if value, ok := commandData.OptString("이름"); ok {
+		name = value
 	}
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(i.Ctx, i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
 	if err != nil {
 		return err
 	}
@@ -25,7 +26,7 @@ func Create(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInt
 		return chatSendErrorMessage(i)
 	}
 
-	if _, err := repository.GetDatabase().Chats.Create(i.Ctx, i.User.ID, name); err != nil {
+	if _, err := repository.GetDatabase().Chats.Create(ctx, i.User().ID.String(), name); err != nil {
 		return err
 	}
 

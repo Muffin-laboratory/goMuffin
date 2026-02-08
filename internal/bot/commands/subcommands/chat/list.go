@@ -1,18 +1,20 @@
 package chat
 
 import (
+	"context"
+
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
-func List(i *builders.InteractionCreate) error {
-	var sections []*builders.Section
-	var containers []*builders.Container
+func List(ctx context.Context, i *builders.CommandCreate) error {
+	var sections []discord.SectionComponent
+	var containers []discord.ContainerComponent
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(i.Ctx, i.User.ID)
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
 	if err != nil {
 		return err
 	}
@@ -21,7 +23,7 @@ func List(i *builders.InteractionCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	data, err := repository.GetDatabase().Chats.Find(i.Ctx, query.ChatQueryBuilder().SetUserID(i.User.ID))
+	data, err := repository.GetDatabase().Chats.Find(ctx, query.ChatQueryBuilder().SetUserID(i.User().ID.String()))
 	if err != nil {
 		return err
 	}
@@ -36,44 +38,43 @@ func List(i *builders.InteractionCreate) error {
 	}
 
 	for _, data := range data {
-		button := builders.ButtonBuilder().
-			SetStyle(discordgo.SuccessButton).
-			SetLabel("선택").
-			SetCustomID(utils.MakeSelectChat(data.ID.Hex(), data.Name, i.User.ID))
+		button := discord.NewSuccessButton("선택", utils.MakeSelectChat(data.ID.Hex(), data.Name, i.User().ID.String()))
 
 		if data.ID == dbUser.ChatID {
-			button.SetDisabled(true)
+			button = button.WithDisabled(true)
 
-			sections = append([]*builders.Section{
-				builders.SectionBuilder().
-					SetAccessory(button).
-					AddText("**%s (선택됨)**", data.Name),
+			sections = append([]discord.SectionComponent{
+				discord.NewSection(
+					discord.NewTextDisplayf("**%s (선택됨)**", data.Name),
+				).
+					WithAccessory(button),
 			}, sections...)
 
 			continue
 		}
 
 		sections = append(sections,
-			builders.SectionBuilder().
-				SetAccessory(button).
-				AddText("%s\n", data.Name),
+			discord.NewSection(
+				discord.NewTextDisplayf("%s\n", data.Name),
+			).
+				WithAccessory(button),
 		)
 	}
 
-	textDisplay := builders.TextDisplayBuilder("### %s님의 채팅목록", i.User.GlobalName)
-	container := builders.ContainerBuilder().AddComponents(textDisplay)
+	textDisplay := discord.NewTextDisplayf("### %s님의 채팅목록", *i.User().GlobalName)
+	container := discord.NewContainer(textDisplay)
 	for i, section := range sections {
-		container.AddComponents(section, builders.SeparatorBuilder())
+		container = container.AddComponents(section, discord.NewSmallSeparator())
 
 		if (i+1)%5 == 0 {
 			containers = append(containers, container)
-			container = builders.ContainerBuilder().AddComponents(textDisplay)
+			container = container.WithComponents(textDisplay)
 
 			continue
 		}
 	}
 
-	if container.GetComponentsLength() > 1 {
+	if len(container.Components) > 1 {
 		containers = append(containers, container)
 	}
 

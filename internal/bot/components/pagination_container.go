@@ -1,16 +1,18 @@
 package components
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
+	"github.com/disgoorg/disgo/events"
 )
 
 var PaginationContainerComponent *loader.Component = &loader.Component{
-	Parse: func(inter *builders.InteractionCreate) bool {
-		customID := inter.MessageComponentData().CustomID
+	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
+		customID := inter.Data.CustomID()
 
 		isFirst := strings.HasPrefix(customID, utils.PaginationContainerFirst)
 		isPrev := strings.HasPrefix(customID, utils.PaginationContainerPrev)
@@ -22,14 +24,14 @@ var PaginationContainerComponent *loader.Component = &loader.Component{
 		}
 
 		id := utils.GetPaginationContainerID(customID)
-		if inter.Member.User.ID != utils.GetUserID(id) {
+		if inter.User().ID.String() != utils.GetUserID(id) {
 			return false
 		}
 
 		return builders.GetPaginationContainer(id) != nil
 	},
-	Run: func(inter *builders.InteractionCreate) error {
-		customID := inter.MessageComponentData().CustomID
+	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
+		customID := inter.Data.CustomID()
 		id := utils.GetPaginationContainerID(customID)
 		p := builders.GetPaginationContainer(id)
 

@@ -1,93 +1,41 @@
 package builders
 
 import (
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
 )
 
-// A Container is builder for container
-type Container struct {
-	container *discordgo.Container
+func MakeErrorContainer(text string, a ...any) discord.ContainerComponent {
+	return discord.NewContainer(
+		discord.NewTextDisplay("### ❌ 오류"),
+		discord.NewTextDisplayf(text, a...),
+	)
 }
 
-// ContainerBuilder creates a new container
-func ContainerBuilder() *Container {
-	return &Container{
-		container: &discordgo.Container{},
-	}
+func MakeDeclineContainer(text string, a ...any) discord.ContainerComponent {
+	return discord.NewContainer(
+		discord.NewTextDisplay("### ❌ 거부"),
+		discord.NewTextDisplayf(text, a...),
+	)
 }
 
-// SetAccentColor sets accent color
-func (c *Container) SetAccentColor(color int) *Container {
-	c.container.AccentColor = &color
-	return c
+func MakeCanceledContainer(text string, a ...any) discord.ContainerComponent {
+	return discord.NewContainer(
+		discord.NewTextDisplay("### ❌ 취소"),
+		discord.NewTextDisplayf(text, a...),
+	)
 }
 
-// SetSpoiler sets spoiler
-func (c *Container) SetSpoiler(spoiler bool) *Container {
-	c.container.Spoiler = spoiler
-	return c
+func MakeSuccessContainer(text string, a ...any) discord.ContainerComponent {
+	return discord.NewContainer(
+		discord.NewTextDisplay("### ✅ 성공"),
+		discord.NewTextDisplayf(text, a...),
+	)
 }
 
-// AddComponents adds components
-func (c *Container) AddComponents(components ...ComponentBuilder) *Container {
-	for _, cmp := range components {
-		c.container.Components = append(c.container.Components, cmp.Build())
-	}
-	return c
-}
-
-// AddText adds a text
-func (c *Container) AddText(format string, a ...any) *Container {
-	c.AddComponents(TextDisplayBuilder(format, a...))
-	return c
-}
-
-// GetComponentsLength returns its components length
-func (c *Container) GetComponentsLength() int {
-	return len(c.container.Components)
-}
-
-// Build returns discordgo.Container(discordgo.MessageComponent)
-func (c *Container) Build() discordgo.MessageComponent {
-	return c.container
-}
-
-func MakeErrorContainer(format string, a ...any) *Container {
-	return ContainerBuilder().
-		AddComponents(
-			TextDisplayBuilder("### ❌ Error"),
-			TextDisplayBuilder(format, a...),
-		)
-}
-
-func MakeDeclineContainer(format string, a ...any) *Container {
-	return ContainerBuilder().
-		AddComponents(
-			TextDisplayBuilder("### ❌ Declined"),
-			TextDisplayBuilder(format, a...),
-		)
-}
-
-func MakeCanceledContainer(format string, a ...any) *Container {
-	return ContainerBuilder().
-		AddComponents(
-			TextDisplayBuilder("### ❌ Canceled"),
-			TextDisplayBuilder(format, a...),
-		)
-}
-
-func MakeSuccessContainer(format string, a ...any) *Container {
-	return ContainerBuilder().
-		AddComponents(
-			TextDisplayBuilder("### ✅ Success"),
-			TextDisplayBuilder(format, a...),
-		)
-}
-
-func MakeUserIsNotRegisteredErrContainer() *Container {
+func MakeUserIsNotRegisteredErrContainer() discord.ContainerComponent {
 	return MakeErrorContainer("해당 기능은 등록된 사용자만 쓸 수 있어요. `/가입`으로 가입해주새요.")
 }
 
-func MakeUserIsBlockedContainer(globalName, reason string) *Container {
+func MakeUserIsBlockedContainer(globalName, reason string) discord.ContainerComponent {
 	return MakeDeclineContainer("- %s님은 서비스에서 차단되었어요.\n> 사유: %s", globalName, reason)
 }

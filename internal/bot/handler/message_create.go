@@ -2,8 +2,7 @@ package handler
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -12,97 +11,110 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/snowflake/v2"
 )
 
-// MessageCreate is handlers of messageCreate event
-func MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
+// OnMessageCreate is handlers of messageCreate event
+func OnMessageCreate(m *events.MessageCreate) {
 	config := configs.GetConfig()
-	if m.Author.ID == s.State.User.ID || m.Author.Bot {
+	if m.Message.Author.Bot {
 		return
 	}
 
+	authorID := m.Message.Author.ID
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
 
-	if strings.HasPrefix(m.Content, config.Bot.Prefix) {
+	if strings.HasPrefix(m.Message.Content, config.Bot.Prefix) {
 
-		m := &builders.MessageCreate{
-			MessageCreate: m,
-			Session:       s,
-			Ctx:           ctx,
-		}
-		content := strings.TrimPrefix(m.Content, config.Bot.Prefix)
+		content := strings.TrimPrefix(m.Message.Content, config.Bot.Prefix)
 
-		if !repository.GetDatabase().Users.IsUser(m.Ctx, m.Author.ID) {
-			builders.NewMessageSender(m).
-				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
+		if !repository.GetDatabase().Users.IsUser(ctx, authorID.String()) {
+			m.Client().Rest.CreateMessage(
+				m.ChannelID,
+				discord.NewMessageCreateBuilder().
+					SetComponents(builders.MakeUserIsNotRegisteredErrContainer()).
+					SetIsComponentsV2(true).
+					SetMessageReference(m.Message.MessageReference).
+					Build(),
+			)
 
 			return
 		}
 
-		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(m.Ctx, m.Author.ID)
-		if blocked {
-			user, _ := s.User(m.Author.ID)
-			builders.NewMessageSender(m).
-				AddComponents(builders.MakeUserIsBlockedContainer(user.GlobalName, reason)).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
+		if blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, authorID.String()); blocked {
+			m.Client().Rest.CreateMessage(
+				m.ChannelID,
+				discord.NewMessageCreateBuilder().
+					SetComponents(builders.MakeUserIsBlockedContainer(*m.Message.Author.GlobalName, reason)).
+					SetIsComponentsV2(true).
+					SetMessageReference(m.Message.MessageReference).
+					Build(),
+			)
 
 			return
 		}
 
-		s.ChannelTyping(m.ChannelID)
+		m.Client().Rest.SendTyping(m.ChannelID)
 
-		dbUser, err := repository.GetDatabase().Users.FindByID(m.Ctx, m.Author.ID)
+		dbUser, err := repository.GetDatabase().Users.FindByID(ctx, authorID.String())
 		if err != nil {
-			owner, _ := s.User(configs.GetConfig().Bot.OwnerID)
-			log.Println(err)
-			builders.NewMessageSender(m).
-				AddComponents(builders.MakeErrorContainer(fmt.Sprintf("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username)))).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
+			owner, _ := m.Client().Rest.GetUser(snowflake.MustParse(config.Bot.OwnerID))
+			m.Client().Logger.Error("error in gathering user", "error", err)
+			m.Client().Rest.CreateMessage(
+				m.ChannelID,
+				discord.NewMessageCreateBuilder().
+					SetComponents(builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))).
+					SetIsComponentsV2(true).
+					SetMessageReference(m.Message.MessageReference).
+					Build(),
+			)
 
 			return
 		}
 
-		str, err := chatbot.GetChatBot().GetResponse(m.Ctx, m.Author, content, m.Attachments...)
+		str, err := chatbot.GetChatBot().GetResponse(ctx, m.Message.Author, content, m.Message.Attachments...)
 		if err != nil {
-			log.Println(err)
-			builders.NewMessageSender(m).
-				SetContent(str).
-				SetReply(true).
-				SetAllowedMentions(discordgo.MessageAllowedMentions{
-					Parse:       []discordgo.AllowedMentionType{},
-					Users:       []string{},
-					Roles:       []string{},
+			slog.Error("error in responding chat.", "user_id", m.Message.Author.ID, "error", err)
+			m.Client().Rest.CreateMessage(
+				m.ChannelID,
+				discord.NewMessageCreateBuilder().
+					SetContent(str).
+					SetMessageReference(m.Message.MessageReference).
+					SetAllowedMentions(&discord.AllowedMentions{
+						Parse:       make([]discord.AllowedMentionType, 0),
+						Users:       make([]snowflake.ID, 0),
+						Roles:       make([]snowflake.ID, 0),
+						RepliedUser: dbUser.ReplyUser,
+					}).
+					Build(),
+			)
+
+			return
+		}
+
+		result := chatbot.ParseResult(str, m)
+		m.Client().Rest.CreateMessage(
+			m.ChannelID,
+			discord.NewMessageCreateBuilder().
+				SetContent(result).
+				SetMessageReference(m.Message.MessageReference).
+				SetAllowedMentions(&discord.AllowedMentions{
+					Parse:       make([]discord.AllowedMentionType, 0),
+					Users:       make([]snowflake.ID, 0),
+					Roles:       make([]snowflake.ID, 0),
 					RepliedUser: dbUser.ReplyUser,
 				}).
-				Send()
+				Build(),
+		)
 
-			return
-		}
-
-		result := chatbot.ParseResult(str, s, m)
-		builders.NewMessageSender(m).
-			SetContent(result).
-			SetReply(true).
-			SetAllowedMentions(discordgo.MessageAllowedMentions{
-				Parse:       []discordgo.AllowedMentionType{},
-				Users:       []string{},
-				Roles:       []string{},
-				RepliedUser: dbUser.ReplyUser,
-			}).
-			Send()
+		return
 	} else {
-		if m.Author.ID == config.Chatbot.Train.UserID {
-			if _, err := repository.GetDatabase().Texts.Create(ctx, m.Content); err != nil {
-				log.Println(err)
+		if m.Message.Author.ID.String() == config.Chatbot.Train.UserID {
+			if _, err := repository.GetDatabase().Texts.Create(ctx, m.Message.Content); err != nil {
+				slog.Error("error in save muffin data.", "error", err)
 			}
 		}
 	}

@@ -1,15 +1,19 @@
 package information
 
 import (
+	"context"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/disgoorg/disgo/discord"
 )
 
-func InfoPatchLogs(i *builders.InteractionCreate) error {
-	var containers []*builders.Container
+func InfoPatchLogs(ctx context.Context, i *builders.CommandCreate) error {
+	var containers []discord.ContainerComponent
+
+	bot, _ := i.Client().Caches.SelfUser()
 
 	ghConfig := &configs.GetConfig().GitHub
 	if ghConfig.Owner == "" || ghConfig.Repository == "" {
@@ -18,20 +22,20 @@ func InfoPatchLogs(i *builders.InteractionCreate) error {
 
 	ghClient := repository.GetGHClient()
 
-	releases, _, err := ghClient.Repositories.ListReleases(i.Ctx, ghConfig.Owner, ghConfig.Repository, nil)
+	releases, _, err := ghClient.Repositories.ListReleases(ctx, ghConfig.Owner, ghConfig.Repository, nil)
 	if err != nil {
 		return err
 	}
 
 	for _, release := range releases {
 		containers = append(containers,
-			builders.ContainerBuilder().
-				AddComponents(
-					builders.SectionBuilder().
-						SetAccessory(builders.ThumbnailBuilder(i.Session.State.User.AvatarURL("512"))).
-						AddText("# %s", *release.TagName).
-						AddText("%s", strings.ReplaceAll(*release.Body, "#", "##")),
-				),
+			discord.NewContainer(
+				discord.NewSection(
+					discord.NewTextDisplayf("# %s", *release.TagName),
+					discord.NewTextDisplayf("%s", strings.ReplaceAll(*release.Body, "#", "##")),
+				).
+					WithAccessory(discord.NewThumbnail(*bot.AvatarURL())),
+			),
 		)
 	}
 
@@ -40,7 +44,7 @@ func InfoPatchLogs(i *builders.InteractionCreate) error {
 		Start()
 }
 
-func returnErrMsg(i *builders.InteractionCreate) error {
+func returnErrMsg(i *builders.CommandCreate) error {
 	return builders.NewMessageSender(i).
 		AddComponents(builders.MakeErrorContainer("해당 봇은 패치내역을 제공하지 않아요.")).
 		SetComponentsV2(true).

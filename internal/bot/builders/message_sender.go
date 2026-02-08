@@ -1,42 +1,37 @@
 package builders
 
 import (
-	"context"
-
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 )
 
-type MessageCreate struct {
-	*discordgo.MessageCreate
-	Session *discordgo.Session
-	Ctx     context.Context
-}
-
 type MessageSender struct {
-	Embeds          []*discordgo.MessageEmbed
+	Embeds          []discord.Embed
 	Content         string
-	Components      []discordgo.MessageComponent
+	Components      []discord.LayoutComponent
 	Ephemeral       bool
 	Reply           bool
 	ComponentsV2    bool
-	AllowedMentions *discordgo.MessageAllowedMentions
+	AllowedMentions *discord.AllowedMentions
 	m               any
+}
+
+type CommandCreate struct {
+	*events.ApplicationCommandInteractionCreate
+	Responded bool
 }
 
 func NewMessageSender(m any) *MessageSender {
 	return &MessageSender{m: m}
 }
 
-func (s *MessageSender) AddEmbeds(embeds ...*discordgo.MessageEmbed) *MessageSender {
+func (s *MessageSender) AddEmbeds(embeds ...discord.Embed) *MessageSender {
 	s.Embeds = append(s.Embeds, embeds...)
 	return s
 }
 
-func (s *MessageSender) AddComponents(components ...ComponentBuilder) *MessageSender {
-	for _, cmp := range components {
-		s.Components = append(s.Components, cmp.Build())
-	}
-
+func (s *MessageSender) AddComponents(components ...discord.LayoutComponent) *MessageSender {
+	s.Components = append(s.Components, components...)
 	return s
 }
 
@@ -55,7 +50,7 @@ func (s *MessageSender) SetReply(reply bool) *MessageSender {
 	return s
 }
 
-func (s *MessageSender) SetAllowedMentions(allowedMentions discordgo.MessageAllowedMentions) *MessageSender {
+func (s *MessageSender) SetAllowedMentions(allowedMentions discord.AllowedMentions) *MessageSender {
 	s.AllowedMentions = &allowedMentions
 	return s
 }
@@ -66,49 +61,50 @@ func (s *MessageSender) SetComponentsV2(componentsV2 bool) *MessageSender {
 }
 
 func (s *MessageSender) Send() error {
-	var flags discordgo.MessageFlags
-
-	if s.ComponentsV2 {
-		flags |= discordgo.MessageFlagsIsComponentsV2
-	}
-
 	switch m := s.m.(type) {
-	case *MessageCreate:
-		var reference *discordgo.MessageReference = nil
+	case *events.MessageCreate:
+		_, err := m.Client().Rest.CreateMessage(
+			m.ChannelID,
+			discord.NewMessageCreateBuilder().
+				SetContent(s.Content).
+				AddEmbeds(s.Embeds...).
+				AddComponents(s.Components...).
+				SetIsComponentsV2(s.ComponentsV2).
+				SetAllowedMentions(s.AllowedMentions).
+				SetMessageReference(m.Message.MessageReference).
+				Build(),
+		)
 
-		if s.Reply {
-			reference = m.Reference()
-		}
-
-		_, err := m.Session.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content:         s.Content,
-			Embeds:          s.Embeds,
-			Components:      s.Components,
-			AllowedMentions: s.AllowedMentions,
-			Flags:           flags,
-			Reference:       reference,
-		})
 		return err
-	case *InteractionCreate:
-		if s.Ephemeral {
-			flags |= discordgo.MessageFlagsEphemeral
+	case *CommandCreate:
+		if m.Responded {
+			_, err := m.Client().Rest.UpdateInteractionResponse(
+				m.ApplicationID(),
+				m.Token(),
+				discord.NewMessageUpdateBuilder().
+					SetContent(s.Content).
+					AddEmbeds(s.Embeds...).
+					AddComponents(s.Components...).
+					SetIsComponentsV2(s.ComponentsV2).
+					Build(),
+			)
+			return err
 		}
 
-		if m.Replied || m.Deferred {
-			return m.EditReply(&discordgo.WebhookEdit{
-				Content:    &s.Content,
-				Embeds:     &s.Embeds,
-				Components: &s.Components,
-				Flags:      flags,
-			})
+		err := m.CreateMessage(
+			discord.NewMessageCreateBuilder().
+				SetContent(s.Content).
+				AddEmbeds(s.Embeds...).
+				AddComponents(s.Components...).
+				SetIsComponentsV2(s.ComponentsV2).
+				SetEphemeral(s.Ephemeral).
+				Build(),
+		)
+		if err != nil {
+			return err
 		}
 
-		return m.Reply(&discordgo.InteractionResponseData{
-			Content:    s.Content,
-			Embeds:     s.Embeds,
-			Components: s.Components,
-			Flags:      flags,
-		})
+		m.Responded = true
 	}
 	return nil
 }

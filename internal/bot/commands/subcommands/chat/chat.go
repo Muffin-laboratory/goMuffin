@@ -1,40 +1,40 @@
 package chat
 
 import (
-	"log"
+	"context"
+	"log/slog"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/snowflake/v2"
 )
 
-func Chat(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption) error {
-	var attachment *discordgo.MessageAttachment
+func Chat(ctx context.Context, i *builders.CommandCreate) error {
+	var attachment discord.Attachment
 
-	if opt := opts.GetOption("첨부파일"); opt != nil {
-		id := opt.Value.(string)
+	commandData := i.SlashCommandInteractionData()
 
-		if resolvedData := i.ApplicationCommandData().Resolved; resolvedData != nil && resolvedData.Attachments != nil {
-			attachment = resolvedData.Attachments[id]
-		}
+	if opt, ok := commandData.OptAttachment("첨부파일"); ok {
+		attachment = opt
 	}
 
-	content, err := chatbot.GetChatBot().GetResponse(i.Ctx, i.User, opts.GetOption("내용").StringValue(), attachment)
+	content, err := chatbot.GetChatBot().GetResponse(ctx, i.User(), commandData.String("내용"), attachment)
 	if err != nil {
-		log.Println(err)
-		i.EditReply(&discordgo.WebhookEdit{
-			Content: &content,
-		})
+		slog.Error("error in responding chat.", "user_id", i.User().ID, "error", err)
+		builders.NewMessageSender(i).
+			SetContent(content).
+			Send()
 		return nil
 	}
 
-	result := chatbot.ParseResult(content, i.Session, i)
-	return i.EditReply(&discordgo.WebhookEdit{
-		Content: &result,
-		AllowedMentions: &discordgo.MessageAllowedMentions{
-			Parse: []discordgo.AllowedMentionType{},
-			Users: []string{},
-			Roles: []string{},
-		},
-	})
+	result := chatbot.ParseResult(content, i)
+	return builders.NewMessageSender(i).
+		SetContent(result).
+		SetAllowedMentions(discord.AllowedMentions{
+			Parse: make([]discord.AllowedMentionType, 0),
+			Users: make([]snowflake.ID, 0),
+			Roles: make([]snowflake.ID, 0),
+		}).
+		Send()
 }

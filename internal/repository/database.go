@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -42,6 +43,8 @@ func GetDatabase() *MuffinDatabase {
 			Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[string, User](timeToExpire)},
 			Chats:     newChatCollection(client.Database(configs.GetConfig().Database.Name).Collection("chat")),
 		}
+
+		slog.Info("database is created.")
 	})
 	return instance
 }

@@ -1,12 +1,14 @@
 package chat
 
 import (
+	"context"
+
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 )
 
-func Settings(inter *builders.InteractionCreate) error {
-	settings, err := repository.NewUserSettings(inter.Ctx, inter.User)
+func Settings(ctx context.Context, inter *builders.CommandCreate) error {
+	settings, err := repository.NewUserSettings(ctx, inter.User())
 	if err != nil {
 		return err
 	}

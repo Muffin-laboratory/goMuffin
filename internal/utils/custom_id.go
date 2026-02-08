@@ -18,7 +18,7 @@ const (
 	PaginationContainerNext    = "#muffin-pages/next$"
 	PaginationContainerLast    = "#muffin-pages/last$"
 	PaginationContainerModal   = "#muffin-pages/modal$"
-	PaginationContainerSetPage = "#muffin-pages/modal/set$"
+	PaginationContainerSetPage = "#muffin-pages/modal/set"
 
 	ServiceAgree    = "#muffin/service/agree@"
 	ServiceDisagree = "#muffin/service/disagree@"

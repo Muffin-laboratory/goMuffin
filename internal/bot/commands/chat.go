@@ -1,12 +1,15 @@
 package commands
 
 import (
+	"context"
+
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/chat"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/events"
 )
 
 var (
@@ -17,119 +20,109 @@ var (
 	chatCommandSettings = "설정"
 )
 
-const chatNameMaxLength = 25
+var chatNameMaxLength = 25
 
 var ChatCommand = &loader.Command{
-	Deferred: true,
-	DeferOptions: &discordgo.InteractionResponseData{
-		Flags: discordgo.MessageFlagsEphemeral,
-	},
-	ApplicationCommand: &discordgo.ApplicationCommand{
+	Deferred:         true,
+	IsDeferEphemeral: true,
+	SlashCommandCreate: &discord.SlashCommandCreate{
 		Name:        "대화",
 		Description: "이 봇이랑 대화해요.",
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
+		Options: []discord.ApplicationCommandOption{
+			discord.ApplicationCommandOptionSubCommand{
 				Name:        chatCommandList,
 				Description: "채팅 목록을 나열해요.",
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
+			discord.ApplicationCommandOptionSubCommand{
 				Name:        chatCommandCreate,
 				Description: "새로운 채팅을 생성해요.",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionString,
+				Options: []discord.ApplicationCommandOption{
+					discord.ApplicationCommandOptionString{
 						Name:        "이름",
 						Description: "채팅방의 이름 (25자 이내)",
-						MaxLength:   chatNameMaxLength,
+						MaxLength:   &chatNameMaxLength,
 						Required:    false,
 					},
 				},
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
+			discord.ApplicationCommandOptionSubCommand{
 				Name:        chatCommandChatting,
 				Description: "이 봇이랑 대화해요.",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:        discordgo.ApplicationCommandOptionString,
+				Options: []discord.ApplicationCommandOption{
+					discord.ApplicationCommandOptionString{
 						Name:        "내용",
 						Description: "대화할 내용",
 						Required:    true,
 					},
-					{
-						Type:        discordgo.ApplicationCommandOptionAttachment,
+					discord.ApplicationCommandOptionAttachment{
 						Name:        "첨부파일",
 						Description: "같이 보낼 파일",
 						Required:    false,
 					},
 				},
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
+			discord.ApplicationCommandOptionSubCommand{
 				Name:        chatCommandDelete,
 				Description: "채팅을 삭제해요.",
-				Options: []*discordgo.ApplicationCommandOption{
-					{
-						Type:         discordgo.ApplicationCommandOptionString,
+				Options: []discord.ApplicationCommandOption{
+					discord.ApplicationCommandOptionString{
 						Name:         "이름",
 						Description:  "지울 채팅방의 이름",
-						MaxLength:    chatNameMaxLength,
+						MaxLength:    &chatNameMaxLength,
 						Required:     true,
 						Autocomplete: true,
 					},
 				},
 			},
-			{
-				Type:        discordgo.ApplicationCommandOptionSubCommand,
+			discord.ApplicationCommandOptionSubCommand{
 				Name:        chatCommandSettings,
 				Description: "봇의 설정을 개인화 해요.",
 			},
 		},
 	},
 	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
-	Run: func(inter *builders.InteractionCreate) error {
-		switch opt := inter.ApplicationCommandData().Options[0]; opt.Name {
+	Run: func(ctx context.Context, inter *builders.CommandCreate) error {
+
+		switch *inter.SlashCommandInteractionData().SubCommandName {
 		case chatCommandChatting:
-			return subcommands.Chat(inter, opt)
+			return subcommands.Chat(ctx, inter)
 		case chatCommandCreate:
-			return subcommands.Create(inter, opt)
+			return subcommands.Create(ctx, inter)
 		case chatCommandList:
-			return subcommands.List(inter)
+			return subcommands.List(ctx, inter)
 		case chatCommandDelete:
-			return subcommands.Delete(inter, opt)
+			return subcommands.Delete(ctx, inter)
 		case chatCommandSettings:
-			return subcommands.Settings(inter)
+			return subcommands.Settings(ctx, inter)
 		default:
 			return nil
 		}
 	},
-	Autocomplete: func(inter *builders.InteractionCreate) error {
-		var choices []*discordgo.ApplicationCommandOptionChoice
+	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
+		var choices []discord.AutocompleteChoice
 		var focusedValue string
 
-		for _, opt := range inter.ApplicationCommandData().Options[0].Options {
+		for _, opt := range inter.Data.Options {
 			if opt.Focused {
-				focusedValue = opt.StringValue()
+				focusedValue = opt.String()
 				break
 			}
 		}
 
 		filter := query.ChatQueryBuilder().SetNameByRegex(focusedValue)
-		data, err := repository.GetDatabase().Chats.Find(inter.Ctx, filter)
+		data, err := repository.GetDatabase().Chats.Find(ctx, filter)
 		if err != nil {
 			return err
 		}
 
 		for _, data := range data {
-			choices = append(choices, &discordgo.ApplicationCommandOptionChoice{
+			choices = append(choices, discord.AutocompleteChoiceString{
 				Name:  data.Name,
 				Value: data.Name,
 			})
 		}
 
-		return inter.Autocomplete(choices)
+		return inter.AutocompleteResult(choices)
 	},
 }
 

@@ -4,16 +4,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/events"
 )
 
+type componentFunc[T any] func(ctx context.Context, i *events.ComponentInteractionCreate) T
+
 type Component struct {
-	Parse             parse
-	Run               run
-	DeferredReply     bool
-	DeferReplyOptions *discordgo.InteractionResponseData
-	DeferredUpdate    bool
+	Parse            componentFunc[bool]
+	Run              componentFunc[error]
+	DeferredReply    bool
+	IsDeferEphemeral bool
+	DeferredUpdate   bool
 }
 
 func (d *Discommand) LoadComponent(c *Component) {
@@ -22,15 +23,8 @@ func (d *Discommand) LoadComponent(c *Component) {
 	d.Components = append(d.Components, c)
 }
 
-func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.InteractionCreate) error {
+func (d *Discommand) ComponentRun(i *events.ComponentInteractionCreate) error {
 	var err error
-
-	i := &builders.InteractionCreate{
-		InteractionCreate: inter,
-		Session:           s,
-	}
-
-	i.InteractionCreate.User = builders.GetInteractionUser(inter)
 
 	for _, c := range d.Components {
 		var ctx context.Context
@@ -40,25 +34,23 @@ func (d *Discommand) ComponentRun(s *discordgo.Session, inter *discordgo.Interac
 		} else {
 			ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 		}
-		i.Ctx = ctx
-
 		defer cancel()
 
-		if !c.Parse(i) {
+		if !c.Parse(ctx, i) {
 			continue
 		}
 
 		if c.DeferredReply {
-			if err := i.DeferReply(c.DeferReplyOptions); err != nil {
+			if err := i.DeferCreateMessage(c.IsDeferEphemeral); err != nil {
 				return err
 			}
 		} else if c.DeferredUpdate {
-			if err := i.DeferUpdate(); err != nil {
+			if err := i.DeferUpdateMessage(); err != nil {
 				return err
 			}
 		}
 
-		err = c.Run(i)
+		err = c.Run(ctx, i)
 		break
 	}
 	return err

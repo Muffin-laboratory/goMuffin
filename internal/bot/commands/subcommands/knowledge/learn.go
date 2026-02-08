@@ -1,6 +1,7 @@
 package knowledge
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -8,12 +9,11 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/bwmarrin/discordgo"
 )
 
-func Learn(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInteractionDataOption, igCommands []string) error {
-	command := opts.GetOption("단어").StringValue()
-	result := opts.GetOption("대답").StringValue()
+func Learn(ctx context.Context, i *builders.CommandCreate, igCommands []string) error {
+	command := i.SlashCommandInteractionData().String("단어")
+	result := i.SlashCommandInteractionData().String("대답")
 
 	ignores := []string{"미간", "Migan", "migan", "간미"}
 	ignores = append(ignores, igCommands...)
@@ -44,7 +44,7 @@ func Learn(i *builders.InteractionCreate, opts *discordgo.ApplicationCommandInte
 		}
 	}
 
-	if _, err := repository.GetDatabase().Knowledge.Create(i.Ctx, i.User.ID, command, result); err != nil {
+	if _, err := repository.GetDatabase().Knowledge.Create(ctx, i.User().ID.String(), command, result); err != nil {
 		return err
 	}
 

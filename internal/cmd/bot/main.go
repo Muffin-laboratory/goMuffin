@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"context"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -10,52 +11,55 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/gateway"
+	"github.com/disgoorg/snowflake/v2"
 )
 
 func main() {
-	err := dg.Open()
+	err := session.OpenGateway(context.Background())
 	if err != nil {
-		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
-		log.Fatalln(err)
+		slog.Error("[Fatal] failed to start bot.", "error", err)
+		os.Exit(1)
 	}
 
-	defer dg.Close()
+	defer session.Close(context.Background())
 
 	// 봇의 상태메세지 변경
 	go func() {
 		for {
-			dg.UpdateCustomStatus("ㅅ살려주세요..!")
+			session.SetPresence(context.Background(), gateway.WithCustomActivity("ㅅ살려주세요..!"))
 			time.Sleep(time.Minute * 10)
 		}
 	}()
 
-	var globalCmds []*discordgo.ApplicationCommand
-	var developerOnlyGuildCmds []*discordgo.ApplicationCommand
+	var globalCmds []discord.ApplicationCommandCreate
+	var developerOnlyGuildCmds []discord.ApplicationCommandCreate
 	for _, cmd := range loader.GetDiscommand().Commands {
 		if cmd.Flags&loader.CommandFlagsIsDeveloperOnlyCommand != 0 {
-			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.ApplicationCommand)
+			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.SlashCommandCreate)
 			continue
 		}
 
-		globalCmds = append(globalCmds, cmd.ApplicationCommand)
+		globalCmds = append(globalCmds, cmd.SlashCommandCreate)
 	}
 
-	_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, "", globalCmds)
+	_, err = session.Rest.SetGlobalCommands(session.ApplicationID, globalCmds)
 	if err != nil {
-		log.Println(err)
+		slog.Error("error in set global commands.", "error", err)
 	}
 
 	if len(developerOnlyGuildCmds) != 0 {
-		_, err = dg.ApplicationCommandBulkOverwrite(dg.State.User.ID, configs.GetConfig().Command.DeveloperOnlyGuildID, developerOnlyGuildCmds)
+		developerOnlyGuildID := snowflake.MustParse(configs.GetConfig().Command.DeveloperOnlyGuildID)
+		_, err = session.Rest.SetGuildCommands(session.ApplicationID, developerOnlyGuildID, developerOnlyGuildCmds)
 		if err != nil {
-			log.Println(err)
+			slog.Error("error in set developer only commands.", "error", err)
 		}
 	}
 
 	defer repository.GetDatabase().Disconnect()
 
-	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MuffinVersion)
+	slog.Info("bot is running. press ctrl+C to exit program.", "version", configs.MuffinVersion)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
