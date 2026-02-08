@@ -39,7 +39,7 @@ func Make(s *bot.Client) error {
 	}
 
 	instance.systemPrompt = prompt
-	slog.Info("chatbot created.")
+	slog.Info("chatbot is created.")
 	return nil
 }
 
