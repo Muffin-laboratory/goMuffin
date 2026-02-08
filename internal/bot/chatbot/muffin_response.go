@@ -8,22 +8,14 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 func (c *Chatbot) getMuffinResponse(ctx context.Context, question string) (string, error) {
-	var data []repository.Text
 	var result string
 	x := rand.Intn(10)
 
-	cur, err := repository.GetDatabase().Texts.Find(context.TODO(), bson.D{{Key: "persona", Value: "muffin"}})
+	data, err := repository.GetDatabase().Texts.All(ctx)
 	if err != nil {
-		return "살려주ㅅ세요", err
-	}
-
-	defer cur.Close(context.TODO())
-
-	if err = cur.All(context.TODO(), &data); err != nil {
 		return "살려주ㅅ세요", err
 	}
 

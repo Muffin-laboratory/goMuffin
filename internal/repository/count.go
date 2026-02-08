@@ -14,7 +14,7 @@ type CountDocuments struct {
 }
 
 func (d *MuffinDatabase) Counts(ctx context.Context, userID string) (*CountDocuments, error) {
-	muffinLength, err := d.Texts.CountDocuments(ctx, Text{Persona: "muffin"})
+	muffinLength, err := d.Texts.coll.CountDocuments(ctx, Text{Persona: "muffin"})
 	if err != nil {
 		return nil, err
 	}
