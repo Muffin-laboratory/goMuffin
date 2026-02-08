@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,8 +19,8 @@ import (
 func main() {
 	err := session.OpenGateway(context.Background())
 	if err != nil {
-		log.Println("[goMuffin] 봇을 시작할 수 없어요.")
-		log.Fatalln(err)
+		slog.Error("[Fatal] failed to start bot.", "error", err)
+		os.Exit(1)
 	}
 
 	defer session.Close(context.Background())
@@ -46,20 +46,20 @@ func main() {
 
 	_, err = session.Rest.SetGlobalCommands(session.ApplicationID, globalCmds)
 	if err != nil {
-		log.Println(err)
+		slog.Error("error in set global commands.", "error", err)
 	}
 
 	if len(developerOnlyGuildCmds) != 0 {
 		developerOnlyGuildID := snowflake.MustParse(configs.GetConfig().Command.DeveloperOnlyGuildID)
 		_, err = session.Rest.SetGuildCommands(session.ApplicationID, developerOnlyGuildID, developerOnlyGuildCmds)
 		if err != nil {
-			log.Println(err)
+			slog.Error("error in set developer only commands.", "error", err)
 		}
 	}
 
 	defer repository.GetDatabase().Disconnect()
 
-	log.Println("[goMuffin] 봇이 실행되고 있어요. 버전:", configs.MuffinVersion)
+	slog.Info("bot is running. press ctrl+C to exit program.", "version", configs.MuffinVersion)
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc

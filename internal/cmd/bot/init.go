@@ -1,7 +1,8 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/dev"
@@ -18,6 +19,10 @@ var session *bot.Client
 
 func init() {
 	var err error
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
 	session, err = disgo.New(configs.GetConfig().Bot.Token,
 		bot.WithGatewayConfigOpts(
 			gateway.WithIntents(
@@ -31,12 +36,13 @@ func init() {
 		bot.WithEventListenerFunc(handler.OnModalSubmitInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnAutocompleteInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnMessageCreate),
+		bot.WithLogger(logger),
 	)
 	if err != nil {
-		log.Fatalln(err)
+		slog.Error("[Fatal] failed to create session.", "error", err)
 	}
 
 	if err = chatbot.Make(session); err != nil {
-		log.Fatalln(err)
+		slog.Error("[Fatal] failed to create chatbot.", "error", err)
 	}
 }

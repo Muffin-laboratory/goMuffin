@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"log/slog"
+
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
@@ -13,7 +15,7 @@ import (
 
 func OnApplicationCommandInteractionCreate(i *events.ApplicationCommandInteractionCreate) {
 	if err := loader.GetDiscommand().ChatInputRun(i.Data.CommandName(), i); err != nil {
-		i.Client().Logger.Error("%v", err)
+		slog.Error("error in responding chat input command.", "user_id", i.User().ID, "error", err)
 		i.CreateMessage(
 			discord.NewMessageCreateBuilder().
 				SetComponents(getErrContainer(i.Client().Rest)).
@@ -26,7 +28,7 @@ func OnApplicationCommandInteractionCreate(i *events.ApplicationCommandInteracti
 
 func OnComponentInteractionCreate(i *events.ComponentInteractionCreate) {
 	if err := loader.GetDiscommand().ComponentRun(i); err != nil {
-		i.Client().Logger.Error("%v", err)
+		slog.Error("error in responding component.", "user_id", i.User().ID, "error", err)
 		i.CreateMessage(
 			discord.NewMessageCreateBuilder().
 				SetComponents(getErrContainer(i.Client().Rest)).
@@ -39,7 +41,7 @@ func OnComponentInteractionCreate(i *events.ComponentInteractionCreate) {
 
 func OnModalSubmitInteractionCreate(i *events.ModalSubmitInteractionCreate) {
 	if err := loader.GetDiscommand().ModalRun(i); err != nil {
-		i.Client().Logger.Error("%v", err)
+		slog.Error("error in responding modal submit.", "user_id", i.User().ID, "error", err)
 		i.CreateMessage(
 			discord.NewMessageCreateBuilder().
 				SetComponents(getErrContainer(i.Client().Rest)).
@@ -52,7 +54,7 @@ func OnModalSubmitInteractionCreate(i *events.ModalSubmitInteractionCreate) {
 
 func OnAutocompleteInteractionCreate(i *events.AutocompleteInteractionCreate) {
 	if err := loader.GetDiscommand().ChatInputAutocomplete(i.Data.CommandName, i); err != nil {
-		i.Client().Logger.Error("%v", err)
+		slog.Error("error in responding autocomplete.", "user_id", i.User().ID, "error", err)
 		i.Respond(discord.InteractionResponseTypeCreateMessage,
 			discord.NewMessageCreateBuilder().
 				SetComponents(getErrContainer(i.Client().Rest)).

@@ -2,6 +2,7 @@ package chatbot
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
@@ -19,7 +20,7 @@ type Chatbot struct {
 var instance *Chatbot
 
 func Make(s *bot.Client) error {
-	gemini, err := genai.NewClient(context.TODO(), &genai.ClientConfig{
+	gemini, err := genai.NewClient(context.Background(), &genai.ClientConfig{
 		APIKey:  configs.GetConfig().Chatbot.Gemini.Token,
 		Backend: genai.BackendGeminiAPI,
 	})
@@ -38,6 +39,7 @@ func Make(s *bot.Client) error {
 	}
 
 	instance.systemPrompt = prompt
+	slog.Info("chatbot created.")
 	return nil
 }
 

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -62,7 +62,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 		dbUser, err := repository.GetDatabase().Users.FindByID(ctx, authorID.String())
 		if err != nil {
 			owner, _ := m.Client().Rest.GetUser(snowflake.MustParse(config.Bot.OwnerID))
-			m.Client().Logger.Error("%v", err)
+			m.Client().Logger.Error("error in gathering user", "error", err)
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
 				discord.NewMessageCreateBuilder().
@@ -77,7 +77,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 
 		str, err := chatbot.GetChatBot().GetResponse(ctx, m.Message.Author, content, m.Message.Attachments...)
 		if err != nil {
-			m.Client().Logger.Error("%v", err)
+			slog.Error("error in responding chat.", "user_id", m.Message.Author.ID, "error", err)
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
 				discord.NewMessageCreateBuilder().
@@ -118,7 +118,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 				Persona:   "muffin",
 				CreatedAt: time.Now(),
 			}); err != nil {
-				log.Fatalln(err)
+				slog.Error("error in save muffin data.", "error", err)
 			}
 		}
 

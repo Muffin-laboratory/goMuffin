@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
@@ -20,7 +21,7 @@ func Chat(ctx context.Context, i *builders.CommandCreate) error {
 
 	content, err := chatbot.GetChatBot().GetResponse(ctx, i.User(), commandData.String("내용"), attachment)
 	if err != nil {
-		i.Client().Logger.Error("%v", err)
+		slog.Error("error in responding chat.", "user_id", i.User().ID, "error", err)
 		builders.NewMessageSender(i).
 			SetContent(content).
 			Send()
