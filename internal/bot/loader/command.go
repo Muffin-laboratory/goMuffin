@@ -51,7 +51,7 @@ func (d *Discommand) ChatInputRun(name string, i *events.ApplicationCommandInter
 			}
 		}
 
-		isOwner := i.User().ID.String() == configs.GetConfig().Bot.OwnerID
+		isOwner := i.User().ID == configs.GetConfig().Bot.OwnerID
 		if command.Flags&CommandFlagsIsDeveloperOnlyCommand != 0 && !isOwner {
 			return builders.NewMessageSender(i).
 				AddComponents(builders.MakeDeclineContainer("이 명령어는 개발자 전용 명령어에요.")).

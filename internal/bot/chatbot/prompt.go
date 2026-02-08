@@ -25,7 +25,7 @@ func makePrompt(ctx context.Context, systemPrompt string, user *discord.User) (s
 
 	knowledgePrompt := "## Knowledge of the user\n"
 
-	if user.ID.String() == configs.GetConfig().Bot.OwnerID {
+	if user.ID == configs.GetConfig().Bot.OwnerID {
 		userPrompt += fmt.Sprintf(
 			"---\n## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is your developer.",
 			user.ID.String(),

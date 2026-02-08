@@ -51,7 +51,7 @@ var BlockCommand = &loader.Command{
 		}
 
 		for _, data := range data {
-			if data.UserID == configs.GetConfig().Bot.OwnerID {
+			if data.UserID == configs.GetConfig().Bot.OwnerID.String() {
 				continue
 			}
 
@@ -87,7 +87,7 @@ var BlockCommand = &loader.Command{
 			reason = opt
 		}
 
-		if userID.String() == configs.GetConfig().Bot.OwnerID {
+		if userID == configs.GetConfig().Bot.OwnerID {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("개발자는 차단을 할 수 없어요.")).
 				SetComponentsV2(true).

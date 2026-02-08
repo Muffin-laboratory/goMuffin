@@ -10,7 +10,6 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
-	"github.com/disgoorg/snowflake/v2"
 )
 
 func OnApplicationCommandInteractionCreate(i *events.ApplicationCommandInteractionCreate) {
@@ -66,6 +65,6 @@ func OnAutocompleteInteractionCreate(i *events.AutocompleteInteractionCreate) {
 }
 
 func getErrContainer(client rest.Rest) discord.ContainerComponent {
-	owner, _ := client.GetUser(snowflake.MustParse(configs.GetConfig().Bot.OwnerID))
+	owner, _ := client.GetUser(configs.GetConfig().Bot.OwnerID)
 	return builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))
 }

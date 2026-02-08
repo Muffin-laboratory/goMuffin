@@ -61,7 +61,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 
 		dbUser, err := repository.GetDatabase().Users.FindByID(ctx, authorID.String())
 		if err != nil {
-			owner, _ := m.Client().Rest.GetUser(snowflake.MustParse(config.Bot.OwnerID))
+			owner, _ := m.Client().Rest.GetUser(config.Bot.OwnerID)
 			m.Client().Logger.Error("error in gathering user", "error", err)
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
@@ -112,7 +112,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 
 		return
 	} else {
-		if m.Message.Author.ID.String() == config.Chatbot.Train.UserID {
+		if m.Message.Author.ID == config.Chatbot.Train.UserID {
 			if _, err := repository.GetDatabase().Texts.Create(ctx, m.Message.Content); err != nil {
 				slog.Error("error in save muffin data.", "error", err)
 			}

@@ -3,20 +3,22 @@ package configs
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"strconv"
 
+	"github.com/disgoorg/snowflake/v2"
 	"github.com/joho/godotenv"
 )
 
 type botConfig struct {
 	Token   string
 	Prefix  string
-	OwnerID string
+	OwnerID snowflake.ID
 }
 
 type trainConfig struct {
-	UserID string
+	UserID snowflake.ID
 }
 
 type geminiConfig struct {
@@ -57,7 +59,7 @@ type integrateMDCConfig struct {
 }
 
 type commandConfig struct {
-	DeveloperOnlyGuildID string
+	DeveloperOnlyGuildID snowflake.ID
 }
 
 // MuffinConfig for Muffin bot
@@ -86,10 +88,22 @@ func GetConfig() *MuffinConfig {
 func getRequiredValue(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		log.Fatalf("[goMuffin] .env 파일에서 필요한 '%s'값이 없어요.", key)
+		slog.Error("[Fatal] an required env value is not found.", "key", key)
+		os.Exit(1)
 	}
 
 	return value
+}
+
+func getRequiredValueToSnowflake(key string) snowflake.ID {
+	value := getRequiredValue(key)
+	id, err := snowflake.Parse(value)
+	if err != nil {
+		slog.Error("[Fatal] failed to required snowflake env value.", "key", key, "value", value)
+		os.Exit(1)
+	}
+
+	return id
 }
 
 func getValue(key string) string {
@@ -114,7 +128,7 @@ func setConfig(config *MuffinConfig) {
 	config.Bot = botConfig{
 		Prefix:  getRequiredValue("BOT_PREFIX"),
 		Token:   getRequiredValue("BOT_TOKEN"),
-		OwnerID: getRequiredValue("BOT_OWNER_ID"),
+		OwnerID: getRequiredValueToSnowflake("BOT_OWNER_ID"),
 	}
 
 	config.Database = databaseConfig{
@@ -137,7 +151,7 @@ func setConfig(config *MuffinConfig) {
 
 	config.Chatbot = chatbotConfig{
 		Gemini: geminiConfig{Token: getValue("CHATBOT_GEMINI_TOKEN"), PromptPath: getValue("CHATBOT_GEMINI_PROMPT_PATH"), Model: getValue("CHATBOT_GEMINI_MODEL")},
-		Train:  trainConfig{UserID: getValue("CHATBOT_TRAIN_USER_ID")},
+		Train:  trainConfig{UserID: getRequiredValueToSnowflake("CHATBOT_TRAIN_USER_ID")},
 	}
 
 	if config.Chatbot.Gemini.Model == "" {
@@ -161,6 +175,6 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	config.Command = commandConfig{
-		DeveloperOnlyGuildID: getRequiredValue("COMMAND_DEVELOPER_ONLY_GUILD_ID"),
+		DeveloperOnlyGuildID: getRequiredValueToSnowflake("COMMAND_DEVELOPER_ONLY_GUILD_ID"),
 	}
 }

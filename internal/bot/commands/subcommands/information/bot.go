@@ -8,11 +8,10 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/snowflake/v2"
 )
 
 func InfoBot(ctx context.Context, i *builders.CommandCreate) error {
-	owner, err := i.Client().Rest.GetUser(snowflake.MustParse(configs.GetConfig().Bot.OwnerID))
+	owner, err := i.Client().Rest.GetUser(configs.GetConfig().Bot.OwnerID)
 	if err != nil {
 		return err
 	}

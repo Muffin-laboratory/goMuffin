@@ -13,7 +13,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/gateway"
-	"github.com/disgoorg/snowflake/v2"
 )
 
 func main() {
@@ -50,7 +49,7 @@ func main() {
 	}
 
 	if len(developerOnlyGuildCmds) != 0 {
-		developerOnlyGuildID := snowflake.MustParse(configs.GetConfig().Command.DeveloperOnlyGuildID)
+		developerOnlyGuildID := configs.GetConfig().Command.DeveloperOnlyGuildID
 		_, err = session.Rest.SetGuildCommands(session.ApplicationID, developerOnlyGuildID, developerOnlyGuildCmds)
 		if err != nil {
 			slog.Error("error in set developer only commands.", "error", err)

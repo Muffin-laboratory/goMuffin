@@ -55,7 +55,7 @@ var UnblockCommand = &loader.Command{
 		}
 
 		for _, data := range data {
-			if data.UserID == configs.GetConfig().Bot.OwnerID {
+			if data.UserID == configs.GetConfig().Bot.OwnerID.String() {
 				continue
 			}
 
@@ -87,7 +87,7 @@ var UnblockCommand = &loader.Command{
 
 		userID := inter.SlashCommandInteractionData().Snowflake("유저")
 
-		if userID.String() == configs.GetConfig().Bot.OwnerID {
+		if userID == configs.GetConfig().Bot.OwnerID {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("개발자는 차단 해제를 할 수 없어요.")).
 				SetComponentsV2(true).
