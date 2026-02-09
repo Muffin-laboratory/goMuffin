@@ -20,7 +20,7 @@ func migrateAnotherCollection(coll *mongo.Collection, ch chan *migrationErr, wg 
 	cur, err := coll.Find(context.Background(), bson.D{
 		{
 			Key:   "user_id",
-			Value: bson.M{"$type": "objectId"},
+			Value: bson.M{"$type": "string"},
 		},
 	})
 	if err != nil {
