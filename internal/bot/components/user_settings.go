@@ -38,7 +38,7 @@ var UserSettingsComponent = &loader.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.UserSettingsChattingMode):
-			var newMode repository.ChattingMode
+			newMode := repository.ChattingAIMode
 
 			if settings.ChattingMode == repository.ChattingAIMode {
 				newMode = repository.ChattingMuffinMode
