@@ -34,16 +34,21 @@ func (d *Discommand) LoadCommand(c *Command) {
 	d.Commands[c.Name] = c
 }
 
-func (d *Discommand) ChatInputRun(name string, i *events.ApplicationCommandInteractionCreate) error {
+func (d *Discommand) ChatInputRun(name string, inter *events.ApplicationCommandInteractionCreate) error {
 	if command, ok := d.Commands[name]; ok {
 		var ctx context.Context
 		var cancel context.CancelFunc
 		if command.Deferred {
-			ctx, cancel = context.WithTimeout(context.Background(), 15*time.Minute)
+			ctx, cancel = context.WithTimeout(context.Background(), 1*time.Minute)
 		} else {
 			ctx, cancel = context.WithTimeout(context.Background(), 3*time.Second)
 		}
 		defer cancel()
+
+		i := &builders.CommandCreate{
+			ApplicationCommandInteractionCreate: inter,
+			Responded:                           command.Deferred,
+		}
 
 		if command.Deferred {
 			if err := i.DeferCreateMessage(command.IsDeferEphemeral); err != nil {
@@ -78,11 +83,7 @@ func (d *Discommand) ChatInputRun(name string, i *events.ApplicationCommandInter
 				Send()
 		}
 
-		return command.Run(ctx, &builders.CommandCreate{
-			ApplicationCommandInteractionCreate: i,
-			Responded:                           command.Deferred,
-		})
-
+		return command.Run(ctx, i)
 	}
 	return nil
 }

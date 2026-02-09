@@ -12,7 +12,6 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/snowflake/v2"
-	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var UnblockCommand = &loader.Command{
@@ -33,7 +32,6 @@ var UnblockCommand = &loader.Command{
 	Flags: loader.CommandFlagsIsDeveloperOnlyCommand,
 	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
 		var choices []discord.AutocompleteChoice
-		var data []*repository.User
 		var focusedValue string
 
 		for _, opt := range inter.Data.Options {
@@ -43,14 +41,8 @@ var UnblockCommand = &loader.Command{
 			}
 		}
 
-		cur, err := repository.GetDatabase().Users.Collection.Find(ctx, bson.M{"blocked": true})
+		data, err := repository.GetDatabase().Users.FindBlockedUser(ctx)
 		if err != nil {
-			return err
-		}
-
-		defer cur.Close(ctx)
-
-		if err = cur.All(ctx, &data); err != nil {
 			return err
 		}
 

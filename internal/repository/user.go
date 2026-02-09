@@ -2,7 +2,8 @@ package repository
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
@@ -39,14 +40,14 @@ const (
 )
 
 type UserCollection struct {
-	Collection *mongo.Collection
-	caches     *cache.CacheManager[int64, User]
+	coll   *mongo.Collection
+	caches *cache.CacheManager[int64, User]
 }
 
 func newUserCollection(coll *mongo.Collection) *UserCollection {
 	return &UserCollection{
-		Collection: coll,
-		caches:     cache.New[int64, User](timeToExpire),
+		coll:   coll,
+		caches: cache.New[int64, User](timeToExpire),
 	}
 }
 
@@ -58,7 +59,7 @@ func (c *UserCollection) Create(ctx context.Context, userID int64) (*User, error
 		CreatedAt:    time.Now(),
 	}
 
-	_, err := c.Collection.InsertOne(ctx, user)
+	_, err := c.coll.InsertOne(ctx, user)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func (c *UserCollection) All(ctx context.Context) ([]User, error) {
 
 	var data []User
 
-	cur, err := c.Collection.Find(ctx, bson.D{})
+	cur, err := c.coll.Find(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +100,23 @@ func (c *UserCollection) All(ctx context.Context) ([]User, error) {
 	return data, nil
 }
 
+func (c *UserCollection) FindBlockedUser(ctx context.Context) ([]User, error) {
+	var data []User
+
+	cur, err := c.coll.Find(ctx, bson.D{{Key: "blocked", Value: true}})
+	if err != nil {
+		return nil, err
+	}
+
+	defer cur.Close(ctx)
+
+	if err = cur.All(ctx, &data); err != nil {
+		return nil, err
+	}
+
+	return data, err
+}
+
 func (c *UserCollection) FindByID(ctx context.Context, userID int64) (*User, error) {
 	if user, ok := c.caches.Get(userID); ok {
 		return &user, nil
@@ -106,8 +124,8 @@ func (c *UserCollection) FindByID(ctx context.Context, userID int64) (*User, err
 
 	var user User
 
-	if err := c.Collection.FindOne(ctx, bson.M{
-		"user_id": userID,
+	if err := c.coll.FindOne(ctx, bson.M{
+		"_id": userID,
 	}).Decode(&user); err != nil {
 		return nil, err
 	}
@@ -120,6 +138,10 @@ func (c *UserCollection) FindByID(ctx context.Context, userID int64) (*User, err
 func (c *UserCollection) IsUser(ctx context.Context, userID int64) bool {
 	user, err := c.FindByID(ctx, userID)
 	if err != nil {
+		if !errors.Is(err, mongo.ErrNoDocuments) {
+			slog.Error("error in gathering user is registered.", "error", err)
+		}
+
 		return false
 	}
 
@@ -131,11 +153,11 @@ func (c *UserCollection) IsUser(ctx context.Context, userID int64) bool {
 func (c *UserCollection) IsUserBlocked(ctx context.Context, userID int64) (bool, string) {
 	user, err := c.FindByID(ctx, userID)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
+		if errors.Is(err, mongo.ErrNoDocuments) {
 			return false, ""
 		}
 
-		fmt.Println(err)
+		slog.Error("error in gathering user is blocked.", "error", err)
 		return true, "에러가 발생하여 차단한 유저를 구별 못해요. 계속 이러면 연락주세요."
 	}
 
@@ -147,6 +169,7 @@ func (c *UserCollection) IsUserBlocked(ctx context.Context, userID int64) (bool,
 func (c *UserCollection) GetUserChattingMode(ctx context.Context, userID int64) (ChattingMode, error) {
 	user, err := c.FindByID(ctx, userID)
 	if err != nil {
+		slog.Error("error in gathering user's mode.", "error", err)
 		return ChattingAIMode, err
 	}
 
@@ -156,7 +179,7 @@ func (c *UserCollection) GetUserChattingMode(ctx context.Context, userID int64) 
 }
 
 func (c *UserCollection) Update(ctx context.Context, userID int64, data *UserUpdate) (*mongo.UpdateResult, error) {
-	result, err := c.Collection.UpdateOne(ctx, bson.M{"user_id": userID}, bson.M{
+	result, err := c.coll.UpdateOne(ctx, bson.M{"_id": userID}, bson.M{
 		"$set": data,
 	})
 	if err != nil {
@@ -174,7 +197,7 @@ func (c *UserCollection) Update(ctx context.Context, userID int64, data *UserUpd
 }
 
 func (c *UserCollection) Delete(ctx context.Context, userID int64) (*mongo.DeleteResult, error) {
-	result, err := c.Collection.DeleteOne(ctx, bson.M{"user_id": userID})
+	result, err := c.coll.DeleteOne(ctx, bson.M{"_id": userID})
 	if err != nil {
 		return nil, err
 	}
