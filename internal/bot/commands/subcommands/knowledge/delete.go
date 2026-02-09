@@ -16,7 +16,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 
 	command := i.SlashCommandInteractionData().String("단어")
 
-	filter := query.KnowledgeQueryBuilder().SetUserID(i.User().ID.String()).SetCommand(command)
+	filter := query.KnowledgeQueryBuilder().SetUserID(int64(i.User().ID)).SetCommand(command)
 	data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
 	if err != nil {
 		return err

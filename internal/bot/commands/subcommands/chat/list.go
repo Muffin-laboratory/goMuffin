@@ -14,7 +14,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 	var sections []discord.SectionComponent
 	var containers []discord.ContainerComponent
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(i.User().ID))
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	data, err := repository.GetDatabase().Chats.Find(ctx, query.ChatQueryBuilder().SetUserID(i.User().ID.String()))
+	data, err := repository.GetDatabase().Chats.Find(ctx, query.ChatQueryBuilder().SetUserID(int64(i.User().ID)))
 	if err != nil {
 		return err
 	}

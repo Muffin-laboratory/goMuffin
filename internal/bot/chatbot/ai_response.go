@@ -17,14 +17,14 @@ import (
 func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question string, attachments ...discord.Attachment) (string, error) {
 	const twelveHours = 43_200
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, user.ID.String())
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(user.ID))
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}
 
-	if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(user.ID.String())); err != nil {
+	if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(int64(user.ID))); err != nil {
 		if err == mongo.ErrNoDocuments {
-			if _, err = repository.GetDatabase().Chats.Create(ctx, user.ID.String(), fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
+			if _, err = repository.GetDatabase().Chats.Create(ctx, int64(user.ID), fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
 				return "살려주ㅅ세요", err
 			}
 		} else {
@@ -39,7 +39,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question
 		}
 
 		if time.Now().Unix()-timestamp > twelveHours {
-			result, err := repository.GetDatabase().Chats.Create(ctx, user.ID.String(), fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
+			result, err := repository.GetDatabase().Chats.Create(ctx, int64(user.ID), fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
 			if err != nil {
 				return "살려주ㅅ세요", err
 			}
@@ -76,7 +76,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question
 	}
 
 	resultText := result.Text()
-	if _, err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, user.ID.String(), question, resultText, files); err != nil {
+	if _, err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, int64(user.ID), question, resultText, files); err != nil {
 		return "살려주ㅅ세요", err
 	}
 

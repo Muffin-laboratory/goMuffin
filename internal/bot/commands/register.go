@@ -20,10 +20,10 @@ var RegisterCommand = &loader.Command{
 	},
 	Flags: loader.CommandFlagsIsBlocked,
 	Run: func(ctx context.Context, inter *builders.CommandCreate) error {
-		userID := inter.User().ID.String()
+		userID := inter.User().ID
 		bot, _ := inter.Client().Caches.SelfUser()
 
-		if repository.GetDatabase().Users.IsUser(ctx, userID) {
+		if repository.GetDatabase().Users.IsUser(ctx, int64(userID)) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("당신은 이미 가입되어있어요. 만약 탈퇴를 원하시면 /탈퇴를 이용해주세요.")).
 				SetComponentsV2(true).
@@ -40,8 +40,8 @@ var RegisterCommand = &loader.Command{
 						configs.GetConfig().Service.TermOfServiceURL,
 					),
 					discord.NewActionRow(
-						discord.NewSuccessButton("동의 및 가입", utils.MakeServiceAgree(userID)),
-						discord.NewDangerButton("취소", utils.MakeServiceDisagree(userID)),
+						discord.NewSuccessButton("동의 및 가입", utils.MakeServiceAgree(userID.String())),
+						discord.NewDangerButton("취소", utils.MakeServiceDisagree(userID.String())),
 					),
 				),
 			).

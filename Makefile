@@ -31,3 +31,6 @@ fmt:
 
 vet:
 	@go vet $(PKG)
+
+migration:
+	@go run ./internal/cmd/migration

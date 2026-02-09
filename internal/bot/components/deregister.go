@@ -31,7 +31,7 @@ var DeregisterComponent = &loader.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.DeregisterAgree):
-			userID := inter.User().ID.String()
+			userID := int64(inter.User().ID)
 
 			if _, err := repository.GetDatabase().Users.Delete(ctx, userID); err != nil {
 				return err

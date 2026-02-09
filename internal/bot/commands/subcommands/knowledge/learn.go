@@ -44,7 +44,7 @@ func Learn(ctx context.Context, i *builders.CommandCreate, igCommands []string) 
 		}
 	}
 
-	if _, err := repository.GetDatabase().Knowledge.Create(ctx, i.User().ID.String(), command, result); err != nil {
+	if _, err := repository.GetDatabase().Knowledge.Create(ctx, int64(i.User().ID), command, result); err != nil {
 		return err
 	}
 

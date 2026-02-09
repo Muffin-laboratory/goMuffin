@@ -17,7 +17,7 @@ func Create(ctx context.Context, i *builders.CommandCreate) error {
 		name = value
 	}
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(i.User().ID))
 	if err != nil {
 		return err
 	}
@@ -26,7 +26,7 @@ func Create(ctx context.Context, i *builders.CommandCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	if _, err := repository.GetDatabase().Chats.Create(ctx, i.User().ID.String(), name); err != nil {
+	if _, err := repository.GetDatabase().Chats.Create(ctx, int64(i.User().ID), name); err != nil {
 		return err
 	}
 

@@ -51,11 +51,12 @@ var BlockCommand = &loader.Command{
 		}
 
 		for _, data := range data {
-			if data.UserID == configs.GetConfig().Bot.OwnerID.String() {
+			userID := snowflake.ID(data.ID)
+			if userID == configs.GetConfig().Bot.OwnerID {
 				continue
 			}
 
-			user, err := inter.Client().Rest.GetUser(snowflake.MustParse(data.UserID))
+			user, err := inter.Client().Rest.GetUser(userID)
 			if err != nil {
 				return err
 			}
@@ -100,7 +101,7 @@ var BlockCommand = &loader.Command{
 			return err
 		}
 
-		if !repository.GetDatabase().Users.IsUser(ctx, userID.String()) {
+		if !repository.GetDatabase().Users.IsUser(ctx, int64(userID)) {
 			return builders.NewMessageSender(inter).
 				AddComponents(builders.MakeErrorContainer("유저 %s은/는 해당 봇 이용자가 아니에요.", user.Username)).
 				SetComponentsV2(true).
@@ -108,7 +109,7 @@ var BlockCommand = &loader.Command{
 				Send()
 		}
 
-		if _, err = repository.GetDatabase().Users.Update(ctx, userID.String(), &repository.UserUpdate{
+		if _, err = repository.GetDatabase().Users.Update(ctx, int64(userID), &repository.UserUpdate{
 			Blocked:       &blocked,
 			BlockedReason: &reason,
 		}); err != nil {

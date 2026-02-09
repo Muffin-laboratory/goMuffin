@@ -60,7 +60,7 @@ func (d *Discommand) ChatInputRun(name string, i *events.ApplicationCommandInter
 				Send()
 		}
 
-		if command.Flags&CommandFlagsIsRegistered != 0 && !repository.GetDatabase().Users.IsUser(ctx, i.User().ID.String()) {
+		if command.Flags&CommandFlagsIsRegistered != 0 && !repository.GetDatabase().Users.IsUser(ctx, int64(i.User().ID)) {
 			return builders.NewMessageSender(i).
 				AddComponents(builders.MakeUserIsNotRegisteredErrContainer()).
 				SetComponentsV2(true).
@@ -69,7 +69,7 @@ func (d *Discommand) ChatInputRun(name string, i *events.ApplicationCommandInter
 				Send()
 		}
 
-		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, i.User().ID.String())
+		blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, int64(i.User().ID))
 		if command.Flags&CommandFlagsIsBlocked != 0 && blocked {
 			return builders.NewMessageSender(i).
 				AddComponents(builders.MakeUserIsBlockedContainer(*i.User().GlobalName, reason)).

@@ -62,7 +62,7 @@ func (c *Chatbot) GetPrompt() string {
 }
 
 func (c *Chatbot) GetResponse(ctx context.Context, user discord.User, question string, attachments ...discord.Attachment) (string, error) {
-	mode, err := repository.GetDatabase().Users.GetUserChattingMode(ctx, user.ID.String())
+	mode, err := repository.GetDatabase().Users.GetUserChattingMode(ctx, int64(user.ID))
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}

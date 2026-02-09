@@ -10,7 +10,7 @@ func ChatQueryBuilder() *ChatQuery {
 	return &ChatQuery{}
 }
 
-func (b *ChatQuery) SetUserID(userID string) *ChatQuery {
+func (b *ChatQuery) SetUserID(userID int64) *ChatQuery {
 	b.filter = append(b.filter, bson.E{Key: "user_id", Value: userID})
 	return b
 }

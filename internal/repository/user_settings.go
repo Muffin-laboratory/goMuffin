@@ -20,7 +20,7 @@ type UserSettings struct {
 var userSettings = make(map[string]*UserSettings)
 
 func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, error) {
-	dbUser, err := GetDatabase().Users.FindByID(ctx, user.ID.String())
+	dbUser, err := GetDatabase().Users.FindByID(ctx, int64(user.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 }
 
 func (s *UserSettings) Submit(ctx context.Context) error {
-	if _, err := GetDatabase().Users.Update(ctx, s.user.ID.String(), &UserUpdate{
+	if _, err := GetDatabase().Users.Update(ctx, int64(s.user.ID), &UserUpdate{
 		ChattingMode:              &s.ChattingMode,
 		ReplyUser:                 &s.ReplyUser,
 		CreateNewChatAfter12Hours: &s.CreateNewChatAfter12Hours,

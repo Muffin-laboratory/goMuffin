@@ -14,7 +14,7 @@ import (
 type Chat struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Name      string        `bson:"name,omitempty"`
-	UserID    string        `bson:"user_id,omitempty"`
+	UserID    int64         `bson:"user_id,omitempty"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }
 
@@ -45,7 +45,7 @@ func (c *ChatCollection) createCache(chat Chat) {
 	createIndexCache(c.indexes, chat.ID, index)
 }
 
-func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*Chat, error) {
+func (c *ChatCollection) Create(ctx context.Context, userID int64, name string) (*Chat, error) {
 	data := Chat{UserID: userID, Name: name, CreatedAt: time.Now()}
 	result, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 	for _, filter := range rawFilter {
 		switch filter.Key {
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		case "name":
 			if value, ok := filter.Value.(string); ok {
 				index.setName(value)

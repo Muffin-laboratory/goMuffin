@@ -13,7 +13,7 @@ import (
 func Delete(ctx context.Context, i *builders.CommandCreate) error {
 	name := i.SlashCommandInteractionData().String("이름")
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(i.User().ID))
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 		return chatSendErrorMessage(i)
 	}
 
-	filter := query.ChatQueryBuilder().SetUserID(dbUser.UserID).SetName(name)
+	filter := query.ChatQueryBuilder().SetUserID(dbUser.ID).SetName(name)
 	data, err := repository.GetDatabase().Chats.Find(ctx, filter)
 	if err != nil {
 		return err

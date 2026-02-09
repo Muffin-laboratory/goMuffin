@@ -39,7 +39,7 @@ func makePrompt(ctx context.Context, systemPrompt string, user *discord.User) (s
 		)
 	}
 
-	knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetUserID(user.ID.String()))
+	knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetUserID(int64(user.ID)))
 	if err != nil {
 		return "", err
 	}

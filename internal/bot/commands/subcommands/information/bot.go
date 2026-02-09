@@ -16,7 +16,7 @@ func InfoBot(ctx context.Context, i *builders.CommandCreate) error {
 		return err
 	}
 
-	counts, err := repository.GetDatabase().Counts(ctx, i.User().ID.String())
+	counts, err := repository.GetDatabase().Counts(ctx, int64(i.User().ID))
 	if err != nil {
 		return err
 	}

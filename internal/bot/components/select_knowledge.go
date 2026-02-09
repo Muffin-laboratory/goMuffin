@@ -25,7 +25,7 @@ var SelectKnowledgeComponent = &loader.Component{
 
 		command := utils.GetSelectKnowledgeCommand(inter.Data.CustomID())
 
-		filter := query.KnowledgeQueryBuilder().SetUserID(inter.User().ID.String()).SetCommand(command)
+		filter := query.KnowledgeQueryBuilder().SetUserID(int64(inter.User().ID)).SetCommand(command)
 		data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
 		if err != nil {
 			return err

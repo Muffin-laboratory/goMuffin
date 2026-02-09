@@ -22,7 +22,7 @@ func boolToString(k bool) string {
 func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
 	accCreatedTimestamp := i.User().ID.Time()
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, i.User().ID.String())
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(i.User().ID))
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
 		return err
 	}
 
-	chatLength, err := repository.GetDatabase().Memory.CountDocuments(ctx, query.MemoryQueryBuilder().SetUserID(i.User().ID.String()))
+	chatLength, err := repository.GetDatabase().Memory.CountDocuments(ctx, query.MemoryQueryBuilder().SetUserID(dbUser.ID))
 	if err != nil {
 		return err
 	}

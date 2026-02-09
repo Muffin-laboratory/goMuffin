@@ -30,7 +30,7 @@ var RegisterComponent = &loader.Component{
 
 		switch {
 		case strings.HasPrefix(customID, utils.ServiceAgree):
-			if _, err := repository.GetDatabase().Users.Create(ctx, inter.User().ID.String()); err != nil {
+			if _, err := repository.GetDatabase().Users.Create(ctx, int64(inter.User().ID)); err != nil {
 				return err
 			}
 

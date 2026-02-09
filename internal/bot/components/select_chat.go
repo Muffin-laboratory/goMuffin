@@ -38,7 +38,7 @@ var SelectChatComponent = &loader.Component{
 	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
 		id, name := utils.GetChatID(inter.Data.CustomID())
 
-		if _, err := repository.GetDatabase().Users.Update(ctx, inter.User().ID.String(), &repository.UserUpdate{
+		if _, err := repository.GetDatabase().Users.Update(ctx, int64(inter.User().ID), &repository.UserUpdate{
 			ChatID: &id,
 		}); err != nil {
 			return err

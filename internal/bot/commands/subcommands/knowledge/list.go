@@ -21,7 +21,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 		command = value
 	}
 
-	filter := query.KnowledgeQueryBuilder().SetUserID(i.User().ID.String())
+	filter := query.KnowledgeQueryBuilder().SetUserID(int64(i.User().ID))
 
 	if command != "" {
 		filter.SetCommandByRegex(command)

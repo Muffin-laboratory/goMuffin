@@ -100,7 +100,7 @@ var KnowledgeCommand = &loader.Command{
 			}
 		}
 
-		filter := query.KnowledgeQueryBuilder().SetUserID(inter.User().ID.String()).SetCommandByRegex(focusedValue)
+		filter := query.KnowledgeQueryBuilder().SetUserID(int64(inter.User().ID)).SetCommandByRegex(focusedValue)
 		data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
 		if err != nil {
 			return err

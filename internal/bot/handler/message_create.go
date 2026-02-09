@@ -31,7 +31,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 
 		content := strings.TrimPrefix(m.Message.Content, config.Bot.Prefix)
 
-		if !repository.GetDatabase().Users.IsUser(ctx, authorID.String()) {
+		if !repository.GetDatabase().Users.IsUser(ctx, int64(authorID)) {
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
 				discord.NewMessageCreateBuilder().
@@ -44,7 +44,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 			return
 		}
 
-		if blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, authorID.String()); blocked {
+		if blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, int64(authorID)); blocked {
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
 				discord.NewMessageCreateBuilder().
@@ -59,7 +59,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 
 		m.Client().Rest.SendTyping(m.ChannelID)
 
-		dbUser, err := repository.GetDatabase().Users.FindByID(ctx, authorID.String())
+		dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(authorID))
 		if err != nil {
 			owner, _ := m.Client().Rest.GetUser(config.Bot.OwnerID)
 			m.Client().Logger.Error("error in gathering user", "error", err)

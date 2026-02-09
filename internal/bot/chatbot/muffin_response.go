@@ -26,7 +26,7 @@ func (c *Chatbot) getMuffinResponse(ctx context.Context, question string) (strin
 
 	if x > 2 && len(knowledge) != 0 {
 		data := knowledge[rand.Intn(len(knowledge))]
-		user, _ := c.s.Rest.GetUser(snowflake.MustParse(data.UserID))
+		user, _ := c.s.Rest.GetUser(snowflake.ID(data.UserID))
 
 		result =
 			fmt.Sprintf("%s\n`%s님이 알려주셨어요.`", data.Result, user.Username)
