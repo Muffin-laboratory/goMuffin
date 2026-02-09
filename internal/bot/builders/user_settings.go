@@ -1,10 +1,11 @@
-package repository
+package builders
 
 import (
 	"context"
 	"fmt"
 	"math/rand"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 )
@@ -12,7 +13,7 @@ import (
 type UserSettings struct {
 	ID                        string
 	user                      *discord.User
-	ChattingMode              ChattingMode
+	ChattingMode              repository.ChattingMode
 	ReplyUser                 bool
 	CreateNewChatAfter12Hours bool
 }
@@ -20,7 +21,7 @@ type UserSettings struct {
 var userSettings = make(map[string]*UserSettings)
 
 func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, error) {
-	dbUser, err := GetDatabase().Users.FindByID(ctx, int64(user.ID))
+	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(user.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 		discord.NewTextDisplay("- **12 시간 후 새로운 채팅**\n> 해당 봇과 대화하고 12시간 뒤에 새로운 대화를 시작할지 여부를 정해요."),
 		discord.NewActionRow(
 			discord.NewPrimaryButton(
-				fmt.Sprintf("모드: %s", ModeString(s.ChattingMode)),
+				fmt.Sprintf("모드: %s", repository.ModeString(s.ChattingMode)),
 				utils.MakeUserSettingsChattingMode(s.ID),
 			),
 			discord.NewButton(
@@ -77,7 +78,7 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 }
 
 func (s *UserSettings) Submit(ctx context.Context) error {
-	if _, err := GetDatabase().Users.Update(ctx, int64(s.user.ID), &UserUpdate{
+	if _, err := repository.GetDatabase().Users.Update(ctx, int64(s.user.ID), &repository.UserUpdate{
 		ChattingMode:              &s.ChattingMode,
 		ReplyUser:                 &s.ReplyUser,
 		CreateNewChatAfter12Hours: &s.CreateNewChatAfter12Hours,

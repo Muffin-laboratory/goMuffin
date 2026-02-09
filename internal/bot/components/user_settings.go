@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
@@ -30,11 +31,11 @@ var UserSettingsComponent = &loader.Component{
 			return false
 		}
 
-		return repository.GetUserSettings(id) != nil
+		return builders.GetUserSettings(id) != nil
 	},
 	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
 		customID := inter.Data.CustomID()
-		settings := repository.GetUserSettings(utils.GetUserSettingsID(customID))
+		settings := builders.GetUserSettings(utils.GetUserSettingsID(customID))
 
 		switch {
 		case strings.HasPrefix(customID, utils.UserSettingsChattingMode):
