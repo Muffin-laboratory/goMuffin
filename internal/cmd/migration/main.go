@@ -19,5 +19,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	migration.MigrationUserIDToInt64(client)
+	db := client.Database(configs.GetConfig().Database.Name)
+
+	migration.MigrationUserIDToInt64(db)
+	migration.MigrateKnowledgeCollectionName(db)
 }

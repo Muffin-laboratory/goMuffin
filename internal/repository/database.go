@@ -38,7 +38,7 @@ func GetDatabase() *MuffinDatabase {
 
 		instance = &MuffinDatabase{
 			Client:    client,
-			Knowledge: newKnowledgeCollection(client.Database(configs.GetConfig().Database.Name).Collection("learn")),
+			Knowledge: newKnowledgeCollection(client.Database(configs.GetConfig().Database.Name).Collection("knowledge")),
 			Texts:     newTextCollection(client.Database(configs.GetConfig().Database.Name).Collection("text")),
 			Memory:    newMemoryCollection(client.Database(configs.GetConfig().Database.Name).Collection("memory")),
 			Users:     newUserCollection(client.Database(configs.GetConfig().Database.Name).Collection("user")),

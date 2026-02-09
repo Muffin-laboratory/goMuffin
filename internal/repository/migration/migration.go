@@ -2,9 +2,9 @@ package migration
 
 import (
 	"log/slog"
+	"os"
 	"sync"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
@@ -13,12 +13,14 @@ type migrationErr struct {
 	err   error
 }
 
-func MigrationUserIDToInt64(client *mongo.Client) {
+func MigrationUserIDToInt64(db *mongo.Database) {
+	var errored bool
 	const collections = 4
 
 	var wg sync.WaitGroup
 
-	db := client.Database(configs.GetConfig().Database.Name)
+	slog.Info("start user id migration...")
+
 	ch := make(chan *migrationErr, collections)
 	wg.Add(collections)
 
@@ -31,9 +33,14 @@ func MigrationUserIDToInt64(client *mongo.Client) {
 	close(ch)
 	for err := range ch {
 		if err != nil {
-			slog.Error("error while migration.", "where", err.where, "error", err)
+			slog.Error("error while user id migration.", "where", err.where, "error", err)
+			errored = true
 		}
 	}
 
-	slog.Info("migration is success!!!")
+	if errored {
+		os.Exit(1)
+	}
+
+	slog.Info("user id migration is success!!!")
 }
