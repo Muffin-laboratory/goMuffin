@@ -1,8 +1,13 @@
 package loader
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/disgoorg/disgo/handler"
+)
 
 type Discommand struct {
+	Router     handler.Router
 	Commands   map[string]*Command
 	Components []*Component
 	Modals     []*Modal
@@ -21,6 +26,7 @@ var instance *Discommand
 func GetDiscommand() *Discommand {
 	once.Do(func() {
 		instance = &Discommand{
+			Router:     handler.New(),
 			Commands:   map[string]*Command{},
 			Components: []*Component{},
 			Modals:     []*Modal{},

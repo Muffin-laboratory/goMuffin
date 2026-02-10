@@ -35,7 +35,7 @@ func PaginationContainerBuilder(m any) *PaginationContainer {
 		userID = m.User().ID.String()
 	}
 
-	id := fmt.Sprintf("%s/%d", userID, rand.Intn(100))
+	id := fmt.Sprintf("%s:%d", userID, rand.Intn(100))
 	return &PaginationContainer{
 		Current: 1,
 		ID:      id,

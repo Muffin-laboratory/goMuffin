@@ -8,6 +8,7 @@ import (
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/dev"
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/components"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/handler"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/modals"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/disgoorg/disgo"
@@ -33,10 +34,10 @@ func init() {
 		),
 		bot.WithEventListenerFunc(handler.OnApplicationCommandInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnComponentInteractionCreate),
-		bot.WithEventListenerFunc(handler.OnModalSubmitInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnAutocompleteInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnMessageCreate),
 		bot.WithLogger(logger),
+		bot.WithEventListeners(loader.GetDiscommand().Router),
 	)
 	if err != nil {
 		slog.Error("[Fatal] failed to create session.", "error", err)

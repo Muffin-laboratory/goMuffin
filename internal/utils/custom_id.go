@@ -17,7 +17,7 @@ const (
 	PaginationContainerPages   = "#muffin-pages/pages$"
 	PaginationContainerNext    = "#muffin-pages/next$"
 	PaginationContainerLast    = "#muffin-pages/last$"
-	PaginationContainerModal   = "#muffin-pages/modal$"
+	PaginationContainerModal   = "/muffin-pages/modal"
 	PaginationContainerSetPage = "#muffin-pages/modal/set"
 
 	ServiceAgree    = "#muffin/service/agree@"
@@ -82,7 +82,7 @@ func MakePaginationContainerLast(id string) string {
 }
 
 func MakePaginationContainerModal(id string) string {
-	return fmt.Sprintf("%s%s", PaginationContainerModal, id)
+	return fmt.Sprintf("%s/%s", PaginationContainerModal, id)
 }
 
 func MakePaginationContainerSetPage(id string) string {
@@ -102,7 +102,7 @@ func GetPaginationContainerID(customID string) string {
 	case strings.HasPrefix(customID, PaginationContainerLast):
 		return customID[len(PaginationContainerLast):]
 	case strings.HasPrefix(customID, PaginationContainerModal):
-		return customID[len(PaginationContainerModal):]
+		return customID[len(PaginationContainerModal)+1:]
 	case strings.HasPrefix(customID, PaginationContainerSetPage):
 		return customID[len(PaginationContainerSetPage):]
 	default:

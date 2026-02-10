@@ -38,19 +38,6 @@ func OnComponentInteractionCreate(i *events.ComponentInteractionCreate) {
 	}
 }
 
-func OnModalSubmitInteractionCreate(i *events.ModalSubmitInteractionCreate) {
-	if err := loader.GetDiscommand().ModalRun(i); err != nil {
-		slog.Error("error in responding modal submit.", "user_id", i.User().ID, "error", err)
-		i.CreateMessage(
-			discord.NewMessageCreateBuilder().
-				SetComponents(getErrContainer(i.Client().Rest)).
-				SetIsComponentsV2(true).
-				SetEphemeral(true).
-				Build(),
-		)
-	}
-}
-
 func OnAutocompleteInteractionCreate(i *events.AutocompleteInteractionCreate) {
 	if err := loader.GetDiscommand().ChatInputAutocomplete(i.Data.CommandName, i); err != nil {
 		slog.Error("error in responding autocomplete.", "user_id", i.User().ID, "error", err)
