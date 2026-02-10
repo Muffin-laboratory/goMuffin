@@ -23,8 +23,8 @@ const (
 	ServiceAgree    = "#muffin/service/agree@"
 	ServiceDisagree = "#muffin/service/disagree@"
 
-	DeregisterAgree    = "#muffin/deregister/agree@"
-	DeregisterDisagree = "#muffin/deregister/disagree@"
+	DeregisterAgree    = "/muffin/deregister/agree"
+	DeregisterDisagree = "/muffin/deregister/disagree"
 
 	SelectChat       = "#muffin/chat/select$"
 	DeleteChat       = "#muffin/chat/delete$"
@@ -134,11 +134,11 @@ func GetServiceUserID(customID string) string {
 }
 
 func MakeDeregisterAgree(userID string) string {
-	return fmt.Sprintf("%s%s", DeregisterAgree, userID)
+	return fmt.Sprintf("%s/%s", DeregisterAgree, userID)
 }
 
 func MakeDeregisterDisagree(userID string) string {
-	return fmt.Sprintf("%s%s", DeregisterDisagree, userID)
+	return fmt.Sprintf("%s/%s", DeregisterDisagree, userID)
 }
 
 func GetDeregisterUserID(customID string) string {

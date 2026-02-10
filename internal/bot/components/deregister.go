@@ -1,72 +1,62 @@
 package components
 
 import (
-	"context"
-	"strings"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/disgo/handler/middleware"
 )
 
 var DeregisterComponent = &loader.Component{
-	DeferredUpdate: true,
-	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
-		customID := inter.Data.CustomID()
-		if !strings.HasPrefix(customID, utils.DeregisterAgree) && !strings.HasPrefix(customID, utils.DeregisterDisagree) {
-			return false
-		}
-
-		if inter.User().ID.String() != utils.GetDeregisterUserID(customID) {
-			return false
-		}
-		return true
+	Middlewares: []handler.Middleware{
+		middleware.Defer(discord.InteractionTypeComponent, true, false),
 	},
-	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		customID := inter.Data.CustomID()
+	Handle: func(r handler.Router) {
+		r.Component(utils.DeregisterAgree+"/{user_id}", func(inter *handler.ComponentEvent) error {
+			if inter.Vars["user_id"] != inter.User().ID.String() {
+				return nil
+			}
 
-		switch {
-		case strings.HasPrefix(customID, utils.DeregisterAgree):
 			userID := int64(inter.User().ID)
 
-			if _, err := repository.GetDatabase().Users.Delete(ctx, userID); err != nil {
+			if _, err := repository.GetDatabase().Users.Delete(inter.Ctx, userID); err != nil {
 				return err
 			}
 
-			if err := repository.GetDatabase().Knowledge.DeleteMany(ctx, query.KnowledgeQueryBuilder().SetUserID(userID)); err != nil {
+			if err := repository.GetDatabase().Knowledge.DeleteMany(inter.Ctx, query.KnowledgeQueryBuilder().SetUserID(userID)); err != nil {
 				return err
 			}
 
-			if err := repository.GetDatabase().Memory.DeleteMany(ctx, query.MemoryQueryBuilder().SetUserID(userID)); err != nil {
+			if err := repository.GetDatabase().Memory.DeleteMany(inter.Ctx, query.MemoryQueryBuilder().SetUserID(userID)); err != nil {
 				return err
 			}
 
-			_, err := inter.Client().Rest.UpdateInteractionResponse(
-				inter.ApplicationID(),
-				inter.Token(),
+			_, err := inter.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("탈퇴를 했어요.")).
 					SetIsComponentsV2(true).
 					Build(),
 			)
 			return err
-		case strings.HasPrefix(customID, utils.DeregisterDisagree):
-			_, err := inter.Client().Rest.UpdateInteractionResponse(
-				inter.ApplicationID(),
-				inter.Token(),
+		})
+
+		r.Component(utils.DeregisterDisagree+"/{user_id}", func(inter *handler.ComponentEvent) error {
+			if inter.Vars["user_id"] != inter.User().ID.String() {
+				return nil
+			}
+
+			_, err := inter.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("탈퇴를 거부했어요.")).
 					SetIsComponentsV2(true).
 					Build(),
 			)
 			return err
-		default:
-			return nil
-		}
+		})
 	},
 }
 
