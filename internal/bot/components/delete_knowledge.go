@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -33,7 +32,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 		return true
 	},
 	Run: func(inter *builders.InteractionCreate) error {
-		id, itemID := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
+		id := utils.GetDeleteKnowledgeID(inter.MessageComponentData().CustomID)
 		if err := repository.GetDatabase().Knowledge.DeleteByID(inter.Ctx, id); err != nil {
 			return err
 		}
@@ -42,7 +41,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 		return inter.EditReply(&builders.InteractionEdit{
 			Flags: &flags,
 			Components: &[]discordgo.MessageComponent{
-				builders.MakeSuccessContainer(fmt.Sprintf("%d번을 삭제했어요.", itemID)),
+				builders.MakeSuccessContainer("해당 항목을 삭제했어요."),
 			},
 		})
 	},

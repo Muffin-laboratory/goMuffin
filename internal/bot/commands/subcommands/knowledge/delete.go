@@ -37,7 +37,7 @@ func Delete(i *builders.InteractionCreate, opts builders.CommandInteractionOptio
 					builders.ButtonBuilder().
 						SetStyle(discordgo.DangerButton).
 						SetLabel("삭제").
-						SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User.ID)),
+						SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), i.User.ID)),
 				).
 				AddText(fmt.Sprintf("**%s**\n", data.Result)),
 		)
