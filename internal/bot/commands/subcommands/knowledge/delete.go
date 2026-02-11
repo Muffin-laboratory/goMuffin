@@ -36,7 +36,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 				discord.NewTextDisplayf("**%s**\n", data.Result),
 			).
 				WithAccessory(
-					discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, i.User().ID.String())),
+					discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), i.User().ID.String())),
 				),
 		)
 	}

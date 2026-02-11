@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -38,15 +37,13 @@ const (
 	UserSettingsSubmit       = "#muffin/user/submit$s"
 )
 
-func MakeDeleteKnowledge(id, name, userID string) string {
-	return fmt.Sprintf("%sid=%s&name=%s&user_id=%s", DeleteKnowledge, id, name, userID)
+func MakeDeleteKnowledge(id, userID string) string {
+	return fmt.Sprintf("%sid=%s&user_id=%s", DeleteKnowledge, id, userID)
 }
 
-func GetDeleteKnowledgeID(customID string) (id bson.ObjectID, itemID int) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
-	stringItemId := strings.ReplaceAll(RegexpItemID.FindAllString(customID, 1)[0], "no=", "")
-	itemID, _ = strconv.Atoi(stringItemId)
-	return
+func GetDeleteKnowledgeID(customID string) bson.ObjectID {
+	id, _ := bson.ObjectIDFromHex(RegexpID.FindStringSubmatch(customID)[1])
+	return id
 }
 
 func GetDeleteKnowledgeUserID(customID string) string {

@@ -35,7 +35,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 		return true
 	},
 	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		id, itemID := utils.GetDeleteKnowledgeID(inter.Data.CustomID())
+		id := utils.GetDeleteKnowledgeID(inter.Data.CustomID())
 		if err := repository.GetDatabase().Knowledge.DeleteByID(ctx, id); err != nil {
 			return err
 		}
@@ -44,7 +44,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 			inter.ApplicationID(),
 			inter.Token(),
 			discord.NewMessageUpdateBuilder().
-				SetComponents(builders.MakeSuccessContainer("%d번을 삭제했어요.", itemID)).
+				SetComponents(builders.MakeSuccessContainer("해당 항목을 삭제했어요.")).
 				SetIsComponentsV2(true).
 				Build(),
 		)

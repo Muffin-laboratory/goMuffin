@@ -45,7 +45,7 @@ var SelectKnowledgeComponent = &loader.Component{
 					discord.NewTextDisplayf("**%s**\n", data.Result),
 				).
 					WithAccessory(
-						discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, inter.User().ID.String())),
+						discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), inter.User().ID.String())),
 					),
 			)
 		}
