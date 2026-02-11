@@ -1,55 +1,50 @@
 package components
 
 import (
-	"context"
-	"strings"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/disgo/handler/middleware"
 )
 
 var DeleteKnowledgeComponent = &loader.Component{
-	DeferredUpdate: true,
-	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
-		customID := inter.Data.CustomID()
+	Middlewares: handler.Middlewares{
+		middleware.Defer(discord.InteractionTypeComponent, true, false),
+		middlewares.TimeoutMiddleware(loader.Timeout()),
+	},
+	Handle: func(r handler.Router) {
+		r.Component(utils.DeleteKnowledge+"/{data}", func(inter *handler.ComponentEvent) error {
+			data := inter.Vars["data"]
 
-		if !strings.HasPrefix(customID, utils.DeleteKnowledge) {
-			return false
-		}
+			userID := utils.GetDeleteKnowledgeUserID(data)
+			if inter.User().ID.String() != userID {
+				_, err := inter.UpdateInteractionResponse(
+					discord.NewMessageUpdateBuilder().
+						SetComponents(builders.MakeHasNoPermissionContainer()).
+						SetIsComponentsV2(true).
+						Build(),
+				)
+				return err
+			}
 
-		userID := utils.GetDeleteKnowledgeUserID(customID)
-		if inter.User().ID.String() != userID {
-			inter.CreateMessage(
-				discord.NewMessageCreateBuilder().
-					SetComponents(builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.")).
+			id := utils.GetDeleteKnowledgeID(data)
+
+			if err := repository.GetDatabase().Knowledge.DeleteByID(inter.Ctx, id); err != nil {
+				return err
+			}
+
+			_, err := inter.UpdateInteractionResponse(
+				discord.NewMessageUpdateBuilder().
+					SetComponents(builders.MakeSuccessContainer("해당 항목을 삭제했어요.")).
 					SetIsComponentsV2(true).
-					SetEphemeral(true).
 					Build(),
 			)
-			return false
-		}
-		return true
-	},
-	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		id := utils.GetDeleteKnowledgeID(inter.Data.CustomID())
-		if err := repository.GetDatabase().Knowledge.DeleteByID(ctx, id); err != nil {
 			return err
-		}
-
-		_, err := inter.Client().Rest.UpdateInteractionResponse(
-			inter.ApplicationID(),
-			inter.Token(),
-			discord.NewMessageUpdateBuilder().
-				SetComponents(builders.MakeSuccessContainer("해당 항목을 삭제했어요.")).
-				SetIsComponentsV2(true).
-				Build(),
-		)
-
-		return err
+		})
 	},
 }
 

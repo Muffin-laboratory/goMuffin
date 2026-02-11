@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DeleteKnowledge = "#muffin/knowledge/delete$"
+	DeleteKnowledge = "/muffin/knowledge/delete"
 	SelectKnowledge = "#muffin/knowledge$"
 
 	PaginationContainerFirst   = "#muffin-pages/first$"
@@ -38,7 +38,7 @@ const (
 )
 
 func MakeDeleteKnowledge(id, userID string) string {
-	return fmt.Sprintf("%sid=%s&user_id=%s", DeleteKnowledge, id, userID)
+	return fmt.Sprintf("%s/id=%s&user_id=%s", DeleteKnowledge, id, userID)
 }
 
 func GetDeleteKnowledgeID(customID string) bson.ObjectID {

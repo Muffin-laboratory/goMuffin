@@ -3,6 +3,7 @@ package components
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
@@ -14,6 +15,7 @@ import (
 var DeregisterComponent = &loader.Component{
 	Middlewares: handler.Middlewares{
 		middleware.Defer(discord.InteractionTypeComponent, true, false),
+		middlewares.TimeoutMiddleware(loader.Timeout()),
 	},
 	Handle: func(r handler.Router) {
 		r.Component(utils.DeregisterAgree+"/{user_id}", func(inter *handler.ComponentEvent) error {

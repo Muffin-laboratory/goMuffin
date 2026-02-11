@@ -130,3 +130,5 @@ export/
 data/
 
 *prompt.txt
+
+__debug*
