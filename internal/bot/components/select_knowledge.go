@@ -47,7 +47,7 @@ var SelectKnowledgeComponent = &loader.Component{
 						builders.ButtonBuilder().
 							SetStyle(discordgo.DangerButton).
 							SetLabel("삭제").
-							SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), data.Result, inter.User.ID)),
+							SetCustomID(utils.MakeDeleteKnowledge(data.ID.Hex(), inter.User.ID)),
 					).
 					AddText(fmt.Sprintf("**%s**\n", data.Result)),
 			)
