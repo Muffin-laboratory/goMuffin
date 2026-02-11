@@ -39,3 +39,7 @@ func MakeUserIsNotRegisteredErrContainer() discord.ContainerComponent {
 func MakeUserIsBlockedContainer(globalName, reason string) discord.ContainerComponent {
 	return MakeDeclineContainer("- %s님은 서비스에서 차단되었어요.\n> 사유: %s", globalName, reason)
 }
+
+func MakeHasNoPermissionContainer() discord.ContainerComponent {
+	return MakeDeclineContainer("당신은 해당 권한이 없어요.")
+}
