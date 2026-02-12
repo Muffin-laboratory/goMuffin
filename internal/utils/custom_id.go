@@ -29,7 +29,7 @@ const (
 	DeleteChat       = "#muffin/chat/delete$"
 	DeleteChatCancel = "#muffin/chat/delete/cancel@"
 
-	UserInformationDeregister = "#muffin/info/user/deregister@"
+	UserInformationDeregister = "/muffin/info/user/deregister"
 
 	UserSettingsChattingMode = "#muffin/user/set/chatting_mode$"
 	UserSettingsReplyUser    = "#muffin/user/set/reply_user$"
@@ -180,7 +180,7 @@ func MakeDeleteChatCancel(userID string) string {
 }
 
 func MakeUserInformationDeregister(userID string) string {
-	return fmt.Sprintf("%s%s", UserInformationDeregister, userID)
+	return fmt.Sprintf("%s/%s", UserInformationDeregister, userID)
 }
 
 func GetUserInformationDeregisterUserID(customID string) string {
