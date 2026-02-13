@@ -9,6 +9,7 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/disgo/handler/middleware"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var DeleteKnowledgeComponent = &loader.Component{
@@ -17,11 +18,10 @@ var DeleteKnowledgeComponent = &loader.Component{
 		middlewares.TimeoutMiddleware(loader.Timeout()),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeleteKnowledge+"/{data}", func(inter *handler.ComponentEvent) error {
-			data := inter.Vars["data"]
+		r.Component(utils.DeleteKnowledge+"/{id}/{user_id}", func(inter *handler.ComponentEvent) error {
+			data := inter.Vars["id"]
 
-			userID := utils.GetDeleteKnowledgeUserID(data)
-			if inter.User().ID.String() != userID {
+			if inter.User().ID.String() != inter.Vars["user_id"] {
 				_, err := inter.UpdateInteractionResponse(
 					discord.NewMessageUpdateBuilder().
 						SetComponents(builders.MakeHasNoPermissionContainer()).
@@ -31,7 +31,7 @@ var DeleteKnowledgeComponent = &loader.Component{
 				return err
 			}
 
-			id := utils.GetDeleteKnowledgeID(data)
+			id, _ := bson.ObjectIDFromHex(data)
 
 			if err := repository.GetDatabase().Knowledge.DeleteByID(inter.Ctx, id); err != nil {
 				return err
