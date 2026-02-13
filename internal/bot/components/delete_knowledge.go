@@ -8,14 +8,12 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
-	"github.com/disgoorg/disgo/handler/middleware"
 	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var DeleteKnowledgeComponent = &loader.Component{
 	Middlewares: handler.Middlewares{
-		middleware.Defer(discord.InteractionTypeComponent, true, false),
-		middlewares.TimeoutMiddleware(loader.Timeout()),
+		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 	},
 	Handle: func(r handler.Router) {
 		r.Component(utils.DeleteKnowledge+"/{id}/{user_id}", func(e *handler.ComponentEvent) error {
