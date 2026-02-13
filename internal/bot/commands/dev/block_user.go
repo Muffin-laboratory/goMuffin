@@ -36,18 +36,16 @@ var BlockCommand = &loader.Command{
 	Flags: loader.CommandFlagsIsDeveloperOnlyCommand,
 	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
 		var choices []discord.AutocompleteChoice
-		var focusedValue string
 
-		for _, opt := range inter.Data.Options {
-			if opt.Focused {
-				focusedValue = opt.String()
-				break
-			}
-		}
+		focusedValue := inter.Data.Focused().String()
 
 		data, err := repository.GetDatabase().Users.All(ctx)
 		if err != nil {
 			return err
+		}
+
+		if len(data) > 25 {
+			data = data[:25]
 		}
 
 		for _, data := range data {

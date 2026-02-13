@@ -106,6 +106,10 @@ var KnowledgeCommand = &loader.Command{
 			return err
 		}
 
+		if len(data) > 25 {
+			data = data[:25]
+		}
+
 		for _, data := range data {
 			choices = append(choices, discord.AutocompleteChoiceString{
 				Name:  data.Command,

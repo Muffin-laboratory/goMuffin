@@ -100,19 +100,17 @@ var ChatCommand = &loader.Command{
 	},
 	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
 		var choices []discord.AutocompleteChoice
-		var focusedValue string
 
-		for _, opt := range inter.Data.Options {
-			if opt.Focused {
-				focusedValue = opt.String()
-				break
-			}
-		}
+		focusedValue := inter.Data.Focused().String()
 
 		filter := query.ChatQueryBuilder().SetNameByRegex(focusedValue)
 		data, err := repository.GetDatabase().Chats.Find(ctx, filter)
 		if err != nil {
 			return err
+		}
+
+		if len(data) > 25 {
+			data = data[:25]
 		}
 
 		for _, data := range data {
