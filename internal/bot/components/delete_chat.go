@@ -19,11 +19,11 @@ var DeleteChatComponent = &loader.Component{
 		middlewares.TimeoutMiddleware(loader.Timeout()),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeleteChat+"/{value}/{user_id}", func(inter *handler.ComponentEvent) error {
-			value := inter.Vars["value"]
+		r.Component(utils.DeleteChat+"/{value}/{user_id}", func(e *handler.ComponentEvent) error {
+			value := e.Vars["value"]
 
-			if inter.User().ID.String() != inter.Vars["user_id"] {
-				_, err := inter.CreateFollowupMessage(
+			if e.User().ID.String() != e.Vars["user_id"] {
+				_, err := e.CreateFollowupMessage(
 					discord.NewMessageCreateBuilder().
 						SetComponents(builders.MakeHasNoPermissionContainer()).
 						SetIsComponentsV2(true).
@@ -34,7 +34,7 @@ var DeleteChatComponent = &loader.Component{
 			}
 
 			if value == "cancel" {
-				_, err := inter.UpdateInteractionResponse(
+				_, err := e.UpdateInteractionResponse(
 					discord.NewMessageUpdateBuilder().
 						SetComponents(builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요.")).
 						SetIsComponentsV2(true).
@@ -45,17 +45,17 @@ var DeleteChatComponent = &loader.Component{
 
 			id, _ := bson.ObjectIDFromHex(value)
 
-			if err := repository.GetDatabase().Chats.DeleteByID(inter.Ctx, id); err != nil {
+			if err := repository.GetDatabase().Chats.DeleteByID(e.Ctx, id); err != nil {
 				return err
 			}
 
-			if err := repository.GetDatabase().Memory.DeleteMany(inter.Ctx, query.MemoryQueryBuilder().SetChatID(id)); err != nil {
+			if err := repository.GetDatabase().Memory.DeleteMany(e.Ctx, query.MemoryQueryBuilder().SetChatID(id)); err != nil {
 				return err
 			}
 
-			_, err := inter.Client().Rest.UpdateInteractionResponse(
-				inter.ApplicationID(),
-				inter.Token(),
+			_, err := e.Client().Rest.UpdateInteractionResponse(
+				e.ApplicationID(),
+				e.Token(),
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("해당 채팅을 삭제했어요.")).
 					SetIsComponentsV2(true).

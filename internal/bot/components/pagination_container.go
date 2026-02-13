@@ -1,55 +1,33 @@
 package components
 
 import (
-	"context"
-	"strings"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 )
 
 var PaginationContainerComponent *loader.Component = &loader.Component{
-	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
-		customID := inter.Data.CustomID()
+	Handle: func(r handler.Router) {
+		r.Component(utils.PaginationContainerFirst+"/{id}", func(e *handler.ComponentEvent) error {
+			return builders.GetPaginationContainer(e.Vars["id"]).First(e)
+		})
 
-		isFirst := strings.HasPrefix(customID, utils.PaginationContainerFirst)
-		isPrev := strings.HasPrefix(customID, utils.PaginationContainerPrev)
-		isNext := strings.HasPrefix(customID, utils.PaginationContainerNext)
-		isLast := strings.HasPrefix(customID, utils.PaginationContainerLast)
-		isSetPage := strings.HasPrefix(customID, utils.PaginationContainerPages)
-		if !isFirst && !isPrev && !isNext && !isLast && !isSetPage {
-			return false
-		}
+		r.Component(utils.PaginationContainerPrev+"/{id}", func(e *handler.ComponentEvent) error {
+			return builders.GetPaginationContainer(e.Vars["id"]).Prev(e)
+		})
 
-		id := utils.GetPaginationContainerID(customID)
-		if inter.User().ID.String() != utils.GetUserID(id) {
-			return false
-		}
+		r.Component(utils.PaginationContainerNext+"/{id}", func(e *handler.ComponentEvent) error {
+			return builders.GetPaginationContainer(e.Vars["id"]).Next(e)
+		})
 
-		return builders.GetPaginationContainer(id) != nil
-	},
-	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		customID := inter.Data.CustomID()
-		id := utils.GetPaginationContainerID(customID)
-		p := builders.GetPaginationContainer(id)
+		r.Component(utils.PaginationContainerLast+"/{id}", func(e *handler.ComponentEvent) error {
+			return builders.GetPaginationContainer(e.Vars["id"]).Last(e)
+		})
 
-		switch {
-		case strings.HasPrefix(customID, utils.PaginationContainerFirst):
-			return p.First(inter)
-		case strings.HasPrefix(customID, utils.PaginationContainerPrev):
-			return p.Prev(inter)
-		case strings.HasPrefix(customID, utils.PaginationContainerNext):
-			return p.Next(inter)
-		case strings.HasPrefix(customID, utils.PaginationContainerLast):
-			return p.Last(inter)
-		case strings.HasPrefix(customID, utils.PaginationContainerPages):
-			return p.ShowModal(inter)
-		default:
-			return nil
-		}
-
+		r.Component(utils.PaginationContainerPages+"/{id}", func(e *handler.ComponentEvent) error {
+			return builders.GetPaginationContainer(e.Vars["id"]).ShowModal(e)
+		})
 	},
 }
 

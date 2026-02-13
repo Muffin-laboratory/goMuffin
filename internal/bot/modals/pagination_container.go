@@ -26,7 +26,7 @@ var PaginationContainerModal = &loader.Modal{
 				)
 			}
 
-			return p.Set(inter.ModalSubmitInteractionCreate, page)
+			return p.Set(inter, page)
 		})
 	},
 }

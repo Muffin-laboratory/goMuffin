@@ -3,11 +3,14 @@ package builders
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/disgo/rest"
 )
 
 // PaginationContainer is container with page
@@ -18,6 +21,12 @@ type PaginationContainer struct {
 	ID         string
 	m          any
 	timer      *time.Timer
+}
+
+type updatableEvent interface {
+	discord.Interaction
+	UpdateMessage(messageUpdate discord.MessageUpdate, opts ...rest.RequestOpt) error
+	CreateFollowupMessage(messageCreate discord.MessageCreate, opts ...rest.RequestOpt) (*discord.Message, error)
 }
 
 var paginationContainers = make(map[string]*PaginationContainer)
@@ -105,12 +114,12 @@ func GetPaginationContainer(id string) *PaginationContainer {
 }
 
 // First moves to first page
-func (p *PaginationContainer) First(i *events.ComponentInteractionCreate) error {
+func (p *PaginationContainer) First(i *handler.ComponentEvent) error {
 	return p.Set(i, 1)
 }
 
 // Prev move to previous page
-func (p *PaginationContainer) Prev(i *events.ComponentInteractionCreate) error {
+func (p *PaginationContainer) Prev(i *handler.ComponentEvent) error {
 	if p.Current == 1 {
 		p.Current = p.Total
 	} else {
@@ -121,7 +130,7 @@ func (p *PaginationContainer) Prev(i *events.ComponentInteractionCreate) error {
 }
 
 // Next moves to next page
-func (p *PaginationContainer) Next(i *events.ComponentInteractionCreate) error {
+func (p *PaginationContainer) Next(i *handler.ComponentEvent) error {
 	if p.Current >= p.Total {
 		p.Current = 1
 	} else {
@@ -132,12 +141,23 @@ func (p *PaginationContainer) Next(i *events.ComponentInteractionCreate) error {
 }
 
 // Last moves to last page
-func (p *PaginationContainer) Last(i *events.ComponentInteractionCreate) error {
+func (p *PaginationContainer) Last(i *handler.ComponentEvent) error {
 	return p.Set(i, p.Total)
 }
 
 // Set sets to page
-func (p *PaginationContainer) Set(i any, page int) error {
+func (p *PaginationContainer) Set(i updatableEvent, page int) error {
+	if userID := strings.Split(p.ID, ":")[0]; userID != i.User().ID.String() {
+		_, err := i.CreateFollowupMessage(
+			discord.NewMessageCreateBuilder().
+				SetComponents(MakeHasNoPermissionContainer()).
+				SetIsComponentsV2(true).
+				SetEphemeral(true).
+				Build(),
+		)
+		return err
+	}
+
 	p.resetTimer()
 
 	if page <= 0 {
@@ -149,28 +169,16 @@ func (p *PaginationContainer) Set(i any, page int) error {
 	}
 
 	container := p.Containers[p.Current-1].AddComponents(makeComponents(p.ID, p.Current, p.Total))
-	switch i := i.(type) {
-	case *events.ComponentInteractionCreate:
-		return i.UpdateMessage(
-			discord.NewMessageUpdateBuilder().
-				SetIsComponentsV2(true).
-				SetComponents(container).
-				Build(),
-		)
-	case *events.ModalSubmitInteractionCreate:
-		return i.UpdateMessage(
-			discord.NewMessageUpdateBuilder().
-				SetIsComponentsV2(true).
-				SetComponents(container).
-				Build(),
-		)
-	default:
-		return nil
-	}
+	return i.UpdateMessage(
+		discord.NewMessageUpdateBuilder().
+			SetIsComponentsV2(true).
+			SetComponents(container).
+			Build(),
+	)
 }
 
 // ShowModal show discord's modal
-func (p *PaginationContainer) ShowModal(i *events.ComponentInteractionCreate) error {
+func (p *PaginationContainer) ShowModal(i *handler.ComponentEvent) error {
 	return i.Modal(
 		discord.NewModalCreateBuilder().
 			SetCustomID(utils.MakePaginationContainerModal(p.ID)).

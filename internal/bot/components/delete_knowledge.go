@@ -18,11 +18,11 @@ var DeleteKnowledgeComponent = &loader.Component{
 		middlewares.TimeoutMiddleware(loader.Timeout()),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeleteKnowledge+"/{id}/{user_id}", func(inter *handler.ComponentEvent) error {
-			data := inter.Vars["id"]
+		r.Component(utils.DeleteKnowledge+"/{id}/{user_id}", func(e *handler.ComponentEvent) error {
+			data := e.Vars["id"]
 
-			if inter.User().ID.String() != inter.Vars["user_id"] {
-				_, err := inter.UpdateInteractionResponse(
+			if e.User().ID.String() != e.Vars["user_id"] {
+				_, err := e.UpdateInteractionResponse(
 					discord.NewMessageUpdateBuilder().
 						SetComponents(builders.MakeHasNoPermissionContainer()).
 						SetIsComponentsV2(true).
@@ -33,11 +33,11 @@ var DeleteKnowledgeComponent = &loader.Component{
 
 			id, _ := bson.ObjectIDFromHex(data)
 
-			if err := repository.GetDatabase().Knowledge.DeleteByID(inter.Ctx, id); err != nil {
+			if err := repository.GetDatabase().Knowledge.DeleteByID(e.Ctx, id); err != nil {
 				return err
 			}
 
-			_, err := inter.UpdateInteractionResponse(
+			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("해당 항목을 삭제했어요.")).
 					SetIsComponentsV2(true).

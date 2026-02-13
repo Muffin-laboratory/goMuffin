@@ -18,9 +18,9 @@ var DeregisterComponent = &loader.Component{
 		middlewares.TimeoutMiddleware(loader.Timeout()),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeregisterAgree+"/{user_id}", func(inter *handler.ComponentEvent) error {
-			if inter.Vars["user_id"] != inter.User().ID.String() {
-				_, err := inter.UpdateInteractionResponse(
+		r.Component(utils.DeregisterAgree+"/{user_id}", func(e *handler.ComponentEvent) error {
+			if e.Vars["user_id"] != e.User().ID.String() {
+				_, err := e.UpdateInteractionResponse(
 					discord.NewMessageUpdateBuilder().
 						SetComponents(builders.MakeHasNoPermissionContainer()).
 						SetIsComponentsV2(true).
@@ -29,21 +29,21 @@ var DeregisterComponent = &loader.Component{
 				return err
 			}
 
-			userID := int64(inter.User().ID)
+			userID := int64(e.User().ID)
 
-			if _, err := repository.GetDatabase().Users.Delete(inter.Ctx, userID); err != nil {
+			if _, err := repository.GetDatabase().Users.Delete(e.Ctx, userID); err != nil {
 				return err
 			}
 
-			if err := repository.GetDatabase().Knowledge.DeleteMany(inter.Ctx, query.KnowledgeQueryBuilder().SetUserID(userID)); err != nil {
+			if err := repository.GetDatabase().Knowledge.DeleteMany(e.Ctx, query.KnowledgeQueryBuilder().SetUserID(userID)); err != nil {
 				return err
 			}
 
-			if err := repository.GetDatabase().Memory.DeleteMany(inter.Ctx, query.MemoryQueryBuilder().SetUserID(userID)); err != nil {
+			if err := repository.GetDatabase().Memory.DeleteMany(e.Ctx, query.MemoryQueryBuilder().SetUserID(userID)); err != nil {
 				return err
 			}
 
-			_, err := inter.UpdateInteractionResponse(
+			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("탈퇴를 성공적으로 완료했어요.")).
 					SetIsComponentsV2(true).
@@ -52,12 +52,12 @@ var DeregisterComponent = &loader.Component{
 			return err
 		})
 
-		r.Component(utils.DeregisterDisagree+"/{user_id}", func(inter *handler.ComponentEvent) error {
-			if inter.Vars["user_id"] != inter.User().ID.String() {
+		r.Component(utils.DeregisterDisagree+"/{user_id}", func(e *handler.ComponentEvent) error {
+			if e.Vars["user_id"] != e.User().ID.String() {
 				return nil
 			}
 
-			_, err := inter.UpdateInteractionResponse(
+			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("탈퇴를 취소했어요.")).
 					SetIsComponentsV2(true).
