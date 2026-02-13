@@ -12,21 +12,11 @@ import (
 
 var RegisterComponent = &loader.Component{
 	Middlewares: handler.Middlewares{
+		middlewares.CheckIDMiddleware(),
 		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.ServiceAgree+"/{user_id}", func(e *handler.ComponentEvent) error {
-			if e.User().ID.String() != e.Vars["user_id"] {
-				_, err := e.CreateFollowupMessage(
-					discord.NewMessageCreateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						SetEphemeral(true).
-						Build(),
-				)
-				return err
-			}
-
+		r.Component(utils.ServiceAgree, func(e *handler.ComponentEvent) error {
 			if _, err := repository.GetDatabase().Users.Create(e.Ctx, int64(e.User().ID)); err != nil {
 				return err
 			}
@@ -41,18 +31,7 @@ var RegisterComponent = &loader.Component{
 			return err
 		})
 
-		r.Component(utils.ServiceDisagree+"/{user_id}", func(e *handler.ComponentEvent) error {
-			if e.User().ID.String() != e.Vars["user_id"] {
-				_, err := e.CreateFollowupMessage(
-					discord.NewMessageCreateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						SetEphemeral(true).
-						Build(),
-				)
-				return err
-			}
-
+		r.Component(utils.ServiceDisagree, func(e *handler.ComponentEvent) error {
 			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeDeclineContainer("가입을 거부했어요.")).

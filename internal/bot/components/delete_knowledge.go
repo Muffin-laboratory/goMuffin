@@ -13,21 +13,12 @@ import (
 
 var DeleteKnowledgeComponent = &loader.Component{
 	Middlewares: handler.Middlewares{
+		middlewares.CheckIDMiddleware(),
 		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeleteKnowledge+"/{id}/{user_id}", func(e *handler.ComponentEvent) error {
+		r.Component(utils.DeleteKnowledge+"/{id}", func(e *handler.ComponentEvent) error {
 			data := e.Vars["id"]
-
-			if e.User().ID.String() != e.Vars["user_id"] {
-				_, err := e.UpdateInteractionResponse(
-					discord.NewMessageUpdateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						Build(),
-				)
-				return err
-			}
 
 			id, _ := bson.ObjectIDFromHex(data)
 

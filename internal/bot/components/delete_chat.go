@@ -14,22 +14,12 @@ import (
 
 var DeleteChatComponent = &loader.Component{
 	Middlewares: handler.Middlewares{
+		middlewares.CheckIDMiddleware(),
 		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeleteChat+"/{value}/{user_id}", func(e *handler.ComponentEvent) error {
+		r.Component(utils.DeleteChat+"/{value}", func(e *handler.ComponentEvent) error {
 			value := e.Vars["value"]
-
-			if e.User().ID.String() != e.Vars["user_id"] {
-				_, err := e.CreateFollowupMessage(
-					discord.NewMessageCreateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						SetEphemeral(true).
-						Build(),
-				)
-				return err
-			}
 
 			if value == "cancel" {
 				_, err := e.UpdateInteractionResponse(

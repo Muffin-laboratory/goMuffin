@@ -13,20 +13,11 @@ import (
 
 var DeregisterComponent = &loader.Component{
 	Middlewares: handler.Middlewares{
+		middlewares.CheckIDMiddleware(),
 		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 	},
 	Handle: func(r handler.Router) {
-		r.Component(utils.DeregisterAgree+"/{user_id}", func(e *handler.ComponentEvent) error {
-			if e.Vars["user_id"] != e.User().ID.String() {
-				_, err := e.UpdateInteractionResponse(
-					discord.NewMessageUpdateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						Build(),
-				)
-				return err
-			}
-
+		r.Component(utils.DeregisterAgree, func(e *handler.ComponentEvent) error {
 			userID := int64(e.User().ID)
 
 			if _, err := repository.GetDatabase().Users.Delete(e.Ctx, userID); err != nil {
@@ -50,11 +41,7 @@ var DeregisterComponent = &loader.Component{
 			return err
 		})
 
-		r.Component(utils.DeregisterDisagree+"/{user_id}", func(e *handler.ComponentEvent) error {
-			if e.Vars["user_id"] != e.User().ID.String() {
-				return nil
-			}
-
+		r.Component(utils.DeregisterDisagree, func(e *handler.ComponentEvent) error {
 			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateBuilder().
 					SetComponents(builders.MakeSuccessContainer("탈퇴를 취소했어요.")).
