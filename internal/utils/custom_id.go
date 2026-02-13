@@ -19,8 +19,8 @@ const (
 	PaginationContainerModal   = "/muffin-pages/modal"
 	PaginationContainerSetPage = "/muffin-pages/modal/set"
 
-	ServiceAgree    = "#muffin/service/agree@"
-	ServiceDisagree = "#muffin/service/disagree@"
+	ServiceAgree    = "/muffin/service/agree"
+	ServiceDisagree = "/muffin/service/disagree"
 
 	DeregisterAgree    = "/muffin/deregister/agree"
 	DeregisterDisagree = "/muffin/deregister/disagree"
@@ -112,11 +112,11 @@ func GetUserID(id string) string {
 }
 
 func MakeServiceAgree(userID string) string {
-	return fmt.Sprintf("%s%s", ServiceAgree, userID)
+	return fmt.Sprintf("%s/%s", ServiceAgree, userID)
 }
 
 func MakeServiceDisagree(userID string) string {
-	return fmt.Sprintf("%s%s", ServiceDisagree, userID)
+	return fmt.Sprintf("%s/%s", ServiceDisagree, userID)
 }
 
 func GetServiceUserID(customID string) string {
