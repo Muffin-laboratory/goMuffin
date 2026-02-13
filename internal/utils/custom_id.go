@@ -26,8 +26,8 @@ const (
 	DeregisterDisagree = "/muffin/deregister/disagree"
 
 	SelectChat       = "#muffin/chat/select$"
-	DeleteChat       = "#muffin/chat/delete$"
-	DeleteChatCancel = "#muffin/chat/delete/cancel@"
+	DeleteChat       = "/muffin/chat/delete"
+	DeleteChatCancel = "/muffin/chat/delete/cancel"
 
 	UserInformationDeregister = "/muffin/info/user/deregister"
 
@@ -154,7 +154,10 @@ func MakeSelectChat(id, name, userID string) string {
 }
 
 func GetChatID(customID string) (id bson.ObjectID, name string) {
-	id, _ = bson.ObjectIDFromHex(strings.ReplaceAll(RegexpID.FindAllString(customID, 1)[0], "id=", ""))
+	id, _ = bson.ObjectIDFromHex(RegexpID.FindStringSubmatch(customID)[1])
+	if !RegexpName.Match([]byte(customID)) {
+		return
+	}
 	name = RegexpName.FindStringSubmatch(customID)[1]
 	return
 }
@@ -171,12 +174,12 @@ func GetChatUserID(customID string) string {
 	}
 }
 
-func MakeDeleteChat(id, name, userID string) string {
-	return fmt.Sprintf("%sid=%s&name=%s&user_id=%s", DeleteChat, id, name, userID)
+func MakeDeleteChat(id, userID string) string {
+	return fmt.Sprintf("%s/%s/%s", DeleteChat, id, userID)
 }
 
 func MakeDeleteChatCancel(userID string) string {
-	return fmt.Sprintf("%s%s", DeleteChatCancel, userID)
+	return fmt.Sprintf("%s/cancel/%s", DeleteChat, userID)
 }
 
 func MakeUserInformationDeregister(userID string) string {

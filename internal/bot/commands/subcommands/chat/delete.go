@@ -46,7 +46,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 					discord.NewTextDisplayf("- **%s**\n", data.Name),
 				).
 					WithAccessory(
-						discord.NewDangerButton("삭제", utils.MakeDeleteChat(data.ID.Hex(), data.Name, i.User().ID.String())),
+						discord.NewDangerButton("삭제", utils.MakeDeleteChat(data.ID.Hex(), i.User().ID.String())),
 					),
 			)
 		}
@@ -78,7 +78,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 				discord.NewTextDisplayf("### 채팅 %s 삭제", name),
 				discord.NewTextDisplay("- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**"),
 				discord.NewActionRow(
-					discord.NewDangerButton("삭제", utils.MakeDeleteChat(data[0].ID.Hex(), name, i.User().ID.String())),
+					discord.NewDangerButton("삭제", utils.MakeDeleteChat(data[0].ID.Hex(), i.User().ID.String())),
 					discord.NewPrimaryButton("취소", utils.MakeDeleteChatCancel(i.User().ID.String())),
 				),
 			),
