@@ -65,14 +65,13 @@ func (s *MessageSender) Send() error {
 	case *events.MessageCreate:
 		_, err := m.Client().Rest.CreateMessage(
 			m.ChannelID,
-			discord.NewMessageCreateBuilder().
-				SetContent(s.Content).
+			discord.NewMessageCreate().
+				WithContent(s.Content).
 				AddEmbeds(s.Embeds...).
 				AddComponents(s.Components...).
-				SetIsComponentsV2(s.ComponentsV2).
-				SetAllowedMentions(s.AllowedMentions).
-				SetMessageReference(m.Message.MessageReference).
-				Build(),
+				WithIsComponentsV2(s.ComponentsV2).
+				WithAllowedMentions(s.AllowedMentions).
+				WithMessageReference(m.Message.MessageReference),
 		)
 
 		return err
@@ -81,24 +80,22 @@ func (s *MessageSender) Send() error {
 			_, err := m.Client().Rest.UpdateInteractionResponse(
 				m.ApplicationID(),
 				m.Token(),
-				discord.NewMessageUpdateBuilder().
-					SetContent(s.Content).
+				discord.NewMessageUpdate().
+					WithContent(s.Content).
 					AddEmbeds(s.Embeds...).
 					AddComponents(s.Components...).
-					SetIsComponentsV2(s.ComponentsV2).
-					Build(),
+					WithIsComponentsV2(s.ComponentsV2),
 			)
 			return err
 		}
 
 		err := m.CreateMessage(
-			discord.NewMessageCreateBuilder().
-				SetContent(s.Content).
+			discord.NewMessageCreate().
+				WithContent(s.Content).
 				AddEmbeds(s.Embeds...).
 				AddComponents(s.Components...).
-				SetIsComponentsV2(s.ComponentsV2).
-				SetEphemeral(s.Ephemeral).
-				Build(),
+				WithIsComponentsV2(s.ComponentsV2).
+				WithEphemeral(s.Ephemeral),
 		)
 		if err != nil {
 			return err

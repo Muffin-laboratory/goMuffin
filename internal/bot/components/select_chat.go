@@ -26,10 +26,9 @@ var SelectChatComponent = &loader.Component{
 			inter.Client().Rest.UpdateInteractionResponse(
 				inter.ApplicationID(),
 				inter.Token(),
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요.")).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
+				}),
 			)
 			return false
 		}
@@ -47,10 +46,9 @@ var SelectChatComponent = &loader.Component{
 		_, err := inter.Client().Rest.UpdateInteractionResponse(
 			inter.ApplicationID(),
 			inter.Token(),
-			discord.NewMessageUpdateBuilder().
-				SetComponents(builders.MakeSuccessContainer("`%s`으로 채팅을 변경했어요.", name)).
-				SetIsComponentsV2(true).
-				Build(),
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				builders.MakeSuccessContainer("`%s`으로 채팅을 변경했어요.", name),
+			}),
 		)
 		return err
 	},

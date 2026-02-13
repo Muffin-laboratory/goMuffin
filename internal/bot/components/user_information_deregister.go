@@ -15,11 +15,8 @@ var UserInformationDeregisterComponent = &loader.Component{
 		r.Component(utils.UserInformationDeregister+"/{user_id}", func(inter *handler.ComponentEvent) error {
 			if inter.User().ID.String() != inter.Vars["user_id"] {
 				return inter.CreateMessage(
-					discord.NewMessageCreateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						SetEphemeral(true).
-						Build(),
+					discord.NewMessageCreateV2(builders.MakeHasNoPermissionContainer()).
+						WithEphemeral(true),
 				)
 			}
 

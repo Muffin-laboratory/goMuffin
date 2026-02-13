@@ -18,11 +18,8 @@ var PaginationContainerModal = &loader.Modal{
 			page, err := strconv.Atoi(inter.Data.Text(utils.PaginationContainerSetPage))
 			if err != nil {
 				return inter.CreateMessage(
-					discord.NewMessageCreateBuilder().
-						SetComponents(builders.MakeErrorContainer("해당 값은 숫자여야해요.")).
-						SetIsComponentsV2(true).
-						SetEphemeral(true).
-						Build(),
+					discord.NewMessageCreateV2(builders.MakeErrorContainer("해당 값은 숫자여야해요.")).
+						WithEphemeral(true),
 				)
 			}
 

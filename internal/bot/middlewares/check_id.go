@@ -20,11 +20,8 @@ func CheckIDMiddleware() handler.Middleware {
 			userID := parts[len(parts)-1]
 			if userID != inter.User().ID.String() {
 				_, err := e.CreateFollowupMessage(
-					discord.NewMessageCreateBuilder().
-						SetComponents(builders.MakeHasNoPermissionContainer()).
-						SetIsComponentsV2(true).
-						SetEphemeral(true).
-						Build(),
+					discord.NewMessageCreateV2(builders.MakeHasNoPermissionContainer()).
+						WithEphemeral(true),
 				)
 				if err != nil {
 					return err

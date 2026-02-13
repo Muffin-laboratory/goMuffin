@@ -27,10 +27,9 @@ var DeleteKnowledgeComponent = &loader.Component{
 			}
 
 			_, err := e.UpdateInteractionResponse(
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeSuccessContainer("해당 항목을 삭제했어요.")).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("해당 항목을 삭제했어요."),
+				}),
 			)
 			return err
 		})

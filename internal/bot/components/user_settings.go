@@ -64,19 +64,9 @@ var UserSettingsComponent = &loader.Component{
 			_, err := inter.Client().Rest.UpdateInteractionResponse(
 				inter.ApplicationID(),
 				inter.Token(),
-				discord.NewMessageUpdateBuilder().
-					SetComponents(
-						discord.NewContainer(
-							discord.NewSection(
-								discord.NewTextDisplay("### 채팅 설정\n- 봇의 설정을 성공적으로 바꾸었어요."),
-							).
-								WithAccessory(
-									discord.NewThumbnail(*inter.User().AvatarURL()),
-								),
-						),
-					).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("- 봇의 대화 설정을 성공적으로 바꾸었어요."),
+				}),
 			)
 			return err
 		default:
@@ -87,10 +77,9 @@ var UserSettingsComponent = &loader.Component{
 		_, err := inter.Client().Rest.UpdateInteractionResponse(
 			inter.ApplicationID(),
 			inter.Token(),
-			discord.NewMessageUpdateBuilder().
-				SetComponents(settings.MakeContainer()).
-				SetIsComponentsV2(true).
-				Build(),
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				settings.MakeContainer(),
+			}),
 		)
 		return err
 	},

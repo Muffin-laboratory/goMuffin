@@ -23,10 +23,9 @@ var DeleteChatComponent = &loader.Component{
 
 			if value == "cancel" {
 				_, err := e.UpdateInteractionResponse(
-					discord.NewMessageUpdateBuilder().
-						SetComponents(builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요.")).
-						SetIsComponentsV2(true).
-						Build(),
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						builders.MakeCanceledContainer("아무 채팅방을 삭제하지 않았어요."),
+					}),
 				)
 				return err
 			}
@@ -44,10 +43,9 @@ var DeleteChatComponent = &loader.Component{
 			_, err := e.Client().Rest.UpdateInteractionResponse(
 				e.ApplicationID(),
 				e.Token(),
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeSuccessContainer("해당 채팅을 삭제했어요.")).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("해당 채팅을 삭제했어요."),
+				}),
 			)
 			return err
 		})

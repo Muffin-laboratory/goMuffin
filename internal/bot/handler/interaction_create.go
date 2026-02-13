@@ -16,11 +16,8 @@ func OnApplicationCommandInteractionCreate(i *events.ApplicationCommandInteracti
 	if err := loader.GetDiscommand().ChatInputRun(i.Data.CommandName(), i); err != nil {
 		slog.Error("error in responding chat input command.", "user_id", i.User().ID, "error", err)
 		i.CreateMessage(
-			discord.NewMessageCreateBuilder().
-				SetComponents(getErrContainer(i.Client().Rest)).
-				SetIsComponentsV2(true).
-				SetEphemeral(true).
-				Build(),
+			discord.NewMessageCreateV2(getErrContainer(i.Client().Rest)).
+				WithEphemeral(true),
 		)
 	}
 }
@@ -29,11 +26,8 @@ func OnComponentInteractionCreate(i *events.ComponentInteractionCreate) {
 	if err := loader.GetDiscommand().ComponentRun(i); err != nil {
 		slog.Error("error in responding component.", "user_id", i.User().ID, "error", err)
 		i.CreateMessage(
-			discord.NewMessageCreateBuilder().
-				SetComponents(getErrContainer(i.Client().Rest)).
-				SetIsComponentsV2(true).
-				SetEphemeral(true).
-				Build(),
+			discord.NewMessageCreateV2(getErrContainer(i.Client().Rest)).
+				WithEphemeral(true),
 		)
 	}
 }
@@ -42,11 +36,8 @@ func OnAutocompleteInteractionCreate(i *events.AutocompleteInteractionCreate) {
 	if err := loader.GetDiscommand().ChatInputAutocomplete(i.Data.CommandName, i); err != nil {
 		slog.Error("error in responding autocomplete.", "user_id", i.User().ID, "error", err)
 		i.Respond(discord.InteractionResponseTypeCreateMessage,
-			discord.NewMessageCreateBuilder().
-				SetComponents(getErrContainer(i.Client().Rest)).
-				SetIsComponentsV2(true).
-				SetEphemeral(true).
-				Build(),
+			discord.NewMessageCreateV2(getErrContainer(i.Client().Rest)).
+				WithEphemeral(true),
 		)
 	}
 }

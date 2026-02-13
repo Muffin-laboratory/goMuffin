@@ -23,20 +23,18 @@ var RegisterComponent = &loader.Component{
 
 			bot, _ := e.Client().Caches.SelfUser()
 			_, err := e.UpdateInteractionResponse(
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeSuccessContainer("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", bot.Username)).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("가입을 했어요. 이제 %s의 모든 기능을 사용할 수 있어요.", bot.Username),
+				}),
 			)
 			return err
 		})
 
 		r.Component(utils.ServiceDisagree, func(e *handler.ComponentEvent) error {
 			_, err := e.UpdateInteractionResponse(
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeDeclineContainer("가입을 거부했어요.")).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeDeclineContainer("가입을 거부했어요."),
+				}),
 			)
 			return err
 		})

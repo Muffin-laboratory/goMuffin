@@ -28,17 +28,13 @@ func OnMessageCreate(m *events.MessageCreate) {
 	defer cancel()
 
 	if strings.HasPrefix(m.Message.Content, config.Bot.Prefix) {
-
 		content := strings.TrimPrefix(m.Message.Content, config.Bot.Prefix)
 
 		if !repository.GetDatabase().Users.IsUser(ctx, int64(authorID)) {
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
-				discord.NewMessageCreateBuilder().
-					SetComponents(builders.MakeUserIsNotRegisteredErrContainer()).
-					SetIsComponentsV2(true).
-					SetMessageReference(m.Message.MessageReference).
-					Build(),
+				discord.NewMessageCreateV2(builders.MakeUserIsNotRegisteredErrContainer()).
+					WithMessageReference(m.Message.MessageReference),
 			)
 
 			return
@@ -47,11 +43,10 @@ func OnMessageCreate(m *events.MessageCreate) {
 		if blocked, reason := repository.GetDatabase().Users.IsUserBlocked(ctx, int64(authorID)); blocked {
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
-				discord.NewMessageCreateBuilder().
-					SetComponents(builders.MakeUserIsBlockedContainer(*m.Message.Author.GlobalName, reason)).
-					SetIsComponentsV2(true).
-					SetMessageReference(m.Message.MessageReference).
-					Build(),
+				discord.NewMessageCreateV2(
+					builders.MakeUserIsBlockedContainer(*m.Message.Author.GlobalName, reason),
+				).
+					WithMessageReference(m.Message.MessageReference),
 			)
 
 			return
@@ -65,11 +60,10 @@ func OnMessageCreate(m *events.MessageCreate) {
 			m.Client().Logger.Error("error in gathering user", "error", err)
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
-				discord.NewMessageCreateBuilder().
-					SetComponents(builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))).
-					SetIsComponentsV2(true).
-					SetMessageReference(m.Message.MessageReference).
-					Build(),
+				discord.NewMessageCreateV2(
+					builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username)),
+				).
+					WithMessageReference(m.Message.MessageReference),
 			)
 
 			return
@@ -80,16 +74,15 @@ func OnMessageCreate(m *events.MessageCreate) {
 			slog.Error("error in responding chat.", "user_id", m.Message.Author.ID, "error", err)
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
-				discord.NewMessageCreateBuilder().
-					SetContent(str).
-					SetMessageReference(m.Message.MessageReference).
-					SetAllowedMentions(&discord.AllowedMentions{
+				discord.NewMessageCreate().
+					WithContent(str).
+					WithMessageReference(m.Message.MessageReference).
+					WithAllowedMentions(&discord.AllowedMentions{
 						Parse:       make([]discord.AllowedMentionType, 0),
 						Users:       make([]snowflake.ID, 0),
 						Roles:       make([]snowflake.ID, 0),
 						RepliedUser: dbUser.ReplyUser,
-					}).
-					Build(),
+					}),
 			)
 
 			return
@@ -98,16 +91,15 @@ func OnMessageCreate(m *events.MessageCreate) {
 		result := chatbot.ParseResult(str, m)
 		m.Client().Rest.CreateMessage(
 			m.ChannelID,
-			discord.NewMessageCreateBuilder().
-				SetContent(result).
-				SetMessageReference(m.Message.MessageReference).
-				SetAllowedMentions(&discord.AllowedMentions{
+			discord.NewMessageCreate().
+				WithContent(result).
+				WithMessageReference(m.Message.MessageReference).
+				WithAllowedMentions(&discord.AllowedMentions{
 					Parse:       make([]discord.AllowedMentionType, 0),
 					Users:       make([]snowflake.ID, 0),
 					Roles:       make([]snowflake.ID, 0),
 					RepliedUser: dbUser.ReplyUser,
-				}).
-				Build(),
+				}),
 		)
 
 		return

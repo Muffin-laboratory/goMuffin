@@ -33,20 +33,18 @@ var DeregisterComponent = &loader.Component{
 			}
 
 			_, err := e.UpdateInteractionResponse(
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeSuccessContainer("탈퇴를 성공적으로 완료했어요.")).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("탈퇴를 성공적으로 완료했어요."),
+				}),
 			)
 			return err
 		})
 
 		r.Component(utils.DeregisterDisagree, func(e *handler.ComponentEvent) error {
 			_, err := e.UpdateInteractionResponse(
-				discord.NewMessageUpdateBuilder().
-					SetComponents(builders.MakeSuccessContainer("탈퇴를 취소했어요.")).
-					SetIsComponentsV2(true).
-					Build(),
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("탈퇴를 취소했어요."),
+				}),
 			)
 			return err
 		})

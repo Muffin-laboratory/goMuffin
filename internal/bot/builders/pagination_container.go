@@ -149,11 +149,9 @@ func (p *PaginationContainer) Last(i *handler.ComponentEvent) error {
 func (p *PaginationContainer) Set(i updatableEvent, page int) error {
 	if userID := strings.Split(p.ID, ":")[0]; userID != i.User().ID.String() {
 		_, err := i.CreateFollowupMessage(
-			discord.NewMessageCreateBuilder().
-				SetComponents(MakeHasNoPermissionContainer()).
-				SetIsComponentsV2(true).
-				SetEphemeral(true).
-				Build(),
+			discord.NewMessageCreateV2().
+				WithComponents(MakeHasNoPermissionContainer()).
+				WithEphemeral(true),
 		)
 		return err
 	}
@@ -170,20 +168,17 @@ func (p *PaginationContainer) Set(i updatableEvent, page int) error {
 
 	container := p.Containers[p.Current-1].AddComponents(makeComponents(p.ID, p.Current, p.Total))
 	return i.UpdateMessage(
-		discord.NewMessageUpdateBuilder().
-			SetIsComponentsV2(true).
-			SetComponents(container).
-			Build(),
+		discord.NewMessageUpdateV2([]discord.LayoutComponent{container}),
 	)
 }
 
 // ShowModal show discord's modal
 func (p *PaginationContainer) ShowModal(i *handler.ComponentEvent) error {
 	return i.Modal(
-		discord.NewModalCreateBuilder().
-			SetCustomID(utils.MakePaginationContainerModal(p.ID)).
-			SetTitle("페이지 설정").
-			AddComponents(
+		discord.NewModalCreate(
+			utils.MakePaginationContainerModal(p.ID),
+			"페이지 설정",
+			[]discord.LayoutComponent{
 				discord.NewLabel(
 					"이동할 페이지",
 					discord.NewShortTextInput(utils.PaginationContainerSetPage).
@@ -191,7 +186,7 @@ func (p *PaginationContainer) ShowModal(i *handler.ComponentEvent) error {
 						WithValue(fmt.Sprint(p.Current)),
 				).
 					WithDescription("이동할 페이지의 번호를 입력해 주세요."),
-			).
-			Build(),
+			},
+		),
 	)
 }
