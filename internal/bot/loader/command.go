@@ -31,11 +31,31 @@ const (
 func (d *Discommand) LoadCommand(c *Command) {
 	defer commandMutex.Unlock()
 	commandMutex.Lock()
-	d.Commands[c.Name] = c
+	d.OldCommands[c.Name] = c
+}
+
+func (d *Discommand) RegisterCommand(command discord.ApplicationCommandCreate) {
+	d.commands = append(d.commands, command)
+}
+
+func (d *Discommand) Commands() []discord.ApplicationCommandCreate {
+	commandsCopy := make([]discord.ApplicationCommandCreate, len(d.commands))
+	copy(commandsCopy, d.commands)
+	return commandsCopy
+}
+
+func (d *Discommand) RegisterDevCommand(command discord.ApplicationCommandCreate) {
+	d.devCommands = append(d.devCommands, command)
+}
+
+func (d *Discommand) DevCommands() []discord.ApplicationCommandCreate {
+	devCommandsCopy := make([]discord.ApplicationCommandCreate, len(d.devCommands))
+	copy(devCommandsCopy, d.devCommands)
+	return devCommandsCopy
 }
 
 func (d *Discommand) ChatInputRun(name string, inter *events.ApplicationCommandInteractionCreate) error {
-	if command, ok := d.Commands[name]; ok {
+	if command, ok := d.OldCommands[name]; ok {
 		var ctx context.Context
 		var cancel context.CancelFunc
 		if command.Deferred {
@@ -89,7 +109,7 @@ func (d *Discommand) ChatInputRun(name string, inter *events.ApplicationCommandI
 }
 
 func (d *Discommand) ChatInputAutocomplete(name string, i *events.AutocompleteInteractionCreate) error {
-	if command, ok := d.Commands[name]; ok {
+	if command, ok := d.OldCommands[name]; ok {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		defer cancel()
 

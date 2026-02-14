@@ -33,13 +33,7 @@ func main() {
 	}()
 
 	var globalCmds []discord.ApplicationCommandCreate
-	var developerOnlyGuildCmds []discord.ApplicationCommandCreate
-	for _, cmd := range loader.GetDiscommand().Commands {
-		if cmd.Flags&loader.CommandFlagsIsDeveloperOnlyCommand != 0 {
-			developerOnlyGuildCmds = append(developerOnlyGuildCmds, cmd.SlashCommandCreate)
-			continue
-		}
-
+	for _, cmd := range loader.GetDiscommand().OldCommands {
 		globalCmds = append(globalCmds, cmd.SlashCommandCreate)
 	}
 
@@ -48,6 +42,7 @@ func main() {
 		slog.Error("error in set global commands.", "error", err)
 	}
 
+	developerOnlyGuildCmds := loader.GetDiscommand().DevCommands()
 	if len(developerOnlyGuildCmds) != 0 {
 		developerOnlyGuildID := configs.GetConfig().Command.DeveloperOnlyGuildID
 		_, err = session.Rest.SetGuildCommands(session.ApplicationID, developerOnlyGuildID, developerOnlyGuildCmds)

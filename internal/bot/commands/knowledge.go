@@ -76,7 +76,7 @@ var KnowledgeCommand = &loader.Command{
 		case knowledgeLearn:
 			igCommands := []string{}
 
-			for _, command := range loader.GetDiscommand().Commands {
+			for _, command := range loader.GetDiscommand().OldCommands {
 				igCommands = append(igCommands, command.Name)
 			}
 

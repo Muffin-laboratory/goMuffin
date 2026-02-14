@@ -36,7 +36,7 @@ func init() {
 		bot.WithEventListenerFunc(handler.OnAutocompleteInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnMessageCreate),
 		bot.WithLogger(logger),
-		bot.WithEventListeners(loader.GetDiscommand().Router),
+		bot.WithEventListeners(loader.GetDiscommand().Router()),
 	)
 	if err != nil {
 		slog.Error("[Fatal] failed to create session.", "error", err)

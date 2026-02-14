@@ -4,12 +4,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
 
 type Discommand struct {
-	Router   handler.Router
-	Commands map[string]*Command
+	router      handler.Router
+	OldCommands map[string]*Command
+	commands    []discord.ApplicationCommandCreate
+	devCommands []discord.ApplicationCommandCreate
 }
 
 var (
@@ -28,11 +31,15 @@ func GetDiscommand() *Discommand {
 	once.Do(func() {
 		r := handler.New()
 		instance = &Discommand{
-			Router:   r,
-			Commands: make(map[string]*Command),
+			router:      r,
+			OldCommands: make(map[string]*Command),
 		}
 
 	})
 
 	return instance
+}
+
+func (d *Discommand) Router() handler.Router {
+	return d.router
 }
