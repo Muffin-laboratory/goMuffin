@@ -28,7 +28,17 @@ var UserSettingsComponent = &loader.Component{
 			case "12hours":
 				settings.Toggle12Hours()
 			case "submit":
-				return settings.Submit(e.Ctx)
+				err := settings.Submit(e.Ctx)
+				if err != nil {
+					return err
+				}
+
+				_, err = e.UpdateInteractionResponse(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						builders.MakeSuccessContainer("- 봇의 대화 설정을 성공적으로 바꾸었어요."),
+					}),
+				)
+				return err
 			}
 
 			_, err := e.UpdateInteractionResponse(
