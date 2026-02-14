@@ -38,7 +38,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 	}
 
 	for _, data := range data {
-		button := discord.NewSuccessButton("선택", utils.MakeSelectChat(data.ID.Hex(), data.Name, i.User().ID.String()))
+		button := discord.NewSuccessButton("선택", utils.MakeSelectChat(data.ID.Hex(), i.User().ID.String()))
 
 		if data.ID == dbUser.ChatID {
 			button = button.WithDisabled(true)

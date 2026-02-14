@@ -1,56 +1,38 @@
 package components
 
 import (
-	"context"
-	"strings"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 var SelectChatComponent = &loader.Component{
-	DeferredUpdate: true,
-	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
-		customID := inter.Data.CustomID()
+	Middlewares: handler.Middlewares{
+		middlewares.CheckIDMiddleware(),
+		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
+	},
+	Handle: func(r handler.Router) {
+		r.Component(utils.SelectChat+"/{id}", func(e *handler.ComponentEvent) error {
+			id, _ := bson.ObjectIDFromHex(e.Vars["id"])
 
-		if !strings.HasPrefix(customID, utils.SelectChat) {
-			return false
-		}
+			if _, err := repository.GetDatabase().Users.Update(e.Ctx, int64(e.User().ID), &repository.UserUpdate{
+				ChatID: &id,
+			}); err != nil {
+				return err
+			}
 
-		userID := utils.GetChatUserID(customID)
-		if inter.User().ID.String() != userID {
-			inter.Client().Rest.UpdateInteractionResponse(
-				inter.ApplicationID(),
-				inter.Token(),
+			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateV2([]discord.LayoutComponent{
-					builders.MakeDeclineContainer("당신은 해당 권한이 없ㅇ어요."),
+					builders.MakeSuccessContainer("해당 채팅으로 변경하였어요."),
 				}),
 			)
-			return false
-		}
-		return true
-	},
-	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		id, name := utils.GetChatID(inter.Data.CustomID())
-
-		if _, err := repository.GetDatabase().Users.Update(ctx, int64(inter.User().ID), &repository.UserUpdate{
-			ChatID: &id,
-		}); err != nil {
 			return err
-		}
-
-		_, err := inter.Client().Rest.UpdateInteractionResponse(
-			inter.ApplicationID(),
-			inter.Token(),
-			discord.NewMessageUpdateV2([]discord.LayoutComponent{
-				builders.MakeSuccessContainer("`%s`으로 채팅을 변경했어요.", name),
-			}),
-		)
-		return err
+		})
 	},
 }
 

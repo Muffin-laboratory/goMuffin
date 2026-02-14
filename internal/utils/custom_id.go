@@ -25,7 +25,7 @@ const (
 	DeregisterAgree    = "/muffin/deregister/agree"
 	DeregisterDisagree = "/muffin/deregister/disagree"
 
-	SelectChat       = "#muffin/chat/select$"
+	SelectChat       = "/muffin/chat/select"
 	DeleteChat       = "/muffin/chat/delete"
 	DeleteChatCancel = "/muffin/chat/delete/cancel"
 
@@ -149,8 +149,8 @@ func GetDeregisterUserID(customID string) string {
 	}
 }
 
-func MakeSelectChat(id, name, userID string) string {
-	return fmt.Sprintf("%sid=%s&name=%s&user_id=%s", SelectChat, id, name, userID)
+func MakeSelectChat(id, userID string) string {
+	return fmt.Sprintf("%s/%s/%s", SelectChat, id, userID)
 }
 
 func GetChatID(customID string) (id bson.ObjectID, name string) {
