@@ -6,7 +6,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/rest"
@@ -44,5 +43,5 @@ func OnAutocompleteInteractionCreate(i *events.AutocompleteInteractionCreate) {
 
 func getErrContainer(client rest.Rest) discord.ContainerComponent {
 	owner, _ := client.GetUser(configs.GetConfig().Bot.OwnerID)
-	return builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username))
+	return builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, `%s`으로 연락해주세요.", owner.Username)
 }

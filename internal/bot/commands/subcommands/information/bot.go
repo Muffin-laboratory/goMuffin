@@ -6,7 +6,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 )
 
@@ -33,8 +32,8 @@ func InfoBot(ctx context.Context, i *builders.CommandCreate) error {
 					discord.NewTextDisplayf("- **버전**\n> %s", configs.MuffinVersion),
 				).
 					WithAccessory(thumbnail),
-				discord.NewTextDisplayf("- **최근에 업데이트된 날짜**\n> %s", utils.Time(configs.UpdatedAt(), utils.RelativeTime)),
-				discord.NewTextDisplayf("- **봇이 시작한 시각**\n> %s", utils.Time(configs.StartedAt, utils.RelativeTime)),
+				discord.NewTextDisplayf("- **최근에 업데이트된 날짜**\n> %s", builders.Time(configs.UpdatedAt(), builders.RelativeTime)),
+				discord.NewTextDisplayf("- **봇이 시작한 시각**\n> %s", builders.Time(configs.StartedAt, builders.RelativeTime)),
 				discord.NewActionRow(
 					discord.NewLinkButton("개인정보처리방침", configs.GetConfig().Service.PrivacyPolicyURL).
 						WithEmoji(discord.NewComponentEmoji("🔗")),

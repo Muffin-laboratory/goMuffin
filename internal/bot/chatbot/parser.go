@@ -8,7 +8,6 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"google.golang.org/genai"
@@ -38,12 +37,12 @@ func ParseResult(content string, m any) string {
 	result = strings.ReplaceAll(result, "{user.mention}", user.Mention())
 	result = strings.ReplaceAll(result, "{user.globalName}", *user.GlobalName)
 	result = strings.ReplaceAll(result, "{user.id}", user.ID.String())
-	result = strings.ReplaceAll(result, "{user.createdAt}", utils.Time(&userCreatedAt, utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(joinedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{user.createdAt}", builders.Time(&userCreatedAt, builders.RelativeTime))
+	result = strings.ReplaceAll(result, "{user.joinedAt}", builders.Time(joinedAt, builders.RelativeTime))
 
 	result = strings.ReplaceAll(result, "{muffin.version}", configs.MuffinVersion)
-	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt(), utils.RelativeTime))
-	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.Time(configs.StartedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.updatedAt}", builders.Time(configs.UpdatedAt(), builders.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.startedAt}", builders.Time(configs.StartedAt, builders.RelativeTime))
 	result = strings.ReplaceAll(result, "{muffin.name}", bot.Username)
 	result = strings.ReplaceAll(result, "{muffin.id}", bot.ID.String())
 	return result

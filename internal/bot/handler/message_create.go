@@ -10,7 +10,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/snowflake/v2"
@@ -61,7 +60,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 			m.Client().Rest.CreateMessage(
 				m.ChannelID,
 				discord.NewMessageCreateV2(
-					builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, %s으로 연락해주세요.", utils.InlineCode(owner.Username)),
+					builders.MakeErrorContainer("오류가 발생하였어요. 만약 계속 발생한다면, `%s`으로 연락해주세요.", owner.Username),
 				).
 					WithMessageReference(m.Message.MessageReference),
 			)

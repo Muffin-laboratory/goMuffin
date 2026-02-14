@@ -44,8 +44,8 @@ func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
 			discord.NewContainer(
 				discord.NewSection(
 					discord.NewTextDisplayf("### %s님의 정보", *i.User().GlobalName),
-					discord.NewTextDisplayf("- **디스코드 가입일**\n> %s", utils.Time(&accCreatedTimestamp, utils.RelativeTime)),
-					discord.NewTextDisplayf("- **머핀봇 가입일**\n> %s", utils.Time(&dbUser.CreatedAt, utils.RelativeTime)),
+					discord.NewTextDisplayf("- **디스코드 가입일**\n> %s", builders.Time(&accCreatedTimestamp, builders.RelativeTime)),
+					discord.NewTextDisplayf("- **머핀봇 가입일**\n> %s", builders.Time(&dbUser.CreatedAt, builders.RelativeTime)),
 				).
 					WithAccessory(discord.NewThumbnail(*bot.AvatarURL())),
 				discord.NewTextDisplayf("- **현재 모드**\n> `%s`", dbUser.ModeString()),
