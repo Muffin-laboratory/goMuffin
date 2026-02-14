@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
+	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/disgo/rest"
 )
@@ -18,8 +18,9 @@ type PaginationContainer struct {
 	Current    int
 	Total      int
 	ID         string
-	m          any
+	m          creatableEvent
 	timer      *time.Timer
+	deferred   bool
 }
 
 type updatableEvent interface {
@@ -28,27 +29,27 @@ type updatableEvent interface {
 	CreateFollowupMessage(messageCreate discord.MessageCreate, opts ...rest.RequestOpt) (*discord.Message, error)
 }
 
+type creatableEvent interface {
+	discord.Interaction
+	Client() *bot.Client
+	CreateMessage(messageCreate discord.MessageCreate, opts ...rest.RequestOpt) error
+}
+
 var paginationContainers = make(map[string]*PaginationContainer)
 
 const endDuration = 10 * time.Minute
 
 // PaginationContainerBuilder creates a new PaginationContainer
-func PaginationContainerBuilder(m any) *PaginationContainer {
-	var userID string
-
-	switch m := m.(type) {
-	case *events.MessageCreate:
-		userID = m.Message.Author.ID.String()
-	case *CommandCreate:
-		userID = m.User().ID.String()
-	}
+func PaginationContainerBuilder(m creatableEvent, deferred bool) *PaginationContainer {
+	userID := m.User().ID.String()
 
 	id := fmt.Sprintf("%s:%d", userID, rand.Intn(100))
 	return &PaginationContainer{
-		Current: 1,
-		ID:      id,
-		m:       m,
-		timer:   time.NewTimer(endDuration),
+		Current:  1,
+		ID:       id,
+		m:        m,
+		timer:    time.NewTimer(endDuration),
+		deferred: deferred,
 	}
 }
 
@@ -75,12 +76,19 @@ func (p *PaginationContainer) Start() error {
 
 	go p.waitTimerEnd()
 
-	return NewMessageSender(p.m).
-		AddComponents(container).
-		SetReply(true).
-		SetEphemeral(true).
-		SetComponentsV2(true).
-		Send()
+	if p.deferred {
+		_, err := p.m.Client().Rest.UpdateInteractionResponse(
+			p.m.ApplicationID(),
+			p.m.Token(),
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{container}),
+		)
+		return err
+	}
+
+	return p.m.CreateMessage(
+		discord.NewMessageCreateV2(container).
+			WithEphemeral(true),
+	)
 }
 
 func makeComponents(id string, current, total int) discord.ActionRowComponent {

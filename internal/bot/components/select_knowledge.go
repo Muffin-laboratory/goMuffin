@@ -65,7 +65,7 @@ func init() {
 				containers = append(containers, container)
 			}
 
-			return builders.PaginationContainerBuilder(e).
+			return builders.PaginationContainerBuilder(e, true).
 				AddContainers(containers...).
 				Start()
 		})

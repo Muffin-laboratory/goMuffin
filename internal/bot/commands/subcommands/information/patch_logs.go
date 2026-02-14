@@ -1,28 +1,33 @@
 package information
 
 import (
-	"context"
 	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func InfoPatchLogs(ctx context.Context, i *builders.CommandCreate) error {
+func InfoPatchLogs(e *handler.CommandEvent) error {
 	var containers []discord.ContainerComponent
 
-	bot, _ := i.Client().Caches.SelfUser()
+	bot, _ := e.Client().Caches.SelfUser()
 
 	ghConfig := &configs.GetConfig().GitHub
 	if ghConfig.Owner == "" || ghConfig.Repository == "" {
-		return returnErrMsg(i)
+		_, err := e.UpdateInteractionResponse(
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				builders.MakeErrorContainer("해당 봇은 패치내역을 제공하지 않아요."),
+			}),
+		)
+		return err
 	}
 
 	ghClient := repository.GetGHClient()
 
-	releases, _, err := ghClient.Repositories.ListReleases(ctx, ghConfig.Owner, ghConfig.Repository, nil)
+	releases, _, err := ghClient.Repositories.ListReleases(e.Ctx, ghConfig.Owner, ghConfig.Repository, nil)
 	if err != nil {
 		return err
 	}
@@ -39,15 +44,7 @@ func InfoPatchLogs(ctx context.Context, i *builders.CommandCreate) error {
 		)
 	}
 
-	return builders.PaginationContainerBuilder(i).
+	return builders.PaginationContainerBuilder(e, true).
 		AddContainers(containers...).
 		Start()
-}
-
-func returnErrMsg(i *builders.CommandCreate) error {
-	return builders.NewMessageSender(i).
-		AddComponents(builders.MakeErrorContainer("해당 봇은 패치내역을 제공하지 않아요.")).
-		SetComponentsV2(true).
-		SetEphemeral(true).
-		Send()
 }

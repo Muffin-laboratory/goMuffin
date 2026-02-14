@@ -1,14 +1,13 @@
 package information
 
 import (
-	"context"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
 func boolToString(k bool) string {
@@ -19,31 +18,31 @@ func boolToString(k bool) string {
 	return "비활성화"
 }
 
-func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
-	accCreatedTimestamp := i.User().ID.Time()
+func InfoUser(e *handler.CommandEvent) error {
+	accCreatedTimestamp := e.User().ID.Time()
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(i.User().ID))
+	dbUser, err := repository.GetDatabase().Users.FindByID(e.Ctx, int64(e.User().ID))
 	if err != nil {
 		return err
 	}
 
-	currentChat, err := repository.GetDatabase().Chats.FindByID(ctx, dbUser.ChatID)
+	currentChat, err := repository.GetDatabase().Chats.FindByID(e.Ctx, dbUser.ChatID)
 	if err != nil {
 		return err
 	}
 
-	chatLength, err := repository.GetDatabase().Memory.CountDocuments(ctx, query.MemoryQueryBuilder().SetUserID(dbUser.ID))
+	chatLength, err := repository.GetDatabase().Memory.CountDocuments(e.Ctx, query.MemoryQueryBuilder().SetUserID(dbUser.ID))
 	if err != nil {
 		return err
 	}
 
-	bot, _ := i.Client().Caches.SelfUser()
+	bot, _ := e.Client().Caches.SelfUser()
 
-	return builders.NewMessageSender(i).
-		AddComponents(
+	_, err = e.UpdateInteractionResponse(
+		discord.NewMessageUpdateV2([]discord.LayoutComponent{
 			discord.NewContainer(
 				discord.NewSection(
-					discord.NewTextDisplayf("### %s님의 정보", *i.User().GlobalName),
+					discord.NewTextDisplayf("### %s님의 정보", *e.User().GlobalName),
 					discord.NewTextDisplayf("- **디스코드 가입일**\n> %s", builders.Time(&accCreatedTimestamp, builders.RelativeTime)),
 					discord.NewTextDisplayf("- **머핀봇 가입일**\n> %s", builders.Time(&dbUser.CreatedAt, builders.RelativeTime)),
 				).
@@ -58,11 +57,10 @@ func InfoUser(ctx context.Context, i *builders.CommandCreate) error {
 						WithEmoji(discord.NewComponentEmoji("🔗")),
 					discord.NewLinkButton("서비스 이용약관", configs.GetConfig().Service.TermOfServiceURL).
 						WithEmoji(discord.NewComponentEmoji("🔗")),
-					discord.NewDangerButton("탈퇴", utils.MakeUserInformationDeregister(i.User().ID.String())),
+					discord.NewDangerButton("탈퇴", utils.MakeUserInformationDeregister(e.User().ID.String())),
 				),
 			),
-		).
-		SetComponentsV2(true).
-		SetEphemeral(true).
-		Send()
+		}),
+	)
+	return err
 }

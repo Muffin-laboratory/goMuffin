@@ -67,7 +67,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 			containers = append(containers, container)
 		}
 
-		return builders.PaginationContainerBuilder(i).
+		return builders.PaginationContainerBuilder(i, true).
 			AddContainers(containers...).
 			Start()
 	}
