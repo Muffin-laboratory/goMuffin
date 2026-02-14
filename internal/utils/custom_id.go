@@ -31,10 +31,11 @@ const (
 
 	UserInformationDeregister = "/muffin/info/user/deregister"
 
-	UserSettingsChattingMode = "#muffin/user/set/chatting_mode$"
-	UserSettingsReplyUser    = "#muffin/user/set/reply_user$"
-	UserSettings12Hours      = "#muffin/user/set/12hours$"
-	UserSettingsSubmit       = "#muffin/user/submit$s"
+	UserSettings             = "/muffin/user/settings"
+	UserSettingsChattingMode = "/muffin/user/settings/chatting_mode"
+	UserSettingsReplyUser    = "/muffin/user/settings/reply_user"
+	UserSettings12Hours      = "/muffin/user/settings/12hours"
+	UserSettingsSubmit       = "/muffin/user/settings/submit"
 )
 
 func MakeDeleteKnowledge(id, userID string) string {
@@ -191,19 +192,19 @@ func GetUserInformationDeregisterUserID(customID string) string {
 }
 
 func MakeUserSettingsChattingMode(id string) string {
-	return fmt.Sprintf("%s%s", UserSettingsChattingMode, id)
+	return fmt.Sprintf("%s/%s", UserSettingsChattingMode, id)
 }
 
 func MakeUserSettingsReplyUser(id string) string {
-	return fmt.Sprintf("%s%s", UserSettingsReplyUser, id)
+	return fmt.Sprintf("%s/%s", UserSettingsReplyUser, id)
 }
 
 func MakeUserSettings12Hours(id string) string {
-	return fmt.Sprintf("%s%s", UserSettings12Hours, id)
+	return fmt.Sprintf("%s/%s", UserSettings12Hours, id)
 }
 
 func MakeUserSettingsSubmit(id string) string {
-	return fmt.Sprintf("%s%s", UserSettingsSubmit, id)
+	return fmt.Sprintf("%s/%s", UserSettingsSubmit, id)
 }
 
 func GetUserSettingsID(customID string) string {

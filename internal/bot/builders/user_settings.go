@@ -26,8 +26,8 @@ func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, err
 		return nil, err
 	}
 
-	id := fmt.Sprintf("%s/%d", user.ID, rand.Intn(100))
-	s := UserSettings{
+	id := fmt.Sprintf("%s:%d", user.ID, rand.Intn(100))
+	s := &UserSettings{
 		ID:                        id,
 		user:                      &user,
 		ChattingMode:              dbUser.ChattingMode,
@@ -35,9 +35,9 @@ func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, err
 		CreateNewChatAfter12Hours: dbUser.CreateNewChatAfter12Hours,
 	}
 
-	userSettings[id] = &s
+	userSettings[id] = s
 
-	return &s, nil
+	return s, nil
 }
 
 func GetUserSettings(id string) *UserSettings {
@@ -75,6 +75,24 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 			discord.NewSuccessButton("완료", utils.MakeUserSettingsSubmit(s.ID)),
 		),
 	)
+}
+
+func (s *UserSettings) ToggleChattingMode() {
+	newMode := repository.ChattingAIMode
+
+	if s.ChattingMode == repository.ChattingAIMode {
+		newMode = repository.ChattingMuffinMode
+	}
+
+	s.ChattingMode = newMode
+}
+
+func (s *UserSettings) ToggleReplyUser() {
+	s.ReplyUser = !s.ReplyUser
+}
+
+func (s *UserSettings) Toggle12Hours() {
+	s.CreateNewChatAfter12Hours = !s.CreateNewChatAfter12Hours
 }
 
 func (s *UserSettings) Submit(ctx context.Context) error {

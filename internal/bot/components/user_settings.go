@@ -1,87 +1,43 @@
 package components
 
 import (
-	"context"
-	"strings"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
-	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 )
 
 var UserSettingsComponent = &loader.Component{
-	DeferredUpdate: true,
-	Parse: func(ctx context.Context, inter *events.ComponentInteractionCreate) bool {
-		customID := inter.Data.CustomID()
-
-		isChattingMode := strings.HasPrefix(customID, utils.UserSettingsChattingMode)
-		isReplyUser := strings.HasPrefix(customID, utils.UserSettingsReplyUser)
-		is12Hours := strings.HasPrefix(customID, utils.UserSettings12Hours)
-		isSubmit := strings.HasPrefix(customID, utils.UserSettingsSubmit)
-
-		if !isChattingMode && !isReplyUser && !is12Hours && !isSubmit {
-			return false
-		}
-
-		id := utils.GetUserSettingsID(customID)
-		if inter.User().ID.String() != utils.GetUserID(id) {
-			return false
-		}
-
-		return builders.GetUserSettings(id) != nil
+	Middlewares: handler.Middlewares{
+		middlewares.CheckUserSettingsMiddleware(),
+		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 	},
-	Run: func(ctx context.Context, inter *events.ComponentInteractionCreate) error {
-		customID := inter.Data.CustomID()
-		settings := builders.GetUserSettings(utils.GetUserSettingsID(customID))
+	Handle: func(r handler.Router) {
+		r.Component(utils.UserSettings+"/{type}/{id}", func(e *handler.ComponentEvent) error {
+			settingsType := e.Vars["type"]
+			id := e.Vars["id"]
+			settings := builders.GetUserSettings(id)
 
-		switch {
-		case strings.HasPrefix(customID, utils.UserSettingsChattingMode):
-			newMode := repository.ChattingAIMode
-
-			if settings.ChattingMode == repository.ChattingAIMode {
-				newMode = repository.ChattingMuffinMode
+			switch settingsType {
+			case "chatting_mode":
+				settings.ToggleChattingMode()
+			case "reply_user":
+				settings.ToggleReplyUser()
+			case "12hours":
+				settings.Toggle12Hours()
+			case "submit":
+				return settings.Submit(e.Ctx)
 			}
 
-			settings.ChattingMode = newMode
-
-			goto ReturnSettings
-		case strings.HasPrefix(customID, utils.UserSettingsReplyUser):
-			settings.ReplyUser = !settings.ReplyUser
-
-			goto ReturnSettings
-		case strings.HasPrefix(customID, utils.UserSettings12Hours):
-			settings.CreateNewChatAfter12Hours = !settings.CreateNewChatAfter12Hours
-
-			goto ReturnSettings
-		case strings.HasPrefix(customID, utils.UserSettingsSubmit):
-			if err := settings.Submit(ctx); err != nil {
-				return err
-			}
-
-			_, err := inter.Client().Rest.UpdateInteractionResponse(
-				inter.ApplicationID(),
-				inter.Token(),
+			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateV2([]discord.LayoutComponent{
-					builders.MakeSuccessContainer("- 봇의 대화 설정을 성공적으로 바꾸었어요."),
+					settings.MakeContainer(),
 				}),
 			)
 			return err
-		default:
-			return nil
-		}
-
-	ReturnSettings:
-		_, err := inter.Client().Rest.UpdateInteractionResponse(
-			inter.ApplicationID(),
-			inter.Token(),
-			discord.NewMessageUpdateV2([]discord.LayoutComponent{
-				settings.MakeContainer(),
-			}),
-		)
-		return err
+		})
 	},
 }
 
