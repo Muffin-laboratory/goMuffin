@@ -12,20 +12,19 @@ import (
 
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Component(utils.UserInformationDeregister+"/{user_id}", func(inter *handler.ComponentEvent) error {
-			if inter.User().ID.String() != inter.Vars["user_id"] {
-				return inter.CreateMessage(
+		r.Component(utils.UserInformationDeregister+"/{user_id}", func(e *handler.ComponentEvent) error {
+			if e.User().ID.String() != e.Vars["user_id"] {
+				return e.CreateMessage(
 					discord.NewMessageCreateV2(builders.MakeHasNoPermissionContainer()).
 						WithEphemeral(true),
 				)
 			}
 
-			return commands.DeregisterCommand.Run(inter.Ctx, &builders.CommandCreate{
-				ApplicationCommandInteractionCreate: &events.ApplicationCommandInteractionCreate{
-					GenericEvent:                  inter.GenericEvent,
-					ApplicationCommandInteraction: discord.ApplicationCommandInteraction{},
-					Respond:                       inter.Respond,
-				}})
+			return commands.HandleDeregister(&events.ApplicationCommandInteractionCreate{
+				GenericEvent:                  e.GenericEvent,
+				ApplicationCommandInteraction: discord.ApplicationCommandInteraction{},
+				Respond:                       e.Respond,
+			})
 		})
 	})
 }

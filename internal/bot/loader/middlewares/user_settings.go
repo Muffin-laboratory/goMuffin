@@ -10,9 +10,6 @@ func CheckUserSettingsMiddleware() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
 			next = CheckIDMiddleware()(next)
-			if next == nil {
-				return nil
-			}
 
 			var customID string
 

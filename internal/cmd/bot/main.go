@@ -11,7 +11,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/gateway"
 )
 
@@ -32,7 +31,7 @@ func main() {
 		}
 	}()
 
-	var globalCmds []discord.ApplicationCommandCreate
+	globalCmds := loader.GetDiscommand().Commands()
 	for _, cmd := range loader.GetDiscommand().OldCommands {
 		globalCmds = append(globalCmds, cmd.SlashCommandCreate)
 	}
