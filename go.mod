@@ -4,7 +4,7 @@ go 1.24.11
 
 require (
 	github.com/LoperLee/golang-hangul-toolkit v1.1.0
-	github.com/disgoorg/disgo v0.19.0
+	github.com/disgoorg/disgo v0.19.2
 	github.com/disgoorg/snowflake/v2 v2.0.3
 	github.com/google/go-github/v74 v74.0.0
 	github.com/joho/godotenv v1.5.1
