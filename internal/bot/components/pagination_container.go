@@ -3,16 +3,15 @@ package components
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/handler"
 )
 
-var PaginationContainerComponent *loader.Component = &loader.Component{
-	Middlewares: handler.Middlewares{
-		middlewares.CheckPaginationContainerMiddleware(),
-	},
-	Handle: func(r handler.Router) {
+func init() {
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
+		r.Use(middlewares.CheckPaginationContainerMiddleware())
+
 		r.Component(utils.PaginationContainerFirst+"/{id}", func(e *handler.ComponentEvent) error {
 			return builders.GetPaginationContainer(e.Vars["id"]).First(e)
 		})
@@ -32,9 +31,5 @@ var PaginationContainerComponent *loader.Component = &loader.Component{
 		r.Component(utils.PaginationContainerPages+"/{id}", func(e *handler.ComponentEvent) error {
 			return builders.GetPaginationContainer(e.Vars["id"]).ShowModal(e)
 		})
-	},
-}
-
-func init() {
-	loader.GetDiscommand().LoadComponent(PaginationContainerComponent)
+	})
 }

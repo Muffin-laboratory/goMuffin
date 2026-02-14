@@ -8,14 +8,12 @@ import (
 )
 
 type Discommand struct {
-	Router     handler.Router
-	Commands   map[string]*Command
-	Components []*Component
+	Router   handler.Router
+	Commands map[string]*Command
 }
 
 var (
-	commandMutex   sync.Mutex
-	componentMutex sync.Mutex
+	commandMutex sync.Mutex
 )
 
 var once sync.Once

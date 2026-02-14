@@ -3,18 +3,19 @@ package components
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
 
-var UserSettingsComponent = &loader.Component{
-	Middlewares: handler.Middlewares{
-		middlewares.CheckUserSettingsMiddleware(),
-		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
-	},
-	Handle: func(r handler.Router) {
+func init() {
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
+		r.Use(
+			middlewares.CheckUserSettingsMiddleware(),
+			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
+		)
+
 		r.Component(utils.UserSettings+"/{type}/{id}", func(e *handler.ComponentEvent) error {
 			settingsType := e.Vars["type"]
 			id := e.Vars["id"]
@@ -48,9 +49,5 @@ var UserSettingsComponent = &loader.Component{
 			)
 			return err
 		})
-	},
-}
-
-func init() {
-	loader.GetDiscommand().LoadComponent(UserSettingsComponent)
+	})
 }

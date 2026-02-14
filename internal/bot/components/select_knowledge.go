@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
@@ -11,12 +11,13 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-var SelectKnowledgeComponent = &loader.Component{
-	Middlewares: handler.Middlewares{
-		middlewares.CheckIDMiddleware(),
-		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, false, true),
-	},
-	Handle: func(r handler.Router) {
+func init() {
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
+		r.Use(
+			middlewares.CheckIDMiddleware(),
+			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, false, true),
+		)
+
 		r.Component(utils.SelectChat+"/{command}", func(e *handler.ComponentEvent) error {
 			var sections []discord.SectionComponent
 			var containers []discord.ContainerComponent
@@ -68,9 +69,5 @@ var SelectKnowledgeComponent = &loader.Component{
 				AddContainers(containers...).
 				Start()
 		})
-	},
-}
-
-func init() {
-	loader.GetDiscommand().LoadComponent(SelectKnowledgeComponent)
+	})
 }

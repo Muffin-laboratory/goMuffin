@@ -3,7 +3,7 @@ package components
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
@@ -11,12 +11,13 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-var DeregisterComponent = &loader.Component{
-	Middlewares: handler.Middlewares{
-		middlewares.CheckIDMiddleware(),
-		middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
-	},
-	Handle: func(r handler.Router) {
+func init() {
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
+		r.Use(
+			middlewares.CheckIDMiddleware(),
+			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
+		)
+
 		r.Component(utils.DeregisterAgree, func(e *handler.ComponentEvent) error {
 			userID := int64(e.User().ID)
 
@@ -48,9 +49,6 @@ var DeregisterComponent = &loader.Component{
 			)
 			return err
 		})
-	},
-}
+	})
 
-func init() {
-	loader.GetDiscommand().LoadComponent(DeregisterComponent)
 }

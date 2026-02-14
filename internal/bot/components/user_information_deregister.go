@@ -10,8 +10,8 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-var UserInformationDeregisterComponent = &loader.Component{
-	Handle: func(r handler.Router) {
+func init() {
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Component(utils.UserInformationDeregister+"/{user_id}", func(inter *handler.ComponentEvent) error {
 			if inter.User().ID.String() != inter.Vars["user_id"] {
 				return inter.CreateMessage(
@@ -27,9 +27,5 @@ var UserInformationDeregisterComponent = &loader.Component{
 					Respond:                       inter.Respond,
 				}})
 		})
-	},
-}
-
-func init() {
-	loader.GetDiscommand().LoadComponent(UserInformationDeregisterComponent)
+	})
 }
