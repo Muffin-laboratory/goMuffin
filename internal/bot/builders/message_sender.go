@@ -3,6 +3,7 @@ package builders
 import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 )
 
 type MessageSender struct {
@@ -102,6 +103,24 @@ func (s *MessageSender) Send() error {
 		}
 
 		m.Responded = true
+	case *handler.CommandEvent:
+		return m.CreateMessage(
+			discord.NewMessageCreate().
+				WithContent(s.Content).
+				AddEmbeds(s.Embeds...).
+				AddComponents(s.Components...).
+				WithIsComponentsV2(s.ComponentsV2).
+				WithEphemeral(s.Ephemeral),
+		)
+	case *handler.InteractionEvent:
+		return m.CreateMessage(
+			discord.NewMessageCreate().
+				WithContent(s.Content).
+				AddEmbeds(s.Embeds...).
+				AddComponents(s.Components...).
+				WithIsComponentsV2(s.ComponentsV2).
+				WithEphemeral(s.Ephemeral),
+		)
 	}
 	return nil
 }

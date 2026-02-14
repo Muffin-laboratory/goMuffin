@@ -86,11 +86,12 @@ func init() {
 			userID := data.Snowflake("유저")
 
 			if userID == configs.GetConfig().Bot.OwnerID {
-				return builders.NewMessageSender(e).
-					AddComponents(builders.MakeErrorContainer("개발자는 차단 해제를 할 수 없어요.")).
-					SetComponentsV2(true).
-					SetEphemeral(true).
-					Send()
+				_, err := e.UpdateInteractionResponse(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						builders.MakeErrorContainer("개발자는 차단 해제를 할 수 없어요."),
+					}),
+				)
+				return err
 			}
 
 			user, err := e.Client().Rest.GetUser(userID)
@@ -99,11 +100,12 @@ func init() {
 			}
 
 			if !repository.GetDatabase().Users.IsUser(e.Ctx, int64(userID)) {
-				return builders.NewMessageSender(e).
-					AddComponents(builders.MakeErrorContainer("유저 %s은/는 해당 봇 이용자가 아니에요.", user.Username)).
-					SetComponentsV2(true).
-					SetEphemeral(true).
-					Send()
+				_, err := e.UpdateInteractionResponse(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						builders.MakeErrorContainer("유저 %s은/는 해당 봇 이용자가 아니에요.", user.Username),
+					}),
+				)
+				return err
 			}
 
 			if _, err = repository.GetDatabase().Users.Update(e.Ctx, int64(userID), &repository.UserUpdate{
@@ -113,11 +115,12 @@ func init() {
 				return err
 			}
 
-			return builders.NewMessageSender(e).
-				AddComponents(builders.MakeSuccessContainer("유저 %s 성공적으로 차단 해제했어요.", hangul.GetJosa(user.Username, hangul.EUL_REUL))).
-				SetComponentsV2(true).
-				SetEphemeral(true).
-				Send()
+			_, err = e.UpdateInteractionResponse(
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeSuccessContainer("유저 %s 성공적으로 차단 해제했어요.", hangul.GetJosa(user.Username, hangul.EUL_REUL)),
+				}),
+			)
+			return err
 		})
 	})
 }
