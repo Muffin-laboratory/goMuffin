@@ -9,7 +9,7 @@ import (
 
 const (
 	DeleteKnowledge = "/muffin/knowledge/delete"
-	SelectKnowledge = "#muffin/knowledge$"
+	SelectKnowledge = "/muffin/knowledge/select"
 
 	PaginationContainerFirst   = "/muffin-pages/first"
 	PaginationContainerPrev    = "/muffin-pages/prev"
@@ -51,7 +51,7 @@ func GetDeleteKnowledgeUserID(customID string) string {
 }
 
 func MakeSelectKnowledge(command string) string {
-	return fmt.Sprintf("%s%s", SelectKnowledge, command)
+	return fmt.Sprintf("%s/%s", SelectKnowledge, command)
 }
 
 func GetSelectKnowledgeCommand(customID string) string {
