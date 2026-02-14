@@ -3,7 +3,6 @@ package builders
 import (
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
@@ -147,15 +146,6 @@ func (p *PaginationContainer) Last(i *handler.ComponentEvent) error {
 
 // Set sets to page
 func (p *PaginationContainer) Set(i updatableEvent, page int) error {
-	if userID := strings.Split(p.ID, ":")[0]; userID != i.User().ID.String() {
-		_, err := i.CreateFollowupMessage(
-			discord.NewMessageCreateV2().
-				WithComponents(MakeHasNoPermissionContainer()).
-				WithEphemeral(true),
-		)
-		return err
-	}
-
 	p.resetTimer()
 
 	if page <= 0 {

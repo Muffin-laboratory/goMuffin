@@ -5,12 +5,16 @@ import (
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
 
 var PaginationContainerModal = &loader.Modal{
+	Middlewares: handler.Middlewares{
+		middlewares.CheckPaginationContainerMiddleware(),
+	},
 	Handle: func(r handler.Router) {
 		r.Modal(utils.PaginationContainerModal+"/{id}", func(inter *handler.ModalEvent) error {
 			p := builders.GetPaginationContainer(inter.Vars["id"])
