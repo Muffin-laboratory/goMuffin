@@ -13,9 +13,9 @@ import (
 type UserSettings struct {
 	ID                        string
 	user                      *discord.User
-	ChattingMode              repository.ChattingMode
-	ReplyUser                 bool
-	CreateNewChatAfter12Hours bool
+	chattingMode              repository.ChattingMode
+	replyUser                 bool
+	createNewChatAfter12Hours bool
 }
 
 var userSettings = make(map[string]*UserSettings)
@@ -30,9 +30,9 @@ func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, err
 	s := &UserSettings{
 		ID:                        id,
 		user:                      &user,
-		ChattingMode:              dbUser.ChattingMode,
-		ReplyUser:                 dbUser.ReplyUser,
-		CreateNewChatAfter12Hours: dbUser.CreateNewChatAfter12Hours,
+		chattingMode:              dbUser.ChattingMode,
+		replyUser:                 dbUser.ReplyUser,
+		createNewChatAfter12Hours: dbUser.CreateNewChatAfter12Hours,
 	}
 
 	userSettings[id] = s
@@ -57,17 +57,17 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 		discord.NewTextDisplay("- **12 시간 후 새로운 채팅**\n> 해당 봇과 대화하고 12시간 뒤에 새로운 대화를 시작할지 여부를 정해요."),
 		discord.NewActionRow(
 			discord.NewPrimaryButton(
-				fmt.Sprintf("모드: %s", repository.ModeString(s.ChattingMode)),
+				fmt.Sprintf("모드: %s", repository.ModeString(s.chattingMode)),
 				utils.MakeUserSettingsChattingMode(s.ID),
 			),
 			discord.NewButton(
-				utils.GetStyleFromBool(s.ReplyUser),
-				fmt.Sprintf("답장 멘션: %s", utils.BoolToString(s.ReplyUser)),
+				utils.GetStyleFromBool(s.replyUser),
+				fmt.Sprintf("답장 멘션: %s", utils.BoolToString(s.replyUser)),
 				utils.MakeUserSettingsReplyUser(s.ID), "", 0,
 			),
 			discord.NewButton(
-				utils.GetStyleFromBool(s.CreateNewChatAfter12Hours),
-				fmt.Sprintf("12 시간 후 새로운 채팅: %s", utils.BoolToString(s.CreateNewChatAfter12Hours)),
+				utils.GetStyleFromBool(s.createNewChatAfter12Hours),
+				fmt.Sprintf("12 시간 후 새로운 채팅: %s", utils.BoolToString(s.createNewChatAfter12Hours)),
 				utils.MakeUserSettings12Hours(s.ID), "", 0,
 			),
 		),
@@ -80,26 +80,26 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 func (s *UserSettings) ToggleChattingMode() {
 	newMode := repository.ChattingAIMode
 
-	if s.ChattingMode == repository.ChattingAIMode {
+	if s.chattingMode == repository.ChattingAIMode {
 		newMode = repository.ChattingMuffinMode
 	}
 
-	s.ChattingMode = newMode
+	s.chattingMode = newMode
 }
 
 func (s *UserSettings) ToggleReplyUser() {
-	s.ReplyUser = !s.ReplyUser
+	s.replyUser = !s.replyUser
 }
 
 func (s *UserSettings) Toggle12Hours() {
-	s.CreateNewChatAfter12Hours = !s.CreateNewChatAfter12Hours
+	s.createNewChatAfter12Hours = !s.createNewChatAfter12Hours
 }
 
 func (s *UserSettings) Submit(ctx context.Context) error {
 	if _, err := repository.GetDatabase().Users.Update(ctx, int64(s.user.ID), &repository.UserUpdate{
-		ChattingMode:              &s.ChattingMode,
-		ReplyUser:                 &s.ReplyUser,
-		CreateNewChatAfter12Hours: &s.CreateNewChatAfter12Hours,
+		ChattingMode:              &s.chattingMode,
+		ReplyUser:                 &s.replyUser,
+		CreateNewChatAfter12Hours: &s.createNewChatAfter12Hours,
 	}); err != nil {
 		return err
 	}
