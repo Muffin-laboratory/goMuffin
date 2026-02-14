@@ -3,10 +3,8 @@ package loader
 import "github.com/disgoorg/disgo/handler"
 
 type Modal struct {
-	Middlewares      handler.Middlewares
-	Handle           func(r handler.Router)
-	Deferred         bool
-	IsDeferEphemeral bool
+	Middlewares handler.Middlewares
+	Handle      func(r handler.Router)
 }
 
 func (d *Discommand) LoadModal(m *Modal) {

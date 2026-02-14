@@ -33,7 +33,6 @@ func init() {
 			),
 		),
 		bot.WithEventListenerFunc(handler.OnApplicationCommandInteractionCreate),
-		bot.WithEventListenerFunc(handler.OnComponentInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnAutocompleteInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnMessageCreate),
 		bot.WithLogger(logger),
