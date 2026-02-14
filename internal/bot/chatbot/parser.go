@@ -42,7 +42,7 @@ func ParseResult(content string, m any) string {
 	result = strings.ReplaceAll(result, "{user.joinedAt}", utils.Time(joinedAt, utils.RelativeTime))
 
 	result = strings.ReplaceAll(result, "{muffin.version}", configs.MuffinVersion)
-	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt, utils.RelativeTime))
+	result = strings.ReplaceAll(result, "{muffin.updatedAt}", utils.Time(configs.UpdatedAt(), utils.RelativeTime))
 	result = strings.ReplaceAll(result, "{muffin.startedAt}", utils.Time(configs.StartedAt, utils.RelativeTime))
 	result = strings.ReplaceAll(result, "{muffin.name}", bot.Username)
 	result = strings.ReplaceAll(result, "{muffin.id}", bot.ID.String())
