@@ -10,15 +10,15 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/disgo/rest"
+	"github.com/disgoorg/snowflake/v2"
 )
 
-// PaginationContainer is container with page
-type PaginationContainer struct {
+// PaginatedContainer is container with page
+type PaginatedContainer struct {
 	Containers []discord.ContainerComponent
 	Current    int
 	Total      int
 	ID         string
-	m          creatableEvent
 	timer      *time.Timer
 	deferred   bool
 }
@@ -35,57 +35,54 @@ type creatableEvent interface {
 	CreateMessage(messageCreate discord.MessageCreate, opts ...rest.RequestOpt) error
 }
 
-var paginationContainers = make(map[string]*PaginationContainer)
+var paginatedContainers = make(map[string]*PaginatedContainer)
 
 const endDuration = 10 * time.Minute
 
-// PaginationContainerBuilder creates a new PaginationContainer
-func PaginationContainerBuilder(m creatableEvent, deferred bool) *PaginationContainer {
-	userID := m.User().ID.String()
-
-	id := fmt.Sprintf("%s:%d", userID, rand.Intn(100))
-	return &PaginationContainer{
+// NewPaginatedContainer creates a new PaginationContainer
+func NewPaginatedContainer(userID snowflake.ID, deferred bool) *PaginatedContainer {
+	id := fmt.Sprintf("%d:%d", userID, rand.Intn(100))
+	return &PaginatedContainer{
 		Current:  1,
 		ID:       id,
-		m:        m,
 		timer:    time.NewTimer(endDuration),
 		deferred: deferred,
 	}
 }
 
-func (p *PaginationContainer) waitTimerEnd() {
+func (p *PaginatedContainer) waitTimerEnd() {
 	<-p.timer.C
-	delete(paginationContainers, p.ID)
+	delete(paginatedContainers, p.ID)
 }
 
-func (p *PaginationContainer) resetTimer() {
+func (p *PaginatedContainer) resetTimer() {
 	p.timer.Reset(endDuration)
 }
 
 // AddContainers adds containers
-func (p *PaginationContainer) AddContainers(containers ...discord.ContainerComponent) *PaginationContainer {
+func (p *PaginatedContainer) AddContainers(containers ...discord.ContainerComponent) *PaginatedContainer {
 	p.Total += len(containers)
 	p.Containers = append(p.Containers, containers...)
 	return p
 }
 
 // Start starts the paginated-container
-func (p *PaginationContainer) Start() error {
+func (p *PaginatedContainer) Start(e creatableEvent) error {
 	container := p.Containers[0].AddComponents(makeComponents(p.ID, p.Current, p.Total))
-	paginationContainers[p.ID] = p
+	paginatedContainers[p.ID] = p
 
 	go p.waitTimerEnd()
 
 	if p.deferred {
-		_, err := p.m.Client().Rest.UpdateInteractionResponse(
-			p.m.ApplicationID(),
-			p.m.Token(),
+		_, err := e.Client().Rest.UpdateInteractionResponse(
+			e.ApplicationID(),
+			e.Token(),
 			discord.NewMessageUpdateV2([]discord.LayoutComponent{container}),
 		)
 		return err
 	}
 
-	return p.m.CreateMessage(
+	return e.CreateMessage(
 		discord.NewMessageCreateV2(container).
 			WithEphemeral(true),
 	)
@@ -113,20 +110,20 @@ func makeComponents(id string, current, total int) discord.ActionRowComponent {
 }
 
 // GetPaginationContainer gets PaginationContainer
-func GetPaginationContainer(id string) *PaginationContainer {
-	if p, ok := paginationContainers[id]; ok {
+func GetPaginationContainer(id string) *PaginatedContainer {
+	if p, ok := paginatedContainers[id]; ok {
 		return p
 	}
 	return nil
 }
 
 // First moves to first page
-func (p *PaginationContainer) First(i *handler.ComponentEvent) error {
+func (p *PaginatedContainer) First(i *handler.ComponentEvent) error {
 	return p.Set(i, 1)
 }
 
 // Prev move to previous page
-func (p *PaginationContainer) Prev(i *handler.ComponentEvent) error {
+func (p *PaginatedContainer) Prev(i *handler.ComponentEvent) error {
 	if p.Current == 1 {
 		p.Current = p.Total
 	} else {
@@ -137,7 +134,7 @@ func (p *PaginationContainer) Prev(i *handler.ComponentEvent) error {
 }
 
 // Next moves to next page
-func (p *PaginationContainer) Next(i *handler.ComponentEvent) error {
+func (p *PaginatedContainer) Next(i *handler.ComponentEvent) error {
 	if p.Current >= p.Total {
 		p.Current = 1
 	} else {
@@ -148,12 +145,12 @@ func (p *PaginationContainer) Next(i *handler.ComponentEvent) error {
 }
 
 // Last moves to last page
-func (p *PaginationContainer) Last(i *handler.ComponentEvent) error {
+func (p *PaginatedContainer) Last(i *handler.ComponentEvent) error {
 	return p.Set(i, p.Total)
 }
 
 // Set sets to page
-func (p *PaginationContainer) Set(i updatableEvent, page int) error {
+func (p *PaginatedContainer) Set(i updatableEvent, page int) error {
 	p.resetTimer()
 
 	if page <= 0 {
@@ -171,7 +168,7 @@ func (p *PaginationContainer) Set(i updatableEvent, page int) error {
 }
 
 // ShowModal show discord's modal
-func (p *PaginationContainer) ShowModal(i *handler.ComponentEvent) error {
+func (p *PaginatedContainer) ShowModal(i *handler.ComponentEvent) error {
 	return i.Modal(
 		discord.NewModalCreate(
 			utils.MakePaginationContainerModal(p.ID),

@@ -44,7 +44,7 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 		)
 	}
 
-	return builders.PaginationContainerBuilder(e, true).
+	return builders.NewPaginatedContainer(e.User().ID, true).
 		AddContainers(containers...).
-		Start()
+		Start(e)
 }

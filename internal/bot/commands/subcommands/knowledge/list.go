@@ -82,7 +82,7 @@ func List(data discord.SlashCommandInteractionData, e *handler.CommandEvent) err
 		containers = append(containers, container)
 	}
 
-	return builders.PaginationContainerBuilder(e, true).
+	return builders.NewPaginatedContainer(e.User().ID, true).
 		AddContainers(containers...).
-		Start()
+		Start(e)
 }
