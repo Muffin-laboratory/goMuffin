@@ -51,10 +51,6 @@ func MakePaginationContainerModal(id string) string {
 	return fmt.Sprintf("%s/%s", PaginationContainerModal, id)
 }
 
-func MakePaginationContainerSetPage(id string) string {
-	return fmt.Sprintf("%s%s", PaginationContainerSetPage, id)
-}
-
 const (
 	ServiceAgree    = "/muffin/service/agree"
 	ServiceDisagree = "/muffin/service/disagree"
@@ -110,6 +106,8 @@ const (
 	UserSettingsChattingMode = "/muffin/user/settings/chatting_mode"
 	UserSettingsReplyUser    = "/muffin/user/settings/reply_user"
 	UserSettings12Hours      = "/muffin/user/settings/12hours"
+	UserSettingsPrompt       = "/muffin/user/settings/prompt"
+	UserSettingsPromptSet    = "/muffin/user/settings/prompt/set"
 	UserSettingsSubmit       = "/muffin/user/settings/submit"
 )
 
@@ -123,6 +121,10 @@ func MakeUserSettingsReplyUser(id string) string {
 
 func MakeUserSettings12Hours(id string) string {
 	return fmt.Sprintf("%s/%s", UserSettings12Hours, id)
+}
+
+func MakeUserSettingsPrompt(id string) string {
+	return fmt.Sprintf("%s/%s", UserSettingsPrompt, id)
 }
 
 func MakeUserSettingsSubmit(id string) string {

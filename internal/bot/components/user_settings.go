@@ -13,41 +13,63 @@ func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
 			middlewares.CheckUserSettingsMiddleware(),
-			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 		)
 
-		r.Component(utils.UserSettings+"/{type}/{id}", func(e *handler.ComponentEvent) error {
-			settingsType := e.Vars["type"]
-			id := e.Vars["id"]
-			settings := builders.GetUserSettings(id)
+		r.Route(utils.UserSettings, func(r handler.Router) {
+			r.Component("/chatting_mode/{id}", func(e *handler.ComponentEvent) error {
+				settings := builders.GetUserSettings(e.Vars["id"])
 
-			switch settingsType {
-			case "chatting_mode":
 				settings.ToggleChattingMode()
-			case "reply_user":
-				settings.ToggleReplyUser()
-			case "12hours":
-				settings.Toggle12Hours()
-			case "submit":
-				err := settings.Submit(e.Ctx)
-				if err != nil {
-					return err
-				}
-
-				_, err = e.UpdateInteractionResponse(
+				return e.UpdateMessage(
 					discord.NewMessageUpdateV2([]discord.LayoutComponent{
-						builders.MakeSuccessContainer("- 봇의 대화 설정을 성공적으로 바꾸었어요."),
+						settings.MakeContainer(),
 					}),
 				)
-				return err
-			}
+			})
 
-			_, err := e.UpdateInteractionResponse(
-				discord.NewMessageUpdateV2([]discord.LayoutComponent{
-					settings.MakeContainer(),
-				}),
-			)
-			return err
+			r.Component("/reply_user/{id}", func(e *handler.ComponentEvent) error {
+				settings := builders.GetUserSettings(e.Vars["id"])
+
+				settings.ToggleReplyUser()
+				return e.UpdateMessage(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						settings.MakeContainer(),
+					}),
+				)
+			})
+
+			r.Component("/12hours/{id}", func(e *handler.ComponentEvent) error {
+				settings := builders.GetUserSettings(e.Vars["id"])
+
+				settings.Toggle12Hours()
+				return e.UpdateMessage(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						settings.MakeContainer(),
+					}),
+				)
+			})
+
+			r.Component("/prompt/{id}", func(e *handler.ComponentEvent) error {
+				return builders.GetUserSettings(e.Vars["id"]).PromptModal(e)
+			})
+
+			r.Group(func(r handler.Router) {
+				r.Use(middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false))
+
+				r.Component("/submit/{id}", func(e *handler.ComponentEvent) error {
+					err := builders.GetUserSettings(e.Vars["id"]).Submit(e.Ctx)
+					if err != nil {
+						return err
+					}
+
+					_, err = e.UpdateInteractionResponse(
+						discord.NewMessageUpdateV2([]discord.LayoutComponent{
+							builders.MakeSuccessContainer("- 봇의 대화 설정을 성공적으로 바꾸었어요."),
+						}),
+					)
+					return err
+				})
+			})
 		})
 	})
 }

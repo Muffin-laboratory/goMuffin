@@ -8,6 +8,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
 type UserSettings struct {
@@ -16,6 +17,7 @@ type UserSettings struct {
 	chattingMode              repository.ChattingMode
 	replyUser                 bool
 	createNewChatAfter12Hours bool
+	prompt                    string
 }
 
 var userSettings = make(map[string]*UserSettings)
@@ -33,6 +35,7 @@ func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, err
 		chattingMode:              dbUser.ChattingMode,
 		replyUser:                 dbUser.ReplyUser,
 		createNewChatAfter12Hours: dbUser.CreateNewChatAfter12Hours,
+		prompt:                    dbUser.Prompt,
 	}
 
 	userSettings[id] = s
@@ -50,6 +53,7 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 			discord.NewTextDisplay("### 채팅 설정\n- 설정을 개인화 해주세요."),
 			discord.NewTextDisplay("- **모드**\n> 해당 봇이 답을 하는 방식이에요. (AI <-> 일반)"),
 			discord.NewTextDisplay("- **답장 멘션**\n> 해당 봇이 답할 때 답장 멘션 여부를 정해요."),
+			discord.NewTextDisplay("- **사용자 지정 프롬프트 설정**\n> 머핀 봇 전체에 적용되는 사용자 지정 프롬프트를 설정해요."),
 		).
 			WithAccessory(
 				discord.NewThumbnail(*s.user.AvatarURL()),
@@ -69,6 +73,10 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 				utils.GetStyleFromBool(s.createNewChatAfter12Hours),
 				fmt.Sprintf("12 시간 후 새로운 채팅: %s", utils.BoolToString(s.createNewChatAfter12Hours)),
 				utils.MakeUserSettings12Hours(s.ID), "", 0,
+			),
+			discord.NewPrimaryButton(
+				"사용자 지정 프롬프트 설정",
+				utils.MakeUserSettingsPrompt(s.ID),
 			),
 		),
 		discord.NewActionRow(
@@ -95,11 +103,38 @@ func (s *UserSettings) Toggle12Hours() {
 	s.createNewChatAfter12Hours = !s.createNewChatAfter12Hours
 }
 
+func (s *UserSettings) PromptModal(e *handler.ComponentEvent) error {
+	return e.Modal(
+		discord.NewModalCreate(
+			utils.MakeUserSettingsPrompt(s.ID),
+			"사용자 지정 프롬프트 설정",
+			[]discord.LayoutComponent{
+				discord.NewLabel(
+					"사용자 프롬프트",
+					discord.NewParagraphTextInput(utils.UserSettingsPromptSet).
+						WithPlaceholder("여기에 프롬프트를 입력...").
+						WithValue(s.prompt),
+				).
+					WithDescription(
+						"여기에 사용자 지정 프롬프트를 지정해주세요. " +
+							"단, 공란이면 머핀봇의 기본 프롬프트로 설정돼요.",
+					),
+			},
+		),
+	)
+}
+
+func (s *UserSettings) SetPrompt(prompt string) *UserSettings {
+	s.prompt = prompt
+	return s
+}
+
 func (s *UserSettings) Submit(ctx context.Context) error {
 	if _, err := repository.GetDatabase().Users.Update(ctx, int64(s.user.ID), &repository.UserUpdate{
 		ChattingMode:              &s.chattingMode,
 		ReplyUser:                 &s.replyUser,
 		CreateNewChatAfter12Hours: &s.createNewChatAfter12Hours,
+		Prompt:                    &s.prompt,
 	}); err != nil {
 		return err
 	}
