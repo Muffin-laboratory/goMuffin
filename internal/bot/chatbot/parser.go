@@ -10,6 +10,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 	"google.golang.org/genai"
 )
 
@@ -25,7 +26,7 @@ func ParseResult(content string, m any) string {
 		bot, _ = m.Client().Caches.SelfUser()
 		user = m.Message.Author
 		joinedAt = m.Message.Member.JoinedAt
-	case *builders.CommandCreate:
+	case *handler.CommandEvent:
 		user = m.User()
 
 		joinedAt = m.Member().JoinedAt

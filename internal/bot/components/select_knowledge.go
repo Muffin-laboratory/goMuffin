@@ -31,11 +31,12 @@ func init() {
 			}
 
 			if len(data) == 0 {
-				return builders.NewMessageSender(e).
-					AddComponents(builders.MakeErrorContainer("해당 결과를 찾을 수 없어요.")).
-					SetComponentsV2(true).
-					SetEphemeral(true).
-					Send()
+				_, err := e.UpdateInteractionResponse(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						builders.MakeErrorContainer("해당 결과를 찾을 수 없어요."),
+					}),
+				)
+				return err
 			}
 
 			for _, data := range data {
