@@ -53,12 +53,12 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 			discord.NewTextDisplay("### 채팅 설정\n- 설정을 개인화 해주세요."),
 			discord.NewTextDisplay("- **모드**\n> 해당 봇이 답을 하는 방식이에요. (AI <-> 일반)"),
 			discord.NewTextDisplay("- **답장 멘션**\n> 해당 봇이 답할 때 답장 멘션 여부를 정해요."),
-			discord.NewTextDisplay("- **사용자 지정 프롬프트 설정**\n> 머핀 봇 전체에 적용되는 사용자 지정 프롬프트를 설정해요."),
 		).
 			WithAccessory(
 				discord.NewThumbnail(*s.user.AvatarURL()),
 			),
 		discord.NewTextDisplay("- **12 시간 후 새로운 채팅**\n> 해당 봇과 대화하고 12시간 뒤에 새로운 대화를 시작할지 여부를 정해요."),
+		discord.NewTextDisplay("- **사용자 지정 프롬프트 설정**\n> 머핀 봇 전체에 적용되는 사용자 지정 프롬프트를 설정해요."),
 		discord.NewActionRow(
 			discord.NewPrimaryButton(
 				fmt.Sprintf("모드: %s", repository.ModeString(s.chattingMode)),
