@@ -1,22 +1,26 @@
 package knowledge
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func Learn(ctx context.Context, i *builders.CommandCreate, igCommands []string) error {
-	command := i.SlashCommandInteractionData().String("단어")
-	result := i.SlashCommandInteractionData().String("대답")
+func Learn(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	command := data.String("단어")
+	result := data.String("대답")
 
 	ignores := []string{"미간", "Migan", "migan", "간미"}
-	ignores = append(ignores, igCommands...)
+	for _, command := range loader.GetDiscommand().OldCommands {
+		ignores = append(ignores, command.Name)
+	}
 
 	disallows := []string{
 		"@everyone",
@@ -26,31 +30,34 @@ func Learn(ctx context.Context, i *builders.CommandCreate, igCommands []string) 
 
 	for _, ig := range ignores {
 		if strings.Contains(command, ig) {
-			return builders.NewMessageSender(i).
-				AddComponents(builders.MakeErrorContainer("해당 단어는 배우기 껄끄럽네요.")).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
+			_, err := e.UpdateInteractionResponse(
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeErrorContainer("해당 단어는 배우기 껄끄럽네요."),
+				}),
+			)
+			return err
 		}
 	}
 
 	for _, di := range disallows {
 		if strings.Contains(result, di) {
-			return builders.NewMessageSender(i).
-				AddComponents(builders.MakeErrorContainer("해당 단어의 대답으로 하기 좀 그렇네요.")).
-				SetComponentsV2(true).
-				SetReply(true).
-				Send()
+			_, err := e.UpdateInteractionResponse(
+				discord.NewMessageUpdateV2([]discord.LayoutComponent{
+					builders.MakeErrorContainer("해당 단어의 대답으로 하기 좀 그렇네요."),
+				}),
+			)
+			return err
 		}
 	}
 
-	if _, err := repository.GetDatabase().Knowledge.Create(ctx, int64(i.User().ID), command, result); err != nil {
+	if _, err := repository.GetDatabase().Knowledge.Create(e.Ctx, int64(e.User().ID), command, result); err != nil {
 		return err
 	}
 
-	return builders.NewMessageSender(i).
-		AddComponents(builders.MakeSuccessContainer("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL))).
-		SetComponentsV2(true).
-		SetReply(true).
-		Send()
+	_, err := e.UpdateInteractionResponse(
+		discord.NewMessageUpdateV2([]discord.LayoutComponent{
+			builders.MakeSuccessContainer("%s 배웠어요.", hangul.GetJosa(command, hangul.EUL_REUL)),
+		}),
+	)
+	return err
 }

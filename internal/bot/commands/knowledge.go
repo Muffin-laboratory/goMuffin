@@ -1,41 +1,38 @@
 package commands
 
 import (
-	"context"
-
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/knowledge"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 )
 
-const (
-	knowledgeLearn  = "추가"
-	knowledgeList   = "목록"
-	knowledgeDelete = "삭제"
-)
+func init() {
+	var commandMaxLength = 100
 
-var knowledgeMaxCommandLength = 100
+	const (
+		name              = "지식"
+		learnCommandName  = "추가"
+		listCommandName   = "목록"
+		deleteCommandName = "삭제"
+	)
 
-var KnowledgeCommand = &loader.Command{
-	Deferred:         true,
-	IsDeferEphemeral: true,
-	SlashCommandCreate: &discord.SlashCommandCreate{
-		Name:        "지식",
+	loader.GetDiscommand().RegisterCommand(discord.SlashCommandCreate{
+		Name:        name,
 		Description: "이 봇이 사용자와 대화할 때 알면 좋은 지식을 관리하는 명령어에요.",
 		Options: []discord.ApplicationCommandOption{
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        knowledgeLearn,
+				Name:        learnCommandName,
 				Description: "단어를 가르치는 명령어에요.",
 				Options: []discord.ApplicationCommandOption{
 					discord.ApplicationCommandOptionString{
 						Name:        "단어",
 						Description: "등록할 단어",
 						Required:    true,
-						MaxLength:   &knowledgeMaxCommandLength,
+						MaxLength:   &commandMaxLength,
 					},
 					discord.ApplicationCommandOptionString{
 						Name:        "대답",
@@ -45,7 +42,7 @@ var KnowledgeCommand = &loader.Command{
 				},
 			},
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        knowledgeList,
+				Name:        listCommandName,
 				Description: "당신이 가르쳐준 지식을 나열해요.",
 				Options: []discord.ApplicationCommandOption{
 					discord.ApplicationCommandOptionString{
@@ -57,7 +54,7 @@ var KnowledgeCommand = &loader.Command{
 				},
 			},
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        chatCommandDelete,
+				Name:        deleteCommandName,
 				Description: "당신이 가르쳐준 단어를 삭제해요.",
 				Options: []discord.ApplicationCommandOption{
 					discord.ApplicationCommandOptionString{
@@ -69,58 +66,49 @@ var KnowledgeCommand = &loader.Command{
 				},
 			},
 		},
-	},
-	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
-	Run: func(ctx context.Context, inter *builders.CommandCreate) error {
-		switch *inter.SlashCommandInteractionData().SubCommandName {
-		case knowledgeLearn:
-			igCommands := []string{}
+	})
 
-			for _, command := range loader.GetDiscommand().OldCommands {
-				igCommands = append(igCommands, command.Name)
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
+		r.Use(
+			middlewares.CheckUserAndBlockedMiddleware(),
+			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
+		)
+
+		r.Autocomplete("/"+name, func(e *handler.AutocompleteEvent) error {
+			var choices []discord.AutocompleteChoice
+			var focusedValue string
+
+			for _, opt := range e.Data.Options {
+				if opt.Focused {
+					focusedValue = opt.String()
+					break
+				}
 			}
 
-			return subcommands.Learn(ctx, inter, igCommands)
-		case knowledgeList:
-			return subcommands.List(ctx, inter)
-		case knowledgeDelete:
-			return subcommands.Delete(ctx, inter)
-		default:
-			return nil
-		}
-	},
-	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
-		var choices []discord.AutocompleteChoice
-		var focusedValue string
-
-		for _, opt := range inter.Data.Options {
-			if opt.Focused {
-				focusedValue = opt.String()
-				break
+			filter := query.KnowledgeQueryBuilder().SetUserID(int64(e.User().ID)).SetCommandByRegex(focusedValue)
+			data, err := repository.GetDatabase().Knowledge.Find(e.Ctx, filter)
+			if err != nil {
+				return err
 			}
-		}
 
-		filter := query.KnowledgeQueryBuilder().SetUserID(int64(inter.User().ID)).SetCommandByRegex(focusedValue)
-		data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
-		if err != nil {
-			return err
-		}
+			if len(data) > 25 {
+				data = data[:25]
+			}
 
-		if len(data) > 25 {
-			data = data[:25]
-		}
+			for _, data := range data {
+				choices = append(choices, discord.AutocompleteChoiceString{
+					Name:  data.Command,
+					Value: data.Command,
+				})
+			}
 
-		for _, data := range data {
-			choices = append(choices, discord.AutocompleteChoiceString{
-				Name:  data.Command,
-				Value: data.Command,
-			})
-		}
+			return e.AutocompleteResult(choices)
+		})
 
-		return inter.AutocompleteResult(choices)
-	},
-}
-
-func init() {
-	loader.GetDiscommand().LoadCommand(KnowledgeCommand)
+		r.Route("/"+name, func(r handler.Router) {
+			r.SlashCommand("/"+learnCommandName, subcommands.Learn)
+			r.SlashCommand("/"+listCommandName, subcommands.List)
+			r.SlashCommand("/"+deleteCommandName, subcommands.Delete)
+		})
+	})
 }

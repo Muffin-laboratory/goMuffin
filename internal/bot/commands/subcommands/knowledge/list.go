@@ -1,7 +1,6 @@
 package knowledge
 
 import (
-	"context"
 	"slices"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
@@ -9,40 +8,41 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func List(ctx context.Context, i *builders.CommandCreate) error {
+func List(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	var command string
 	var items []string
 	var sections []discord.SectionComponent
 	var containers []discord.ContainerComponent
 
-	if value, ok := i.SlashCommandInteractionData().OptString("단어"); ok {
+	if value, ok := data.OptString("단어"); ok {
 		command = value
 	}
 
-	filter := query.KnowledgeQueryBuilder().SetUserID(int64(i.User().ID))
-
+	filter := query.KnowledgeQueryBuilder().SetUserID(int64(e.User().ID))
 	if command != "" {
 		filter.SetCommandByRegex(command)
 	} else {
 		command = "전체"
 	}
 
-	data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
+	knowledge, err := repository.GetDatabase().Knowledge.Find(e.Ctx, filter)
 	if err != nil {
 		return err
 	}
 
-	if len(data) == 0 {
-		return builders.NewMessageSender(i).
-			AddComponents(builders.MakeErrorContainer("해당 결과를 찾을 수 없어요.")).
-			SetComponentsV2(true).
-			SetEphemeral(true).
-			Send()
+	if len(knowledge) == 0 {
+		_, err := e.UpdateInteractionResponse(
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				builders.MakeErrorContainer("해당 결과를 찾을 수 없어요."),
+			}),
+		)
+		return err
 	}
 
-	for _, data := range data {
+	for _, data := range knowledge {
 		if slices.Contains(items, data.Command) {
 			continue
 		}
@@ -62,13 +62,12 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 	}
 
 	title := discord.NewSection(
-		discord.NewTextDisplayf("### %s님에 대한 지식", *i.User().GlobalName),
+		discord.NewTextDisplayf("### %s님에 대한 지식", *e.User().GlobalName),
 		discord.NewTextDisplayf("- 총 `%d`개", len(items)),
 		discord.NewTextDisplayf("> %s에 대한 검색 결과", command),
 	).
-		WithAccessory(discord.NewThumbnail(*i.User().AvatarURL()))
+		WithAccessory(discord.NewThumbnail(*e.User().AvatarURL()))
 	container := discord.NewContainer(title, discord.NewSmallSeparator())
-
 	for i, section := range sections {
 		container = container.AddComponents(section, discord.NewSmallSeparator())
 
@@ -83,7 +82,7 @@ func List(ctx context.Context, i *builders.CommandCreate) error {
 		containers = append(containers, container)
 	}
 
-	return builders.PaginationContainerBuilder(i, true).
+	return builders.PaginationContainerBuilder(e, true).
 		AddContainers(containers...).
 		Start()
 }

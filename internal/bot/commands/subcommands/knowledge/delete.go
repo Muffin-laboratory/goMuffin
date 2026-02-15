@@ -1,42 +1,42 @@
 package knowledge
 
 import (
-	"context"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func Delete(ctx context.Context, i *builders.CommandCreate) error {
+func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	var sections []discord.SectionComponent
 	var containers []discord.ContainerComponent
 
-	command := i.SlashCommandInteractionData().String("단어")
+	command := data.String("단어")
 
-	filter := query.KnowledgeQueryBuilder().SetUserID(int64(i.User().ID)).SetCommand(command)
-	data, err := repository.GetDatabase().Knowledge.Find(ctx, filter)
+	filter := query.KnowledgeQueryBuilder().SetUserID(int64(e.User().ID)).SetCommand(command)
+	knowledge, err := repository.GetDatabase().Knowledge.Find(e.Ctx, filter)
 	if err != nil {
 		return err
 	}
 
-	if len(data) == 0 {
-		return builders.NewMessageSender(i).
-			AddComponents(builders.MakeErrorContainer("해당 결과를 찾을 수 없어요.")).
-			SetComponentsV2(true).
-			SetEphemeral(true).
-			Send()
+	if len(knowledge) == 0 {
+		_, err := e.UpdateInteractionResponse(
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				builders.MakeErrorContainer("해당 결과를 찾을 수 없어요."),
+			}),
+		)
+		return err
 	}
 
-	for _, data := range data {
+	for _, data := range knowledge {
 		sections = append(sections,
 			discord.NewSection(
 				discord.NewTextDisplayf("**%s**\n", data.Result),
 			).
 				WithAccessory(
-					discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), i.User().ID.String())),
+					discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), e.User().ID.String())),
 				),
 		)
 	}
@@ -57,7 +57,7 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 		containers = append(containers, container)
 	}
 
-	return builders.PaginationContainerBuilder(i, true).
+	return builders.PaginationContainerBuilder(e, true).
 		AddContainers(containers...).
 		Start()
 }
