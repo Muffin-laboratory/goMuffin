@@ -6,7 +6,6 @@ import (
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/disgoorg/disgo/discord"
@@ -18,10 +17,6 @@ func Learn(data discord.SlashCommandInteractionData, e *handler.CommandEvent) er
 	result := data.String("대답")
 
 	ignores := []string{"미간", "Migan", "migan", "간미"}
-	for _, command := range loader.GetDiscommand().OldCommands {
-		ignores = append(ignores, command.Name)
-	}
-
 	disallows := []string{
 		"@everyone",
 		"@here",

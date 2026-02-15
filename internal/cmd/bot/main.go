@@ -32,10 +32,6 @@ func main() {
 	}()
 
 	globalCmds := loader.GetDiscommand().Commands()
-	for _, cmd := range loader.GetDiscommand().OldCommands {
-		globalCmds = append(globalCmds, cmd.SlashCommandCreate)
-	}
-
 	_, err = session.Rest.SetGlobalCommands(session.ApplicationID, globalCmds)
 	if err != nil {
 		slog.Error("error in set global commands.", "error", err)

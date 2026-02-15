@@ -32,8 +32,6 @@ func init() {
 				gateway.IntentMessageContent,
 			),
 		),
-		bot.WithEventListenerFunc(handler.OnApplicationCommandInteractionCreate),
-		bot.WithEventListenerFunc(handler.OnAutocompleteInteractionCreate),
 		bot.WithEventListenerFunc(handler.OnMessageCreate),
 		bot.WithLogger(logger),
 		bot.WithEventListeners(loader.GetDiscommand().Router()),
