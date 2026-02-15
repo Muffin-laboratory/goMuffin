@@ -1,40 +1,40 @@
 package chat
 
 import (
-	"context"
 	"log/slog"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/snowflake/v2"
 )
 
-func Chat(ctx context.Context, i *builders.CommandCreate) error {
+func Chat(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
 	var attachment discord.Attachment
 
-	commandData := i.SlashCommandInteractionData()
-
-	if opt, ok := commandData.OptAttachment("첨부파일"); ok {
+	if opt, ok := data.OptAttachment("첨부파일"); ok {
 		attachment = opt
 	}
 
-	content, err := chatbot.GetChatBot().GetResponse(ctx, i.User(), commandData.String("내용"), attachment)
+	content, err := chatbot.GetChatBot().GetResponse(e.Ctx, e.User(), data.String("내용"), attachment)
 	if err != nil {
-		slog.Error("error in responding chat.", "user_id", i.User().ID, "error", err)
-		builders.NewMessageSender(i).
-			SetContent(content).
-			Send()
+		slog.Error("error in responding chat.", "user_id", e.User().ID, "error", err)
+		e.UpdateInteractionResponse(
+			discord.NewMessageUpdate().
+				WithContent(content),
+		)
 		return nil
 	}
 
-	result := chatbot.ParseResult(content, i)
-	return builders.NewMessageSender(i).
-		SetContent(result).
-		SetAllowedMentions(discord.AllowedMentions{
-			Parse: make([]discord.AllowedMentionType, 0),
-			Users: make([]snowflake.ID, 0),
-			Roles: make([]snowflake.ID, 0),
-		}).
-		Send()
+	result := chatbot.ParseResult(content, e)
+	_, err = e.UpdateInteractionResponse(
+		discord.NewMessageUpdate().
+			WithContent(result).
+			WithAllowedMentions(&discord.AllowedMentions{
+				Parse: make([]discord.AllowedMentionType, 0),
+				Users: make([]snowflake.ID, 0),
+				Roles: make([]snowflake.ID, 0),
+			}),
+	)
+	return err
 }

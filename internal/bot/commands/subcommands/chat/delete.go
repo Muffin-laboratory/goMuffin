@@ -1,57 +1,59 @@
 package chat
 
 import (
-	"context"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func Delete(ctx context.Context, i *builders.CommandCreate) error {
-	name := i.SlashCommandInteractionData().String("이름")
+func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) error {
+	name := data.String("이름")
 
-	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(i.User().ID))
+	dbUser, err := repository.GetDatabase().Users.FindByID(e.Ctx, int64(e.User().ID))
 	if err != nil {
 		return err
 	}
 
 	if dbUser.ChattingMode == repository.ChattingMuffinMode {
-		return chatSendErrorMessage(i)
+		return chatSendErrorMessage(e)
 	}
 
 	filter := query.ChatQueryBuilder().SetUserID(dbUser.ID).SetName(name)
-	data, err := repository.GetDatabase().Chats.Find(ctx, filter)
+	chats, err := repository.GetDatabase().Chats.Find(e.Ctx, filter)
 	if err != nil {
 		return err
 	}
 
-	if len(data) == 0 {
-		return builders.NewMessageSender(i).
-			AddComponents(builders.MakeErrorContainer("해당하는 채팅을 찾을 수 없어요.")).
-			SetComponentsV2(true).
-			SetReply(true).
-			Send()
+	if len(chats) == 0 {
+		_, err := e.UpdateInteractionResponse(
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				builders.MakeErrorContainer("해당하는 채팅을 찾을 수 없어요."),
+			}),
+		)
+		return err
 	}
 
-	if len(data) > 1 {
+	description := "- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**"
+
+	if len(chats) > 1 {
 		var sections []discord.SectionComponent
 		var containers []discord.ContainerComponent
 
-		for _, data := range data {
+		for _, data := range chats {
 			sections = append(sections,
 				discord.NewSection(
 					discord.NewTextDisplayf("- **%s**\n", data.Name),
 				).
 					WithAccessory(
-						discord.NewDangerButton("삭제", utils.MakeDeleteChat(data.ID.Hex(), i.User().ID.String())),
+						discord.NewDangerButton("삭제", utils.MakeDeleteChat(data.ID.Hex(), e.User().ID.String())),
 					),
 			)
 		}
 
-		textDisplay := discord.NewTextDisplayf("### %s님의 채팅목록\n- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**", *i.User().GlobalName)
+		textDisplay := discord.NewTextDisplayf("### %s님의 채팅목록\n%s", *e.User().GlobalName, description)
 		container := discord.NewContainer(textDisplay)
 		for i, section := range sections {
 			container = container.AddComponents(section, discord.NewSmallSeparator())
@@ -67,24 +69,22 @@ func Delete(ctx context.Context, i *builders.CommandCreate) error {
 			containers = append(containers, container)
 		}
 
-		return builders.PaginationContainerBuilder(i, true).
+		return builders.PaginationContainerBuilder(e, true).
 			AddContainers(containers...).
 			Start()
 	}
 
-	return builders.NewMessageSender(i).
-		AddComponents(
+	_, err = e.UpdateInteractionResponse(
+		discord.NewMessageUpdateV2([]discord.LayoutComponent{
 			discord.NewContainer(
 				discord.NewTextDisplayf("### 채팅 %s 삭제", name),
-				discord.NewTextDisplay("- **주의: 이 채팅방을 삭제하면 이 채팅방의 내역을 다시는 못 써요.**"),
+				discord.NewTextDisplay(description),
 				discord.NewActionRow(
-					discord.NewDangerButton("삭제", utils.MakeDeleteChat(data[0].ID.Hex(), i.User().ID.String())),
-					discord.NewPrimaryButton("취소", utils.MakeDeleteChatCancel(i.User().ID.String())),
+					discord.NewDangerButton("삭제", utils.MakeDeleteChat(chats[0].ID.Hex(), e.User().ID.String())),
+					discord.NewPrimaryButton("취소", utils.MakeDeleteChatCancel(e.User().ID.String())),
 				),
 			),
-		).
-		SetComponentsV2(true).
-		SetReply(true).
-		Send()
-
+		}),
+	)
+	return err
 }

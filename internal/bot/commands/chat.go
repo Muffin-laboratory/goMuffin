@@ -1,40 +1,33 @@
 package commands
 
 import (
-	"context"
-
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/chat"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/disgoorg/disgo/discord"
-	"github.com/disgoorg/disgo/events"
+	"github.com/disgoorg/disgo/handler"
 )
 
-var (
-	chatCommandChatting = "하기"
-	chatCommandList     = "목록"
-	chatCommandCreate   = "생성"
-	chatCommandDelete   = "삭제"
-	chatCommandSettings = "설정"
-)
+func init() {
+	var chatNameMaxLength = 25
 
-var chatNameMaxLength = 25
+	const (
+		name              = "대화"
+		chatCommandName   = "하기"
+		listCommandName   = "목록"
+		createCommandName = "생성"
+		deleteCommandName = "삭제"
+		setCommandName    = "설정"
+	)
 
-var ChatCommand = &loader.Command{
-	Deferred:         true,
-	IsDeferEphemeral: true,
-	SlashCommandCreate: &discord.SlashCommandCreate{
-		Name:        "대화",
+	loader.GetDiscommand().RegisterCommand(discord.SlashCommandCreate{
+		Name:        name,
 		Description: "이 봇이랑 대화해요.",
 		Options: []discord.ApplicationCommandOption{
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        chatCommandList,
-				Description: "채팅 목록을 나열해요.",
-			},
-			discord.ApplicationCommandOptionSubCommand{
-				Name:        chatCommandCreate,
+				Name:        createCommandName,
 				Description: "새로운 채팅을 생성해요.",
 				Options: []discord.ApplicationCommandOption{
 					discord.ApplicationCommandOptionString{
@@ -46,7 +39,11 @@ var ChatCommand = &loader.Command{
 				},
 			},
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        chatCommandChatting,
+				Name:        listCommandName,
+				Description: "채팅 목록을 나열해요.",
+			},
+			discord.ApplicationCommandOptionSubCommand{
+				Name:        chatCommandName,
 				Description: "이 봇이랑 대화해요.",
 				Options: []discord.ApplicationCommandOption{
 					discord.ApplicationCommandOptionString{
@@ -62,7 +59,7 @@ var ChatCommand = &loader.Command{
 				},
 			},
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        chatCommandDelete,
+				Name:        deleteCommandName,
 				Description: "채팅을 삭제해요.",
 				Options: []discord.ApplicationCommandOption{
 					discord.ApplicationCommandOptionString{
@@ -75,55 +72,49 @@ var ChatCommand = &loader.Command{
 				},
 			},
 			discord.ApplicationCommandOptionSubCommand{
-				Name:        chatCommandSettings,
+				Name:        setCommandName,
 				Description: "봇의 설정을 개인화 해요.",
 			},
 		},
-	},
-	Flags: loader.CommandFlagsIsRegistered | loader.CommandFlagsIsBlocked,
-	Run: func(ctx context.Context, inter *builders.CommandCreate) error {
+	})
 
-		switch *inter.SlashCommandInteractionData().SubCommandName {
-		case chatCommandChatting:
-			return subcommands.Chat(ctx, inter)
-		case chatCommandCreate:
-			return subcommands.Create(ctx, inter)
-		case chatCommandList:
-			return subcommands.List(ctx, inter)
-		case chatCommandDelete:
-			return subcommands.Delete(ctx, inter)
-		case chatCommandSettings:
-			return subcommands.Settings(ctx, inter)
-		default:
-			return nil
-		}
-	},
-	Autocomplete: func(ctx context.Context, inter *events.AutocompleteInteractionCreate) error {
-		var choices []discord.AutocompleteChoice
+	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
+		r.Use(
+			middlewares.CheckUserAndBlockedMiddleware(),
+			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
+		)
 
-		focusedValue := inter.Data.Focused().String()
+		r.Autocomplete("/"+name, func(e *handler.AutocompleteEvent) error {
+			var choices []discord.AutocompleteChoice
 
-		filter := query.ChatQueryBuilder().SetNameByRegex(focusedValue)
-		data, err := repository.GetDatabase().Chats.Find(ctx, filter)
-		if err != nil {
-			return err
-		}
+			focusedValue := e.Data.Focused().String()
 
-		if len(data) > 25 {
-			data = data[:25]
-		}
+			filter := query.ChatQueryBuilder().SetNameByRegex(focusedValue)
+			data, err := repository.GetDatabase().Chats.Find(e.Ctx, filter)
+			if err != nil {
+				return err
+			}
 
-		for _, data := range data {
-			choices = append(choices, discord.AutocompleteChoiceString{
-				Name:  data.Name,
-				Value: data.Name,
-			})
-		}
+			if len(data) > 25 {
+				data = data[:25]
+			}
 
-		return inter.AutocompleteResult(choices)
-	},
-}
+			for _, data := range data {
+				choices = append(choices, discord.AutocompleteChoiceString{
+					Name:  data.Name,
+					Value: data.Name,
+				})
+			}
 
-func init() {
-	loader.GetDiscommand().LoadCommand(ChatCommand)
+			return e.AutocompleteResult(choices)
+		})
+
+		r.Route("/"+name, func(r handler.Router) {
+			r.SlashCommand("/"+createCommandName, subcommands.Create)
+			r.Command("/"+listCommandName, subcommands.List)
+			r.SlashCommand("/"+chatCommandName, subcommands.Chat)
+			r.SlashCommand("/"+deleteCommandName, subcommands.Delete)
+			r.Command("/"+setCommandName, subcommands.Settings)
+		})
+	})
 }

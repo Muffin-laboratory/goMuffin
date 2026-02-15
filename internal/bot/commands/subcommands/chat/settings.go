@@ -1,20 +1,21 @@
 package chat
 
 import (
-	"context"
-
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
 
-func Settings(ctx context.Context, inter *builders.CommandCreate) error {
-	settings, err := builders.NewUserSettings(ctx, inter.User())
+func Settings(e *handler.CommandEvent) error {
+	settings, err := builders.NewUserSettings(e.Ctx, e.User())
 	if err != nil {
 		return err
 	}
 
-	return builders.NewMessageSender(inter).
-		AddComponents(settings.MakeContainer()).
-		SetComponentsV2(true).
-		SetEphemeral(true).
-		Send()
+	_, err = e.UpdateInteractionResponse(
+		discord.NewMessageUpdateV2([]discord.LayoutComponent{
+			settings.MakeContainer(),
+		}),
+	)
+	return err
 }
