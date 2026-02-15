@@ -150,6 +150,10 @@ func (c *MemoryCollection) GetLastMemoryTimestamp(ctx context.Context, chatID bs
 		return 0, err
 	}
 
+	if len(memory) == 0 {
+		return 0, nil
+	}
+
 	return memory[len(memory)-1].CreatedAt.Unix(), nil
 }
 
