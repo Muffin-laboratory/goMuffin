@@ -14,6 +14,7 @@ import (
 type Chatbot struct {
 	Gemini       *genai.Client
 	systemPrompt string
+	corePrompt   string
 	s            *bot.Client
 }
 
@@ -33,28 +34,19 @@ func Make(s *bot.Client) error {
 		s:      s,
 	}
 
-	prompt, err := loadPrompt()
+	system, core, err := loadPrompt()
 	if err != nil {
 		return err
 	}
 
-	instance.systemPrompt = prompt
+	instance.systemPrompt = system
+	instance.corePrompt = core
 	slog.Info("chatbot is created.")
 	return nil
 }
 
 func GetChatBot() *Chatbot {
 	return instance
-}
-
-func (c *Chatbot) ReloadPrompt() error {
-	prompt, err := loadPrompt()
-	if err != nil {
-		return err
-	}
-
-	c.systemPrompt = prompt
-	return nil
 }
 
 func (c *Chatbot) GetPrompt() string {

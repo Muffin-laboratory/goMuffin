@@ -110,7 +110,7 @@ func (s *UserSettings) PromptModal(e *handler.ComponentEvent) error {
 			"사용자 지정 프롬프트 설정",
 			[]discord.LayoutComponent{
 				discord.NewLabel(
-					"사용자 프롬프트",
+					"사용자 지정 프롬프트",
 					discord.NewParagraphTextInput(utils.UserSettingsPromptSet).
 						WithPlaceholder("여기에 프롬프트를 입력...").
 						WithValue(s.prompt),

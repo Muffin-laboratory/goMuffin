@@ -130,5 +130,6 @@ export/
 data/
 
 *prompt.txt
+!core_prompt.txt
 
 __debug*

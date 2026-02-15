@@ -78,10 +78,16 @@ func MakeDeregisterDisagree(userID string) string {
 }
 
 const (
-	SelectChat       = "/muffin/chat/select"
-	DeleteChat       = "/muffin/chat/delete"
-	DeleteChatCancel = "/muffin/chat/delete/cancel"
+	CreateChat          = "/muffin/chat/create"
+	CreateChatSetPrompt = "/muffin/chat/create/set/prompt"
+	SelectChat          = "/muffin/chat/select"
+	DeleteChat          = "/muffin/chat/delete"
+	DeleteChatCancel    = "/muffin/chat/delete/cancel"
 )
+
+func MakeCreateChat(name string) string {
+	return fmt.Sprintf("%s/%s", CreateChat, name)
+}
 
 func MakeSelectChat(id, userID string) string {
 	return fmt.Sprintf("%s/%s/%s", SelectChat, id, userID)

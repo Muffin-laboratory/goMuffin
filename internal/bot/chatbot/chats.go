@@ -25,7 +25,17 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discord.User, chatID bson.O
 		return nil, err
 	}
 
-	prompt, err := makePrompt(ctx, c.systemPrompt, user)
+	systemPrompt := c.systemPrompt
+	dbChat, err := repository.GetDatabase().Chats.FindByID(ctx, chatID)
+	if err != nil {
+		return nil, err
+	}
+
+	if dbChat.Prompt != "" {
+		systemPrompt = dbChat.Prompt
+	}
+
+	prompt, err := makePrompt(ctx, systemPrompt, c.corePrompt, user)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +45,7 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discord.User, chatID bson.O
 		content = append(content, memory.ToContents()...)
 	}
 
-	chat, err := c.Gemini.Chats.Create(context.TODO(), configs.GetConfig().Chatbot.Gemini.Model, &genai.GenerateContentConfig{
+	chat, err := c.Gemini.Chats.Create(ctx, configs.GetConfig().Chatbot.Gemini.Model, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
 		Tools: []*genai.Tool{
 			{

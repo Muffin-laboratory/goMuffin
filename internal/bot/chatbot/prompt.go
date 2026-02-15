@@ -11,23 +11,28 @@ import (
 	"github.com/disgoorg/disgo/discord"
 )
 
-func loadPrompt() (string, error) {
-	bin, err := os.ReadFile(configs.GetConfig().Chatbot.Gemini.PromptPath)
+func loadPrompt() (string, string, error) {
+	defaultPrompt, err := os.ReadFile(configs.GetConfig().Chatbot.Gemini.PromptPath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return string(bin), nil
+	corePrompt, err := os.ReadFile("core_prompt.txt")
+	if err != nil {
+		return "", "", err
+	}
+
+	return string(defaultPrompt), string(corePrompt), nil
 }
 
-func makePrompt(ctx context.Context, systemPrompt string, user *discord.User) (string, error) {
+func makePrompt(ctx context.Context, systemPrompt, corePrompt string, user *discord.User) (string, error) {
 	var userPrompt string
 
 	knowledgePrompt := "## Knowledge of the user\n"
 
 	if user.ID == configs.GetConfig().Bot.OwnerID {
 		userPrompt += fmt.Sprintf(
-			"---\n## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is your developer.",
+			"\n---\n## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is your developer.",
 			user.ID.String(),
 			*user.GlobalName,
 		)
@@ -45,12 +50,12 @@ func makePrompt(ctx context.Context, systemPrompt string, user *discord.User) (s
 	}
 
 	if len(knowledge) == 0 {
-		knowledgePrompt += "* **Knowledge of the user(the user is not Muffin.) is None.**"
+		knowledgePrompt += "* **Knowledge of the user(The user is not You.) is None.**"
 	}
 
 	for _, knowledge := range knowledge {
 		knowledgePrompt += fmt.Sprintf("* **%s**: %s\n", knowledge.Command, knowledge.Result)
 	}
 
-	return systemPrompt + userPrompt + knowledgePrompt, nil
+	return systemPrompt + userPrompt + knowledgePrompt + corePrompt, nil
 }

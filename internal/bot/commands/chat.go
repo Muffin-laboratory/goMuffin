@@ -8,6 +8,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
+	"github.com/disgoorg/disgo/handler/middleware"
 )
 
 func init() {
@@ -34,6 +35,11 @@ func init() {
 						Name:        "이름",
 						Description: "채팅방의 이름 (25자 이내)",
 						MaxLength:   &chatNameMaxLength,
+						Required:    false,
+					},
+					discord.ApplicationCommandOptionBool{
+						Name:        "프롬프트_지정",
+						Description: "사용자가 원하는 프롬프트 (모달)",
 						Required:    false,
 					},
 				},
@@ -81,7 +87,7 @@ func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
 			middlewares.CheckUserAndBlockedMiddleware(),
-			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
+			middlewares.TimeoutMiddleware(loader.Timeout()),
 		)
 
 		r.Autocomplete("/"+name, func(e *handler.AutocompleteEvent) error {
@@ -110,11 +116,18 @@ func init() {
 		})
 
 		r.Route("/"+name, func(r handler.Router) {
-			r.SlashCommand("/"+createCommandName, subcommands.Create)
-			r.Command("/"+listCommandName, subcommands.List)
-			r.SlashCommand("/"+chatCommandName, subcommands.Chat)
-			r.SlashCommand("/"+deleteCommandName, subcommands.Delete)
-			r.Command("/"+setCommandName, subcommands.Settings)
+			r.Group(func(r handler.Router) {
+				r.SlashCommand("/"+createCommandName, subcommands.Create)
+			})
+
+			r.Group(func(r handler.Router) {
+				r.Use(middleware.Defer(discord.InteractionTypeApplicationCommand, false, true))
+
+				r.Command("/"+listCommandName, subcommands.List)
+				r.SlashCommand("/"+chatCommandName, subcommands.Chat)
+				r.SlashCommand("/"+deleteCommandName, subcommands.Delete)
+				r.Command("/"+setCommandName, subcommands.Settings)
+			})
 		})
 	})
 }

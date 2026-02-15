@@ -15,6 +15,7 @@ type Chat struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Name      string        `bson:"name,omitempty"`
 	UserID    int64         `bson:"user_id,omitempty"`
+	Prompt    string        `bson:"prompt"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }
 
@@ -45,8 +46,8 @@ func (c *ChatCollection) createCache(chat Chat) {
 	createIndexCache(c.indexes, chat.ID, index)
 }
 
-func (c *ChatCollection) Create(ctx context.Context, userID int64, name string) (*Chat, error) {
-	data := Chat{UserID: userID, Name: name, CreatedAt: time.Now()}
+func (c *ChatCollection) Create(ctx context.Context, userID int64, prompt, name string) (*Chat, error) {
+	data := Chat{UserID: userID, Name: name, Prompt: prompt, CreatedAt: time.Now()}
 	result, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
