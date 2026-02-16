@@ -15,10 +15,10 @@ import (
 
 // PaginatedContainer is container with page
 type PaginatedContainer struct {
-	Containers []discord.ContainerComponent
-	Current    int
-	Total      int
-	ID         string
+	containers []discord.ContainerComponent
+	current    int
+	total      int
+	id         string
 	timer      *time.Timer
 	deferred   bool
 }
@@ -43,8 +43,8 @@ const endDuration = 10 * time.Minute
 func NewPaginatedContainer(userID snowflake.ID, deferred bool) *PaginatedContainer {
 	id := fmt.Sprintf("%d:%d", userID, rand.Intn(100))
 	return &PaginatedContainer{
-		Current:  1,
-		ID:       id,
+		current:  1,
+		id:       id,
 		timer:    time.NewTimer(endDuration),
 		deferred: deferred,
 	}
@@ -52,7 +52,7 @@ func NewPaginatedContainer(userID snowflake.ID, deferred bool) *PaginatedContain
 
 func (p *PaginatedContainer) waitTimerEnd() {
 	<-p.timer.C
-	delete(paginatedContainers, p.ID)
+	delete(paginatedContainers, p.id)
 }
 
 func (p *PaginatedContainer) resetTimer() {
@@ -61,15 +61,19 @@ func (p *PaginatedContainer) resetTimer() {
 
 // AddContainers adds containers
 func (p *PaginatedContainer) AddContainers(containers ...discord.ContainerComponent) *PaginatedContainer {
-	p.Total += len(containers)
-	p.Containers = append(p.Containers, containers...)
+	p.total += len(containers)
+	p.containers = append(p.containers, containers...)
 	return p
 }
 
 // Start starts the paginated-container
 func (p *PaginatedContainer) Start(e creatableEvent) error {
-	container := p.Containers[0].AddComponents(makeComponents(p.ID, p.Current, p.Total))
-	paginatedContainers[p.ID] = p
+	if len(p.containers) == 0 {
+		return nil
+	}
+
+	container := p.containers[0].AddComponents(p.makeComponents())
+	paginatedContainers[p.id] = p
 
 	go p.waitTimerEnd()
 
@@ -88,23 +92,27 @@ func (p *PaginatedContainer) Start(e creatableEvent) error {
 	)
 }
 
-func makeComponents(id string, current, total int) discord.ActionRowComponent {
+func (p *PaginatedContainer) makeComponents() discord.ActionRowComponent {
 	disabled := false
 
-	if total == 1 {
+	if p.total == 1 {
 		disabled = true
 	}
 
 	return discord.NewActionRow(
-		discord.NewPrimaryButton("처음", utils.MakePaginationContainerFirst(id)).
+		discord.NewPrimaryButton("", utils.MakePaginationContainerFirst(p.id)).
+			WithEmoji(discord.NewComponentEmoji("⏪")).
 			WithDisabled(disabled),
-		discord.NewPrimaryButton("이전", utils.MakePaginationContainerPrev(id)).
+		discord.NewPrimaryButton("", utils.MakePaginationContainerPrev(p.id)).
+			WithEmoji(discord.NewComponentEmoji("◀️")).
 			WithDisabled(disabled),
-		discord.NewSecondaryButton(fmt.Sprintf("(%d/%d)", current, total), utils.MakePaginationContainerPages(id)).
+		discord.NewSecondaryButton(fmt.Sprintf("(%d/%d)", p.current, p.total), utils.MakePaginationContainerPages(p.id)).
 			WithDisabled(disabled),
-		discord.NewPrimaryButton("다음", utils.MakePaginationContainerNext(id)).
+		discord.NewPrimaryButton("", utils.MakePaginationContainerNext(p.id)).
+			WithEmoji(discord.NewComponentEmoji("▶️")).
 			WithDisabled(disabled),
-		discord.NewPrimaryButton("마지막", utils.MakePaginationContainerLast(id)).
+		discord.NewPrimaryButton("", utils.MakePaginationContainerLast(p.id)).
+			WithEmoji(discord.NewComponentEmoji("⏩")).
 			WithDisabled(disabled),
 	)
 }
@@ -119,34 +127,38 @@ func GetPaginationContainer(id string) *PaginatedContainer {
 
 // First moves to first page
 func (p *PaginatedContainer) First(i *handler.ComponentEvent) error {
+	if p.current == 1 {
+		return p.Set(i, p.total)
+	}
+
 	return p.Set(i, 1)
 }
 
 // Prev move to previous page
 func (p *PaginatedContainer) Prev(i *handler.ComponentEvent) error {
-	if p.Current == 1 {
-		p.Current = p.Total
-	} else {
-		p.Current -= 1
+	if p.current == 1 {
+		return p.Set(i, p.total)
 	}
 
-	return p.Set(i, p.Current)
+	return p.Set(i, p.current-1)
 }
 
 // Next moves to next page
 func (p *PaginatedContainer) Next(i *handler.ComponentEvent) error {
-	if p.Current >= p.Total {
-		p.Current = 1
-	} else {
-		p.Current += 1
+	if p.current == p.total {
+		return p.Set(i, 1)
 	}
 
-	return p.Set(i, p.Current)
+	return p.Set(i, p.current+1)
 }
 
 // Last moves to last page
 func (p *PaginatedContainer) Last(i *handler.ComponentEvent) error {
-	return p.Set(i, p.Total)
+	if p.current == p.total {
+		return p.Set(i, 1)
+	}
+
+	return p.Set(i, p.total)
 }
 
 // Set sets to page
@@ -154,14 +166,14 @@ func (p *PaginatedContainer) Set(i updatableEvent, page int) error {
 	p.resetTimer()
 
 	if page <= 0 {
-		p.Current = 1
-	} else if page > p.Total {
-		p.Current = p.Total
+		p.current = 1
+	} else if page > p.total {
+		p.current = p.total
 	} else {
-		p.Current = page
+		p.current = page
 	}
 
-	container := p.Containers[p.Current-1].AddComponents(makeComponents(p.ID, p.Current, p.Total))
+	container := p.containers[p.current-1].AddComponents(p.makeComponents())
 	return i.UpdateMessage(
 		discord.NewMessageUpdateV2([]discord.LayoutComponent{container}),
 	)
@@ -171,14 +183,14 @@ func (p *PaginatedContainer) Set(i updatableEvent, page int) error {
 func (p *PaginatedContainer) ShowModal(i *handler.ComponentEvent) error {
 	return i.Modal(
 		discord.NewModalCreate(
-			utils.MakePaginationContainerModal(p.ID),
+			utils.MakePaginationContainerModal(p.id),
 			"페이지 설정",
 			[]discord.LayoutComponent{
 				discord.NewLabel(
 					"이동할 페이지",
 					discord.NewShortTextInput(utils.PaginationContainerSetPage).
 						WithPlaceholder("페이지 번호를 여기에 입력...").
-						WithValue(fmt.Sprint(p.Current)),
+						WithValue(fmt.Sprint(p.current)),
 				).
 					WithDescription("이동할 페이지의 번호를 입력해 주세요."),
 			},
