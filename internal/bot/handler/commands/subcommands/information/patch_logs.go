@@ -32,6 +32,15 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 		return err
 	}
 
+	if ghConfig.OldRepository != "" {
+		oldReleases, _, err := ghClient.Repositories.ListReleases(e.Ctx, ghConfig.Owner, ghConfig.OldRepository, nil)
+		if err != nil {
+			return err
+		}
+
+		releases = append(releases, oldReleases...)
+	}
+
 	for _, release := range releases {
 		containers = append(containers,
 			discord.NewContainer(

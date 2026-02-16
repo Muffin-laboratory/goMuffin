@@ -48,8 +48,9 @@ type serviceConfig struct {
 }
 
 type githubConfig struct {
-	Owner      string
-	Repository string
+	Owner         string
+	Repository    string
+	OldRepository string
 }
 
 type integrateMDCConfig struct {
@@ -183,8 +184,9 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	config.GitHub = githubConfig{
-		Owner:      getValue("GITHUB_OWNER"),
-		Repository: getValue("GITHUB_REPO"),
+		Owner:         getValue("GITHUB_OWNER"),
+		Repository:    getValue("GITHUB_REPO"),
+		OldRepository: getValue("GITHUB_OLD_REPO"),
 	}
 
 	config.IntegrateMDC = integrateMDCConfig{
