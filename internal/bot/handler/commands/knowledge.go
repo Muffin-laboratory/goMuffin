@@ -1,7 +1,7 @@
 package commands
 
 import (
-	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/knowledge"
+	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/handler/commands/subcommands/knowledge"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"

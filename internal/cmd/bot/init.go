@@ -5,11 +5,9 @@ import (
 	"os"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
-	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/dev"
-	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/components"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/handler"
+	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/handler"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/handler/events"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
-	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/modals"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/disgoorg/disgo"
 	"github.com/disgoorg/disgo/bot"
@@ -32,7 +30,7 @@ func init() {
 				gateway.IntentMessageContent,
 			),
 		),
-		bot.WithEventListenerFunc(handler.OnMessageCreate),
+		bot.WithEventListenerFunc(events.OnMessageCreate),
 		bot.WithLogger(logger),
 		bot.WithEventListeners(loader.GetDiscommand().Router()),
 	)

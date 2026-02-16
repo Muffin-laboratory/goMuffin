@@ -1,7 +1,7 @@
 package commands
 
 import (
-	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/subcommands/chat"
+	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/handler/commands/subcommands/chat"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
