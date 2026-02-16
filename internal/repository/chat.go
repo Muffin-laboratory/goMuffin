@@ -81,7 +81,7 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 	}
 
 	if idx, ok := c.indexes.Get(index.build()); ok {
-		var chats []Chat
+		chats := make([]Chat, len(idx.ids))
 
 		idx.mu.RLock()
 		for _, id := range idx.ids {

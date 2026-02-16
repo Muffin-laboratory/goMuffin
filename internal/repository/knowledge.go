@@ -80,7 +80,7 @@ func (c *KnowledgeCollection) Find(ctx context.Context, filter query.QueryBuilde
 	}
 
 	if idx, ok := c.indexes.Get(index.build()); ok {
-		var knowledge []Knowledge
+		knowledge := make([]Knowledge, len(idx.ids))
 
 		idx.mu.RLock()
 		for _, id := range idx.ids {
