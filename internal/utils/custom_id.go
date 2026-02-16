@@ -115,6 +115,7 @@ const (
 	UserSettingsPrompt       = "/muffin/user/settings/prompt"
 	UserSettingsPromptSet    = "/muffin/user/settings/prompt/set"
 	UserSettingsSubmit       = "/muffin/user/settings/submit"
+	UserSettingsCancel       = "/muffin/user/settings/cancel"
 )
 
 func MakeUserSettingsChattingMode(id string) string {
@@ -135,4 +136,8 @@ func MakeUserSettingsPrompt(id string) string {
 
 func MakeUserSettingsSubmit(id string) string {
 	return fmt.Sprintf("%s/%s", UserSettingsSubmit, id)
+}
+
+func MakeUserSettingsCancel(id string) string {
+	return fmt.Sprintf("%s/%s", UserSettingsCancel, id)
 }

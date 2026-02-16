@@ -81,6 +81,7 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 		),
 		discord.NewActionRow(
 			discord.NewSuccessButton("완료", utils.MakeUserSettingsSubmit(s.ID)),
+			discord.NewSecondaryButton("취소", utils.MakeUserSettingsCancel(s.ID)),
 		),
 	)
 }
@@ -142,4 +143,8 @@ func (s *UserSettings) Submit(ctx context.Context) error {
 	delete(userSettings, s.ID)
 
 	return nil
+}
+
+func (s *UserSettings) Cancel() {
+	delete(userSettings, s.ID)
 }

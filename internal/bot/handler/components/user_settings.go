@@ -53,6 +53,16 @@ func init() {
 				return builders.GetUserSettings(e.Vars["id"]).PromptModal(e)
 			})
 
+			r.Component("/cancel/{id}", func(e *handler.ComponentEvent) error {
+				builders.GetUserSettings(e.Vars["id"]).Cancel()
+
+				return e.UpdateMessage(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						builders.MakeCanceledContainer("- 해당 변경사항을 취소했어요."),
+					}),
+				)
+			})
+
 			r.Group(func(r handler.Router) {
 				r.Use(middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false))
 
