@@ -46,7 +46,7 @@ func InfoBot(e *handler.CommandEvent) error {
 		return err
 	}
 
-	return builders.NewPaginatedContainer(e.User().ID, true).
+	return builders.NewPaginatedContainer(e, true).
 		AddContainers(
 			container,
 			discord.NewContainer(
@@ -64,5 +64,5 @@ func InfoBot(e *handler.CommandEvent) error {
 				discord.NewSmallSeparator(),
 			),
 		).
-		Start(e)
+		Start()
 }

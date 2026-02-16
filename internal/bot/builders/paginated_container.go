@@ -10,7 +10,6 @@ import (
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 	"github.com/disgoorg/disgo/rest"
-	"github.com/disgoorg/snowflake/v2"
 )
 
 // PaginatedContainer is container with page
@@ -21,6 +20,7 @@ type PaginatedContainer struct {
 	id         string
 	timer      *time.Timer
 	deferred   bool
+	event      creatableEvent
 }
 
 type updatableEvent interface {
@@ -40,18 +40,26 @@ var paginatedContainers = make(map[string]*PaginatedContainer)
 const endDuration = 10 * time.Minute
 
 // NewPaginatedContainer creates a new PaginationContainer
-func NewPaginatedContainer(userID snowflake.ID, deferred bool) *PaginatedContainer {
-	id := fmt.Sprintf("%d:%d", userID, rand.Intn(100))
+func NewPaginatedContainer(event creatableEvent, deferred bool) *PaginatedContainer {
+	id := fmt.Sprintf("%d:%d", event.User().ID, rand.Intn(100))
 	return &PaginatedContainer{
 		current:  1,
 		id:       id,
 		timer:    time.NewTimer(endDuration),
 		deferred: deferred,
+		event:    event,
 	}
 }
 
 func (p *PaginatedContainer) waitTimerEnd() {
 	<-p.timer.C
+	p.event.Client().Rest.UpdateInteractionResponse(
+		p.event.ApplicationID(),
+		p.event.Token(),
+		discord.NewMessageUpdateV2([]discord.LayoutComponent{
+			p.containers[p.current-1],
+		}),
+	)
 	delete(paginatedContainers, p.id)
 }
 
@@ -67,7 +75,7 @@ func (p *PaginatedContainer) AddContainers(containers ...discord.ContainerCompon
 }
 
 // Start starts the paginated-container
-func (p *PaginatedContainer) Start(e creatableEvent) error {
+func (p *PaginatedContainer) Start() error {
 	if len(p.containers) == 0 {
 		return nil
 	}
@@ -78,15 +86,15 @@ func (p *PaginatedContainer) Start(e creatableEvent) error {
 	go p.waitTimerEnd()
 
 	if p.deferred {
-		_, err := e.Client().Rest.UpdateInteractionResponse(
-			e.ApplicationID(),
-			e.Token(),
+		_, err := p.event.Client().Rest.UpdateInteractionResponse(
+			p.event.ApplicationID(),
+			p.event.Token(),
 			discord.NewMessageUpdateV2([]discord.LayoutComponent{container}),
 		)
 		return err
 	}
 
-	return e.CreateMessage(
+	return p.event.CreateMessage(
 		discord.NewMessageCreateV2(container).
 			WithEphemeral(true),
 	)

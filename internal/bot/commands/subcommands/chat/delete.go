@@ -69,9 +69,9 @@ func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 			containers = append(containers, container)
 		}
 
-		return builders.NewPaginatedContainer(e.User().ID, true).
+		return builders.NewPaginatedContainer(e, true).
 			AddContainers(containers...).
-			Start(e)
+			Start()
 	}
 
 	_, err = e.UpdateInteractionResponse(
