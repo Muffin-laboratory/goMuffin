@@ -4,6 +4,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -25,6 +26,7 @@ func Timeout() time.Duration {
 func GetDiscommand() *Discommand {
 	once.Do(func() {
 		r := handler.New()
+		r.Use(middlewares.SendErrorMessage())
 		instance = &Discommand{
 			router: r,
 		}
