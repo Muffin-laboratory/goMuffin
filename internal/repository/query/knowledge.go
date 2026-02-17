@@ -15,7 +15,7 @@ func (q *KnowledgeQuery) SetID(id bson.ObjectID) *KnowledgeQuery {
 	return q
 }
 
-func (q *KnowledgeQuery) SetUserID(userID string) *KnowledgeQuery {
+func (q *KnowledgeQuery) SetUserID(userID int64) *KnowledgeQuery {
 	q.filter = append(q.filter, bson.E{Key: "user_id", Value: userID})
 	return q
 }

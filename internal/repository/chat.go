@@ -14,7 +14,8 @@ import (
 type Chat struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Name      string        `bson:"name,omitempty"`
-	UserID    string        `bson:"user_id,omitempty"`
+	UserID    int64         `bson:"user_id,omitempty"`
+	Prompt    string        `bson:"prompt"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }
 
@@ -45,8 +46,8 @@ func (c *ChatCollection) createCache(chat Chat) {
 	createIndexCache(c.indexes, chat.ID, index)
 }
 
-func (c *ChatCollection) Create(ctx context.Context, userID, name string) (*Chat, error) {
-	data := Chat{UserID: userID, Name: name, CreatedAt: time.Now()}
+func (c *ChatCollection) Create(ctx context.Context, userID int64, prompt, name string) (*Chat, error) {
+	data := Chat{UserID: userID, Name: name, Prompt: prompt, CreatedAt: time.Now()}
 	result, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
 		return nil, err
@@ -71,7 +72,7 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 	for _, filter := range rawFilter {
 		switch filter.Key {
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		case "name":
 			if value, ok := filter.Value.(string); ok {
 				index.setName(value)
@@ -80,7 +81,7 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 	}
 
 	if idx, ok := c.indexes.Get(index.build()); ok {
-		var chats []Chat
+		chats := make([]Chat, len(idx.ids))
 
 		idx.mu.RLock()
 		for _, id := range idx.ids {

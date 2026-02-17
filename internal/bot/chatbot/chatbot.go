@@ -2,25 +2,26 @@ package chatbot
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-
-	"github.com/bwmarrin/discordgo"
-
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/discord"
 	"google.golang.org/genai"
 )
 
 type Chatbot struct {
 	Gemini       *genai.Client
 	systemPrompt string
-	s            *discordgo.Session
+	corePrompt   string
+	s            *bot.Client
 }
 
 var instance *Chatbot
 
-func Make(s *discordgo.Session) error {
-	gemini, err := genai.NewClient(context.TODO(), &genai.ClientConfig{
+func Make(s *bot.Client) error {
+	gemini, err := genai.NewClient(context.Background(), &genai.ClientConfig{
 		APIKey:  configs.GetConfig().Chatbot.Gemini.Token,
 		Backend: genai.BackendGeminiAPI,
 	})
@@ -33,12 +34,14 @@ func Make(s *discordgo.Session) error {
 		s:      s,
 	}
 
-	prompt, err := loadPrompt()
+	system, core, err := loadPrompt()
 	if err != nil {
 		return err
 	}
 
-	instance.systemPrompt = prompt
+	instance.systemPrompt = system
+	instance.corePrompt = core
+	slog.Info("chatbot is created.")
 	return nil
 }
 
@@ -46,22 +49,12 @@ func GetChatBot() *Chatbot {
 	return instance
 }
 
-func (c *Chatbot) ReloadPrompt() error {
-	prompt, err := loadPrompt()
-	if err != nil {
-		return err
-	}
-
-	c.systemPrompt = prompt
-	return nil
-}
-
 func (c *Chatbot) GetPrompt() string {
 	return c.systemPrompt
 }
 
-func (c *Chatbot) GetResponse(ctx context.Context, user *discordgo.User, question string, attachments ...*discordgo.MessageAttachment) (string, error) {
-	mode, err := repository.GetDatabase().Users.GetUserChattingMode(ctx, user.ID)
+func (c *Chatbot) GetResponse(ctx context.Context, user discord.User, question string, attachments ...discord.Attachment) (string, error) {
+	mode, err := repository.GetDatabase().Users.GetUserChattingMode(ctx, int64(user.ID))
 	if err != nil {
 		return "살려주ㅅ세요", err
 	}

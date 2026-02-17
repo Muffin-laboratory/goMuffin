@@ -1,13 +1,15 @@
 package utils
 
-import "github.com/bwmarrin/discordgo"
+import (
+	"github.com/disgoorg/disgo/discord"
+)
 
-func GetStyleFromBool(k bool) discordgo.ButtonStyle {
+func GetStyleFromBool(k bool) discord.ButtonStyle {
 	if k {
-		return discordgo.SuccessButton
+		return discord.ButtonStyleSuccess
 	}
 
-	return discordgo.SecondaryButton
+	return discord.ButtonStyleSecondary
 }
 
 func BoolToString(k bool) string {

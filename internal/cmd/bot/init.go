@@ -1,27 +1,44 @@
 package main
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
-	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/commands/dev"
-	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/components"
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/handler"
-	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/modals"
+	_ "github.com/Muffin-laboratory/goMuffin/internal/bot/handler"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/handler/events"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
-	"github.com/bwmarrin/discordgo"
+	"github.com/disgoorg/disgo"
+	"github.com/disgoorg/disgo/bot"
+	"github.com/disgoorg/disgo/gateway"
 )
 
-var dg *discordgo.Session
+var session *bot.Client
 
 func init() {
-	dg, _ = discordgo.New("Bot " + configs.GetConfig().Bot.Token)
-	err := chatbot.Make(dg)
+	var err error
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
+
+	session, err = disgo.New(configs.GetConfig().Bot.Token,
+		bot.WithGatewayConfigOpts(
+			gateway.WithIntents(
+				gateway.IntentGuilds,
+				gateway.IntentGuildMessages,
+				gateway.IntentMessageContent,
+			),
+		),
+		bot.WithEventListenerFunc(events.OnMessageCreate),
+		bot.WithLogger(logger),
+		bot.WithEventListeners(loader.GetDiscommand().Router()),
+	)
 	if err != nil {
-		log.Fatalln(err)
+		slog.Error("[Fatal] failed to create session.", "error", err)
 	}
 
-	// Handler
-	go dg.AddHandler(handler.MessageCreate)
-	go dg.AddHandler(handler.InteractionCreate)
+	if err = chatbot.Make(session); err != nil {
+		slog.Error("[Fatal] failed to create chatbot.", "error", err)
+	}
 }

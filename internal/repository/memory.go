@@ -13,7 +13,7 @@ import (
 
 type Memory struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
-	UserID    string        `bson:"user_id,omitempty"`
+	UserID    int64         `bson:"user_id,omitempty"`
 	Content   string        `bson:"content,omitempty"`
 	Answer    string        `bson:"answer,omitempty"`
 	ChatID    bson.ObjectID `bson:"chat_id,omitempty"`
@@ -70,7 +70,7 @@ func (c *MemoryCollection) createCache(memory Memory) {
 	createIndexCache(c.indexes, memory.ID, index)
 }
 
-func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) (*Memory, error) {
+func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID int64, content, answer string, files []File) (*Memory, error) {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
@@ -100,12 +100,12 @@ func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) 
 		case "chat_id":
 			index.setChatID(filter.Value.(bson.ObjectID))
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		}
 	}
 
 	if idx, ok := c.indexes.Get(index.build()); ok {
-		var memory []Memory
+		memory := make([]Memory, len(idx.ids))
 
 		idx.mu.RLock()
 		for _, id := range idx.ids {
@@ -176,7 +176,7 @@ func (c *MemoryCollection) DeleteMany(ctx context.Context, filter query.QueryBui
 		case "chat_id":
 			index.setChatID(filter.Value.(bson.ObjectID))
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		}
 	}
 

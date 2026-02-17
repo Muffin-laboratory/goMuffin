@@ -20,6 +20,9 @@ jobs:
                   username: ${{ secrets.SSH_USERNAME }}
                   key: ${{ secrets.SSH_KEY }}
                   port: ${{ secrets.SSH_PORT }}
+                  timeout: 15m
                   script: |
                       cd ${{ secrets.PROJECT_DIR }}
+                      git fetch
+                      git pull
                       ${{ secrets.PROJECT_DIR }}/internal/scripts/update.sh

@@ -13,7 +13,7 @@ type CountDocuments struct {
 	UserMemory    int64
 }
 
-func (d *MuffinDatabase) Counts(ctx context.Context, userID string) (*CountDocuments, error) {
+func (d *MuffinDatabase) Counts(ctx context.Context, userID int64) (*CountDocuments, error) {
 	muffinLength, err := d.Texts.coll.CountDocuments(ctx, Text{Persona: "muffin"})
 	if err != nil {
 		return nil, err
