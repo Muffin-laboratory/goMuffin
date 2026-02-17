@@ -1,10 +1,12 @@
 package loader
 
 import (
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
+	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -23,12 +25,21 @@ func Timeout() time.Duration {
 	return timeout
 }
 
+func initRouter() handler.Router {
+	r := handler.New()
+	r.Use(middlewares.SendErrorMessage())
+
+	if !strings.Contains(configs.MuffinVersion, "release") {
+		r.Use(middlewares.ShowPreviewWarningMessage())
+	}
+
+	return r
+}
+
 func GetDiscommand() *Discommand {
 	once.Do(func() {
-		r := handler.New()
-		r.Use(middlewares.SendErrorMessage())
 		instance = &Discommand{
-			router: r,
+			router: initRouter(),
 		}
 
 	})
