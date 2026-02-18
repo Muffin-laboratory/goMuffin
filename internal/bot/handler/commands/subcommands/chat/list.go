@@ -2,9 +2,9 @@ package chat
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -37,7 +37,7 @@ func List(e *handler.CommandEvent) error {
 	}
 
 	for _, data := range data {
-		button := discord.NewSuccessButton("선택", utils.MakeSelectChat(data.ID.Hex(), e.User().ID.String()))
+		button := discord.NewSuccessButton("선택", customid.MakeSelectChat(data.ID.Hex(), e.User().ID.String()))
 
 		if data.ID == dbUser.ChatID {
 			button = button.WithDisabled(true)

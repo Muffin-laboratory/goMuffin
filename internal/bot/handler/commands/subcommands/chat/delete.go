@@ -2,9 +2,9 @@ package chat
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -48,7 +48,7 @@ func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 					discord.NewTextDisplayf("- **%s**\n", data.Name),
 				).
 					WithAccessory(
-						discord.NewDangerButton("삭제", utils.MakeDeleteChat(data.ID.Hex(), e.User().ID.String())),
+						discord.NewDangerButton("삭제", customid.MakeDeleteChat(data.ID.Hex(), e.User().ID.String())),
 					),
 			)
 		}
@@ -80,8 +80,8 @@ func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 				discord.NewTextDisplayf("### 채팅 %s 삭제", name),
 				discord.NewTextDisplay(description),
 				discord.NewActionRow(
-					discord.NewDangerButton("삭제", utils.MakeDeleteChat(chats[0].ID.Hex(), e.User().ID.String())),
-					discord.NewPrimaryButton("취소", utils.MakeDeleteChatCancel(e.User().ID.String())),
+					discord.NewDangerButton("삭제", customid.MakeDeleteChat(chats[0].ID.Hex(), e.User().ID.String())),
+					discord.NewPrimaryButton("취소", customid.MakeDeleteChatCancel(e.User().ID.String())),
 				),
 			),
 		}),

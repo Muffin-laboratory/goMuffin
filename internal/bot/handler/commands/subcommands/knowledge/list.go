@@ -4,9 +4,9 @@ import (
 	"slices"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -56,7 +56,7 @@ func List(data discord.SlashCommandInteractionData, e *handler.CommandEvent) err
 				discord.NewTextDisplayf("- **%s**", item),
 			).
 				WithAccessory(
-					discord.NewPrimaryButton("자세히 보기", utils.MakeSelectKnowledge(item)),
+					discord.NewPrimaryButton("자세히 보기", customid.MakeSelectKnowledge(item)),
 				),
 		)
 	}

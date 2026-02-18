@@ -2,6 +2,7 @@ package information
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
@@ -57,7 +58,7 @@ func InfoUser(e *handler.CommandEvent) error {
 						WithEmoji(discord.NewComponentEmoji("🔗")),
 					discord.NewLinkButton("서비스 이용약관", configs.GetConfig().Service.TermOfServiceURL).
 						WithEmoji(discord.NewComponentEmoji("🔗")),
-					discord.NewDangerButton("탈퇴", utils.MakeUserInformationDeregister(e.User().ID.String())),
+					discord.NewDangerButton("탈퇴", customid.MakeUserInformationDeregister(e.User().ID.String())),
 				),
 			),
 		}),

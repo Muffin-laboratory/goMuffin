@@ -2,9 +2,9 @@ package knowledge
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -36,7 +36,7 @@ func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 				discord.NewTextDisplayf("**%s**\n", data.Result),
 			).
 				WithAccessory(
-					discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), e.User().ID.String())),
+					discord.NewDangerButton("삭제", customid.MakeDeleteKnowledge(data.ID.Hex(), e.User().ID.String())),
 				),
 		)
 	}

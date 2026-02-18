@@ -2,9 +2,9 @@ package components
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -15,7 +15,7 @@ func init() {
 			middlewares.CheckUserSettingsMiddleware(),
 		)
 
-		r.Route(utils.UserSettings, func(r handler.Router) {
+		r.Route(customid.UserSettings, func(r handler.Router) {
 			r.Component("/chatting_mode/{id}", func(e *handler.ComponentEvent) error {
 				settings := builders.GetUserSettings(e.Vars["id"])
 

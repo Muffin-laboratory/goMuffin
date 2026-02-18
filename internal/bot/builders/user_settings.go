@@ -5,11 +5,27 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
+
+func getStyleFromBool(k bool) discord.ButtonStyle {
+	if k {
+		return discord.ButtonStyleSuccess
+	}
+
+	return discord.ButtonStyleSecondary
+}
+
+func boolToString(k bool) string {
+	if k {
+		return "활성화"
+	}
+
+	return "비활성화"
+}
 
 type UserSettings struct {
 	ID                        string
@@ -62,26 +78,26 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 		discord.NewActionRow(
 			discord.NewPrimaryButton(
 				fmt.Sprintf("모드: %s", repository.ModeString(s.chattingMode)),
-				utils.MakeUserSettingsChattingMode(s.ID),
+				customid.MakeUserSettingsChattingMode(s.ID),
 			),
 			discord.NewButton(
-				utils.GetStyleFromBool(s.replyUser),
-				fmt.Sprintf("답장 멘션: %s", utils.BoolToString(s.replyUser)),
-				utils.MakeUserSettingsReplyUser(s.ID), "", 0,
+				getStyleFromBool(s.replyUser),
+				fmt.Sprintf("답장 멘션: %s", boolToString(s.replyUser)),
+				customid.MakeUserSettingsReplyUser(s.ID), "", 0,
 			),
 			discord.NewButton(
-				utils.GetStyleFromBool(s.createNewChatAfter12Hours),
-				fmt.Sprintf("12 시간 후 새로운 채팅: %s", utils.BoolToString(s.createNewChatAfter12Hours)),
-				utils.MakeUserSettings12Hours(s.ID), "", 0,
+				getStyleFromBool(s.createNewChatAfter12Hours),
+				fmt.Sprintf("12 시간 후 새로운 채팅: %s", boolToString(s.createNewChatAfter12Hours)),
+				customid.MakeUserSettings12Hours(s.ID), "", 0,
 			),
 			discord.NewPrimaryButton(
 				"사용자 지정 프롬프트 설정",
-				utils.MakeUserSettingsPrompt(s.ID),
+				customid.MakeUserSettingsPrompt(s.ID),
 			),
 		),
 		discord.NewActionRow(
-			discord.NewSuccessButton("완료", utils.MakeUserSettingsSubmit(s.ID)),
-			discord.NewSecondaryButton("취소", utils.MakeUserSettingsCancel(s.ID)),
+			discord.NewSuccessButton("완료", customid.MakeUserSettingsSubmit(s.ID)),
+			discord.NewSecondaryButton("취소", customid.MakeUserSettingsCancel(s.ID)),
 		),
 	)
 }
@@ -107,12 +123,12 @@ func (s *UserSettings) Toggle12Hours() {
 func (s *UserSettings) PromptModal(e *handler.ComponentEvent) error {
 	return e.Modal(
 		discord.NewModalCreate(
-			utils.MakeUserSettingsPrompt(s.ID),
+			customid.MakeUserSettingsPrompt(s.ID),
 			"사용자 지정 프롬프트 설정",
 			[]discord.LayoutComponent{
 				discord.NewLabel(
 					"사용자 지정 프롬프트",
-					discord.NewParagraphTextInput(utils.UserSettingsPromptSet).
+					discord.NewParagraphTextInput(customid.UserSettingsPromptSet).
 						WithPlaceholder("여기에 프롬프트를 입력...").
 						WithValue(s.prompt),
 				).

@@ -3,11 +3,11 @@ package modals
 import (
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -16,7 +16,7 @@ func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeModalSubmit, false, true))
 
-		r.Modal(utils.CreateChat+"/{name}", func(e *handler.ModalEvent) error {
+		r.Modal(customid.CreateChat+"/{name}", func(e *handler.ModalEvent) error {
 			name := e.Vars["name"]
 
 			var prompt string
@@ -26,7 +26,7 @@ func init() {
 				return err
 			}
 
-			if value, ok := e.Data.OptText(utils.CreateChatSetPrompt); ok {
+			if value, ok := e.Data.OptText(customid.CreateChatSetPrompt); ok {
 				prompt = value
 			} else {
 				if dbUser.Prompt != "" {

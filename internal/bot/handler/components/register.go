@@ -2,10 +2,10 @@ package components
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -17,7 +17,7 @@ func init() {
 			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 		)
 
-		r.Component(utils.ServiceAgree, func(e *handler.ComponentEvent) error {
+		r.Component(customid.ServiceAgree, func(e *handler.ComponentEvent) error {
 			if _, err := repository.GetDatabase().Users.Create(e.Ctx, int64(e.User().ID)); err != nil {
 				return err
 			}
@@ -31,7 +31,7 @@ func init() {
 			return err
 		})
 
-		r.Component(utils.ServiceDisagree, func(e *handler.ComponentEvent) error {
+		r.Component(customid.ServiceDisagree, func(e *handler.ComponentEvent) error {
 			_, err := e.UpdateInteractionResponse(
 				discord.NewMessageUpdateV2([]discord.LayoutComponent{
 					builders.MakeDeclineContainer("가입을 거부했어요."),

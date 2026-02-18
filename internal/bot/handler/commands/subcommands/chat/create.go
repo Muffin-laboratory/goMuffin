@@ -6,8 +6,8 @@ import (
 
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -31,12 +31,12 @@ func Create(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 	if data.Bool("프롬프트_지정") {
 		return e.Modal(
 			discord.NewModalCreate(
-				utils.MakeCreateChat(name),
+				customid.MakeCreateChat(name),
 				"사용자 지정 프롬프트 설정",
 				[]discord.LayoutComponent{
 					discord.NewLabel(
 						"사용자 지정 프롬프트",
-						discord.NewParagraphTextInput(utils.CreateChatSetPrompt).
+						discord.NewParagraphTextInput(customid.CreateChatSetPrompt).
 							WithPlaceholder("여기에 프롬프트를 입력..."),
 					).
 						WithDescription(

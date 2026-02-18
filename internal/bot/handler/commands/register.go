@@ -2,11 +2,11 @@ package commands
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -46,8 +46,8 @@ func init() {
 							configs.GetConfig().Service.TermOfServiceURL,
 						),
 						discord.NewActionRow(
-							discord.NewSuccessButton("동의 및 가입", utils.MakeServiceAgree(userID.String())),
-							discord.NewDangerButton("취소", utils.MakeServiceDisagree(userID.String())),
+							discord.NewSuccessButton("동의 및 가입", customid.MakeServiceAgree(userID.String())),
+							discord.NewDangerButton("취소", customid.MakeServiceDisagree(userID.String())),
 						),
 					),
 				).

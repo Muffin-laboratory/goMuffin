@@ -2,11 +2,11 @@ package components
 
 import (
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -18,7 +18,7 @@ func init() {
 			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, false, true),
 		)
 
-		r.Component(utils.SelectChat+"/{command}", func(e *handler.ComponentEvent) error {
+		r.Component(customid.SelectKnowledge+"/{command}", func(e *handler.ComponentEvent) error {
 			var sections []discord.SectionComponent
 			var containers []discord.ContainerComponent
 
@@ -45,7 +45,7 @@ func init() {
 						discord.NewTextDisplayf("**%s**\n", data.Result),
 					).
 						WithAccessory(
-							discord.NewDangerButton("삭제", utils.MakeDeleteKnowledge(data.ID.Hex(), e.User().ID.String())),
+							discord.NewDangerButton("삭제", customid.MakeDeleteKnowledge(data.ID.Hex(), e.User().ID.String())),
 						),
 				)
 			}

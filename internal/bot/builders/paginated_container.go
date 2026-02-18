@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -108,18 +108,18 @@ func (p *PaginatedContainer) makeComponents() discord.ActionRowComponent {
 	}
 
 	return discord.NewActionRow(
-		discord.NewPrimaryButton("", utils.MakePaginationContainerFirst(p.id)).
+		discord.NewPrimaryButton("", customid.MakePaginationContainerFirst(p.id)).
 			WithEmoji(discord.NewComponentEmoji("⏪")).
 			WithDisabled(disabled),
-		discord.NewPrimaryButton("", utils.MakePaginationContainerPrev(p.id)).
+		discord.NewPrimaryButton("", customid.MakePaginationContainerPrev(p.id)).
 			WithEmoji(discord.NewComponentEmoji("◀️")).
 			WithDisabled(disabled),
-		discord.NewSecondaryButton(fmt.Sprintf("(%d/%d)", p.current, p.total), utils.MakePaginationContainerPages(p.id)).
+		discord.NewSecondaryButton(fmt.Sprintf("(%d/%d)", p.current, p.total), customid.MakePaginationContainerPages(p.id)).
 			WithDisabled(disabled),
-		discord.NewPrimaryButton("", utils.MakePaginationContainerNext(p.id)).
+		discord.NewPrimaryButton("", customid.MakePaginationContainerNext(p.id)).
 			WithEmoji(discord.NewComponentEmoji("▶️")).
 			WithDisabled(disabled),
-		discord.NewPrimaryButton("", utils.MakePaginationContainerLast(p.id)).
+		discord.NewPrimaryButton("", customid.MakePaginationContainerLast(p.id)).
 			WithEmoji(discord.NewComponentEmoji("⏩")).
 			WithDisabled(disabled),
 	)
@@ -191,12 +191,12 @@ func (p *PaginatedContainer) Set(i updatableEvent, page int) error {
 func (p *PaginatedContainer) ShowModal(i *handler.ComponentEvent) error {
 	return i.Modal(
 		discord.NewModalCreate(
-			utils.MakePaginationContainerModal(p.id),
+			customid.MakePaginationContainerModal(p.id),
 			"페이지 설정",
 			[]discord.LayoutComponent{
 				discord.NewLabel(
 					"이동할 페이지",
-					discord.NewShortTextInput(utils.PaginationContainerSetPage).
+					discord.NewShortTextInput(customid.PaginationContainerSetPage).
 						WithPlaceholder("페이지 번호를 여기에 입력...").
 						WithValue(fmt.Sprint(p.current)),
 				).
