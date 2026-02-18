@@ -9,9 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/v2/mongo"
 )
 
-func migrateAnotherCollection(coll *mongo.Collection, ch chan *migrationErr, wg *sync.WaitGroup) {
-	const where = "memory"
-
+func migrateAnotherCollection(where string, coll *mongo.Collection, ch chan *migrationErr, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	var dataToMigrate []map[string]any

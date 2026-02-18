@@ -25,9 +25,9 @@ func MigrationUserIDToInt64(db *mongo.Database) {
 	wg.Add(collections)
 
 	go migrateUser(db.Collection("user"), ch, &wg)
-	go migrateAnotherCollection(db.Collection("memory"), ch, &wg)
-	go migrateAnotherCollection(db.Collection("chat"), ch, &wg)
-	go migrateAnotherCollection(db.Collection("learn"), ch, &wg)
+	go migrateAnotherCollection("memory", db.Collection("memory"), ch, &wg)
+	go migrateAnotherCollection("chat", db.Collection("chat"), ch, &wg)
+	go migrateAnotherCollection("knowledge", db.Collection("learn"), ch, &wg)
 
 	wg.Wait()
 	close(ch)
