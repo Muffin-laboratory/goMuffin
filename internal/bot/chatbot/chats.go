@@ -13,11 +13,11 @@ import (
 	"google.golang.org/genai"
 )
 
-var chats = cache.New[bson.ObjectID, genai.Chat](time.Hour * 12)
+var chats = cache.New[bson.ObjectID, *genai.Chat](time.Hour * 12)
 
 func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson.ObjectID) (*genai.Chat, error) {
 	if cache, ok := chats.Get(chatID); ok {
-		return &cache, nil
+		return cache, nil
 	}
 
 	memory, err := repository.GetDatabase().Memory.Find(ctx, query.MemoryQueryBuilder().SetChatID(chatID))
@@ -47,7 +47,7 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discordgo.User, chatID bson
 		return nil, err
 	}
 
-	chats.Set(chatID, *chat)
+	chats.Set(chatID, chat)
 
 	return chat, nil
 }
