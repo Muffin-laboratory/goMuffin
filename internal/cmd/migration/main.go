@@ -21,6 +21,7 @@ func main() {
 
 	db := client.Database(configs.GetConfig().Database.Name)
 
+	migration.BackupDB(db)
 	migration.MigrationUserIDToInt64(db)
 	migration.MigrateKnowledgeCollectionName(db)
 }
