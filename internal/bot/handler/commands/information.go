@@ -37,8 +37,8 @@ func init() {
 
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
-			middlewares.CheckBlockedMiddleware(),
-			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
+			middlewares.CheckBlocked(),
+			middlewares.TimeoutAndDefer(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
 		)
 
 		r.Route("/"+name, func(r handler.Router) {

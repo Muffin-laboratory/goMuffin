@@ -14,7 +14,7 @@ import (
 
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Use(middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeModalSubmit, false, true))
+		r.Use(middlewares.TimeoutAndDefer(loader.Timeout(), discord.InteractionTypeModalSubmit, false, true))
 
 		r.Modal(customid.CreateChat+"/{name}", func(e *handler.ModalEvent) error {
 			name := e.Vars["name"]

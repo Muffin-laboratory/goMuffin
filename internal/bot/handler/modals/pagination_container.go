@@ -13,7 +13,7 @@ import (
 
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Use(middlewares.CheckPaginationContainerMiddleware())
+		r.Use(middlewares.CheckPaginationContainer())
 
 		r.Modal(customid.PaginationContainerModal+"/{id}", func(inter *handler.ModalEvent) error {
 			p := builders.GetPaginationContainer(inter.Vars["id"])

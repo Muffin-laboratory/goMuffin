@@ -7,7 +7,7 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-func CheckBlockedMiddleware() handler.Middleware {
+func CheckBlocked() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
 			blocked, reason := repository.GetDatabase().Users.IsUserBlocked(e.Ctx, int64(e.User().ID))

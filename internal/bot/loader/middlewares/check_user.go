@@ -7,7 +7,7 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-func CheckUserMiddleware() handler.Middleware {
+func CheckIsUser() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
 			if !repository.GetDatabase().Users.IsUser(e.Ctx, int64(e.User().ID)) {
@@ -22,11 +22,11 @@ func CheckUserMiddleware() handler.Middleware {
 	}
 }
 
-func CheckUserAndBlockedMiddleware() handler.Middleware {
+func CheckIsUserAndBlocked() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
-			next = CheckUserMiddleware()(next)
-			next = CheckBlockedMiddleware()(next)
+			next = CheckIsUser()(next)
+			next = CheckBlocked()(next)
 			return next(e)
 		}
 	}

@@ -20,7 +20,7 @@ func init() {
 	})
 
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Use(middlewares.CheckBlockedMiddleware())
+		r.Use(middlewares.CheckBlocked())
 
 		r.Command("/"+name, func(e *handler.CommandEvent) error {
 			userID := e.User().ID

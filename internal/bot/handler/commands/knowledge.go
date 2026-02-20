@@ -70,8 +70,8 @@ func init() {
 
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
-			middlewares.CheckUserAndBlockedMiddleware(),
-			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
+			middlewares.CheckIsUserAndBlocked(),
+			middlewares.TimeoutAndDefer(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
 		)
 
 		r.Autocomplete("/"+name, func(e *handler.AutocompleteEvent) error {

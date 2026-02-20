@@ -7,7 +7,7 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-func CheckDeveloperMiddleware() handler.Middleware {
+func CheckIsDeveloper() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
 			developerID := configs.GetConfig().Bot.OwnerID

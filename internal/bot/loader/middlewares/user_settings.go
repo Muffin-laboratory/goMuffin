@@ -6,10 +6,10 @@ import (
 	"github.com/disgoorg/disgo/handler"
 )
 
-func CheckUserSettingsMiddleware() handler.Middleware {
+func CheckUserSettings() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
-			next = CheckIDMiddleware()(next)
+			next = CheckUserID()(next)
 
 			var customID string
 

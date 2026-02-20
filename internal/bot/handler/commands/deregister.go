@@ -18,7 +18,7 @@ func init() {
 	})
 
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Use(middlewares.CheckUserAndBlockedMiddleware())
+		r.Use(middlewares.CheckIsUserAndBlocked())
 
 		r.Command("/"+name, func(e *handler.CommandEvent) error {
 			return HandleDeregister(e.ApplicationCommandInteractionCreate)

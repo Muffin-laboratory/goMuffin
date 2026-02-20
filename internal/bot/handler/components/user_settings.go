@@ -12,7 +12,7 @@ import (
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
-			middlewares.CheckUserSettingsMiddleware(),
+			middlewares.CheckUserSettings(),
 		)
 
 		r.Route(customid.UserSettings, func(r handler.Router) {
@@ -64,7 +64,7 @@ func init() {
 			})
 
 			r.Group(func(r handler.Router) {
-				r.Use(middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false))
+				r.Use(middlewares.TimeoutAndDefer(loader.Timeout(), discord.InteractionTypeComponent, true, false))
 
 				r.Component("/submit/{id}", func(e *handler.ComponentEvent) error {
 					err := builders.GetUserSettings(e.Vars["id"]).Submit(e.Ctx)

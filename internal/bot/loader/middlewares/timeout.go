@@ -9,7 +9,7 @@ import (
 	"github.com/disgoorg/disgo/handler/middleware"
 )
 
-func TimeoutMiddleware(timeout time.Duration) handler.Middleware {
+func Timeout(timeout time.Duration) handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(inter *handler.InteractionEvent) error {
 			ctx, cancel := context.WithTimeout(inter.Ctx, timeout)
@@ -22,9 +22,9 @@ func TimeoutMiddleware(timeout time.Duration) handler.Middleware {
 	}
 }
 
-func TimeoutAndDeferMiddleware(timeout time.Duration, iType discord.InteractionType, updateMessage, ephemeral bool) handler.Middleware {
+func TimeoutAndDefer(timeout time.Duration, iType discord.InteractionType, updateMessage, ephemeral bool) handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		next = middleware.Defer(iType, updateMessage, ephemeral)(next)
-		return TimeoutMiddleware(timeout)(next)
+		return Timeout(timeout)(next)
 	}
 }

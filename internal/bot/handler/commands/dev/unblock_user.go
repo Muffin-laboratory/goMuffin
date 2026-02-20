@@ -32,8 +32,8 @@ func init() {
 
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
-			middlewares.CheckDeveloperMiddleware(),
-			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
+			middlewares.CheckIsDeveloper(),
+			middlewares.TimeoutAndDefer(loader.Timeout(), discord.InteractionTypeApplicationCommand, false, true),
 		)
 
 		r.Autocomplete("/"+name, func(e *handler.AutocompleteEvent) error {

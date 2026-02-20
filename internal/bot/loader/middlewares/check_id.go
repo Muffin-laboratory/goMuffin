@@ -22,7 +22,7 @@ func getID(customID string) string {
 	return parts[len(parts)-1]
 }
 
-func CheckIDMiddleware() handler.Middleware {
+func CheckUserID() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
 			inter, ok := e.Interaction.(discord.ComponentInteraction)

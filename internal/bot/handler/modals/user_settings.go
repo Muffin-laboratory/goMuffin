@@ -11,7 +11,7 @@ import (
 
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Use(middlewares.CheckUserSettingsMiddleware())
+		r.Use(middlewares.CheckUserSettings())
 
 		r.Modal(customid.UserSettingsPrompt+"/{id}", func(e *handler.ModalEvent) error {
 			var prompt string

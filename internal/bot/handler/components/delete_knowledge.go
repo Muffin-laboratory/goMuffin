@@ -14,8 +14,8 @@ import (
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
 		r.Use(
-			middlewares.CheckIDMiddleware(),
-			middlewares.TimeoutAndDeferMiddleware(loader.Timeout(), discord.InteractionTypeComponent, true, false),
+			middlewares.CheckUserID(),
+			middlewares.TimeoutAndDefer(loader.Timeout(), discord.InteractionTypeComponent, true, false),
 		)
 
 		r.Component(customid.DeleteKnowledge+"/{id}", func(e *handler.ComponentEvent) error {

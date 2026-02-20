@@ -10,7 +10,7 @@ import (
 
 func init() {
 	loader.GetDiscommand().RegisterHandler(func(r handler.Router) {
-		r.Use(middlewares.CheckPaginationContainerMiddleware())
+		r.Use(middlewares.CheckPaginationContainer())
 
 		r.Component(customid.PaginationContainerFirst+"/{id}", func(e *handler.ComponentEvent) error {
 			return builders.GetPaginationContainer(e.Vars["id"]).First(e)
