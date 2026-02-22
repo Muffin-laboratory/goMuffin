@@ -17,15 +17,6 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 	bot, _ := e.Client().Caches.SelfUser()
 
 	ghConfig := configs.GetConfig().GitHub
-	if ghConfig.Owner == "" || ghConfig.Repository == "" {
-		_, err := e.UpdateInteractionResponse(
-			discord.NewMessageUpdateV2([]discord.LayoutComponent{
-				builders.MakeErrorContainer("해당 봇은 패치내역을 제공하지 않아요."),
-			}),
-		)
-		return err
-	}
-
 	ghClient := repository.GetGHClient()
 
 	ghReleases, _, err := ghClient.Repositories.ListReleases(e.Ctx, ghConfig.Owner, ghConfig.Repository, nil)
