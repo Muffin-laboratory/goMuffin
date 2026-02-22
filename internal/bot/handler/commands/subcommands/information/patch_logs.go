@@ -38,7 +38,7 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 			releases = append(releases, repository.Release{Version: *oldRelease.TagName, Body: *oldRelease.Body})
 		}
 
-		releases = append(releases, repository.GetOldPatchLogs()...)
+		releases = append(releases, repository.OldPatchLogs()...)
 	}
 
 	for _, release := range releases {

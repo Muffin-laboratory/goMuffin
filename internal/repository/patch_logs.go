@@ -27,7 +27,7 @@ func init() {
 	}
 }
 
-func GetOldPatchLogs() []Release {
+func OldPatchLogs() []Release {
 	oldReleasesCopy := make([]Release, len(oldReleases))
 	copy(oldReleasesCopy, oldReleases)
 	return oldReleasesCopy
