@@ -57,7 +57,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question
 	var files []repository.File
 
 	if len(attachments) != 0 {
-		genaiFiles, err := getFiles(c.Gemini, attachments)
+		genaiFiles, err := getFiles(ctx, c.Gemini, attachments)
 		if err != nil {
 			return "살려주ㅅ세요", err
 		}

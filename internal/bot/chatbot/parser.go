@@ -49,7 +49,7 @@ func ParseResult(content string, m any) string {
 	return result
 }
 
-func getFiles(client *genai.Client, attachments []discord.Attachment) (files []*genai.File, err error) {
+func getFiles(ctx context.Context, client *genai.Client, attachments []discord.Attachment) (files []*genai.File, err error) {
 	for _, attachment := range attachments {
 		var file *genai.File
 		var resp *http.Response
@@ -64,7 +64,7 @@ func getFiles(client *genai.Client, attachments []discord.Attachment) (files []*
 			break
 		}
 
-		file, err = client.Files.Upload(context.TODO(), resp.Body, &genai.UploadFileConfig{
+		file, err = client.Files.Upload(ctx, resp.Body, &genai.UploadFileConfig{
 			MIMEType:    *attachment.ContentType,
 			DisplayName: attachment.Filename,
 		})
