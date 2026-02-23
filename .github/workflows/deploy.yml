@@ -1,28 +1,28 @@
 name: Deploy to server
 
 on:
-    push:
-        branches:
-            - main
+  push:
+    branches:
+      - main
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
+  deploy:
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-            - name: Deploy with SSH
-              uses: appleboy/ssh-action@v1
-              with:
-                  host: ${{ secrets.SSH_HOST }}
-                  username: ${{ secrets.SSH_USERNAME }}
-                  key: ${{ secrets.SSH_KEY }}
-                  port: ${{ secrets.SSH_PORT }}
-                  timeout: 15m
-                  script: |
-                      cd ${{ secrets.PROJECT_DIR }}
-                      git fetch
-                      git pull
-                      ${{ secrets.PROJECT_DIR }}/internal/scripts/update.sh
+      - name: Deploy with SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 15m
+          script: |
+            cd ${{ secrets.PROJECT_DIR }}
+            git fetch
+            git pull
+            ${{ secrets.PROJECT_DIR }}/internal/scripts/update.sh
