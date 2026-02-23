@@ -14,6 +14,7 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 	var containers []discord.ContainerComponent
 	var releases []repository.Release
 
+	startPage := e.SlashCommandInteractionData().Int("버전")
 	bot, _ := e.Client().Caches.SelfUser()
 
 	ghConfig := configs.GetConfig().GitHub
@@ -55,5 +56,6 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 
 	return builders.NewPaginatedContainer(e, true).
 		AddContainers(containers...).
+		SetStartPage(startPage).
 		Start()
 }

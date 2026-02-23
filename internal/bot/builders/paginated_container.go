@@ -67,10 +67,26 @@ func (p *PaginatedContainer) resetTimer() {
 	p.timer.Reset(endDuration)
 }
 
+func (p *PaginatedContainer) setPage(page int) {
+	if page <= 0 {
+		p.current = 1
+	} else if page > p.total {
+		p.current = p.total
+	} else {
+		p.current = page
+	}
+}
+
 // AddContainers adds containers
 func (p *PaginatedContainer) AddContainers(containers ...discord.ContainerComponent) *PaginatedContainer {
 	p.total += len(containers)
 	p.containers = append(p.containers, containers...)
+	return p
+}
+
+// SetStartPage sets start page number.
+func (p *PaginatedContainer) SetStartPage(startPage int) *PaginatedContainer {
+	p.setPage(startPage)
 	return p
 }
 
@@ -80,7 +96,7 @@ func (p *PaginatedContainer) Start() error {
 		return nil
 	}
 
-	container := p.containers[0].AddComponents(p.makeComponents())
+	container := p.containers[p.current-1].AddComponents(p.makeComponents())
 	paginatedContainers[p.id] = p
 
 	go p.waitTimerEnd()
@@ -172,14 +188,7 @@ func (p *PaginatedContainer) Last(i *handler.ComponentEvent) error {
 // Set sets to page
 func (p *PaginatedContainer) Set(i updatableEvent, page int) error {
 	p.resetTimer()
-
-	if page <= 0 {
-		p.current = 1
-	} else if page > p.total {
-		p.current = p.total
-	} else {
-		p.current = page
-	}
+	p.setPage(page)
 
 	container := p.containers[p.current-1].AddComponents(p.makeComponents())
 	return i.UpdateMessage(
