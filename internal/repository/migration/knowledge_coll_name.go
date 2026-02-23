@@ -16,8 +16,6 @@ func MigrateKnowledgeCollectionName(db *mongo.Database) {
 	slog.Info("start knowledge collection migration...")
 
 	go func() {
-		const where = "knowledge_name"
-
 		var data []map[string]any
 
 		oldColl := db.Collection("learn")
