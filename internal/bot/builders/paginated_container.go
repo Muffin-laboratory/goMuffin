@@ -117,11 +117,7 @@ func (p *PaginatedContainer) Start() error {
 }
 
 func (p *PaginatedContainer) makeComponents() discord.ActionRowComponent {
-	disabled := false
-
-	if p.total == 1 {
-		disabled = true
-	}
+	disabled := p.total == 1
 
 	return discord.NewActionRow(
 		discord.NewPrimaryButton("", customid.MakePaginationContainerFirst(p.id)).
