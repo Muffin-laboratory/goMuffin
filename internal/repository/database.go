@@ -50,8 +50,8 @@ func GetDatabase() *MuffinDatabase {
 	return instance
 }
 
-func (d *MuffinDatabase) Disconnect() {
-	GetDatabase().Client.Disconnect(context.Background())
+func (d *MuffinDatabase) Disconnect() error {
+	return GetDatabase().Client.Disconnect(context.Background())
 }
 
 func createIndexCache(im *cache.CacheManager[string, *indexItem], id bson.ObjectID, index indexBuilder) {

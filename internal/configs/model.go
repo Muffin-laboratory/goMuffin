@@ -1,6 +1,10 @@
 package configs
 
-import "github.com/disgoorg/snowflake/v2"
+import (
+	"log/slog"
+
+	"github.com/disgoorg/snowflake/v2"
+)
 
 type botConfig struct {
 	Token   string
@@ -52,4 +56,9 @@ type integrateMDCConfig struct {
 
 type commandConfig struct {
 	DeveloperOnlyGuildID snowflake.ID
+}
+
+type loggerConfig struct {
+	Level     slog.Level
+	WriteFile bool
 }

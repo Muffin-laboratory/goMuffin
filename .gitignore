@@ -133,3 +133,6 @@ data/
 !core_prompt.txt
 
 __debug*
+
+# logs
+logs

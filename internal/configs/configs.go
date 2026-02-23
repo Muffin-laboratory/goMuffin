@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/joho/godotenv"
 )
@@ -15,16 +16,18 @@ type MuffinConfig struct {
 	GitHub       githubConfig
 	IntegrateMDC integrateMDCConfig
 	Command      commandConfig
+	Logger       loggerConfig
 }
 
 var instance *MuffinConfig
+var once sync.Once
 
 func Configs() *MuffinConfig {
-	if instance == nil {
+	once.Do(func() {
 		godotenv.Load()
 		instance = &MuffinConfig{}
 		setConfig(instance)
-	}
+	})
 
 	return instance
 }
@@ -65,7 +68,7 @@ func setConfig(config *MuffinConfig) {
 	}
 
 	if config.Chatbot.Gemini.Model == "" {
-		config.Chatbot.Gemini.Model = "gemini-3-flash"
+		config.Chatbot.Gemini.Model = "gemini-3-flash-preview"
 	}
 
 	config.Service = serviceConfig{
@@ -87,5 +90,10 @@ func setConfig(config *MuffinConfig) {
 
 	config.Command = commandConfig{
 		DeveloperOnlyGuildID: getRequiredValueToSnowflake("COMMAND_DEVELOPER_ONLY_GUILD_ID"),
+	}
+
+	config.Logger = loggerConfig{
+		Level:     getValueToLogLevel("LOGGER_LEVEL"),
+		WriteFile: getValueToBool("LOGGER_WRITE_FILE"),
 	}
 }

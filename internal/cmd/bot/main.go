@@ -15,6 +15,18 @@ import (
 )
 
 func main() {
+	defer func() {
+		err := logFile.Close()
+		if err != nil {
+			slog.Error("error while closing log file", "error", err)
+		}
+
+		err = repository.GetDatabase().Disconnect()
+		if err != nil {
+			slog.Error("error while closing database", "error", err)
+		}
+	}()
+
 	err := session.OpenGateway(context.Background())
 	if err != nil {
 		slog.Error("[Fatal] failed to start bot.", "error", err)
@@ -34,7 +46,7 @@ func main() {
 	globalCmds := loader.GetDiscommand().Commands()
 	_, err = session.Rest.SetGlobalCommands(session.ApplicationID, globalCmds)
 	if err != nil {
-		slog.Error("error in set global commands.", "error", err)
+		slog.Error("error while setting global commands.", "error", err)
 	}
 
 	developerOnlyGuildCmds := loader.GetDiscommand().DevCommands()
@@ -42,11 +54,9 @@ func main() {
 		developerOnlyGuildID := configs.Configs().Command.DeveloperOnlyGuildID
 		_, err = session.Rest.SetGuildCommands(session.ApplicationID, developerOnlyGuildID, developerOnlyGuildCmds)
 		if err != nil {
-			slog.Error("error in set developer only commands.", "error", err)
+			slog.Error("error while setting developer only commands.", "error", err)
 		}
 	}
-
-	defer repository.GetDatabase().Disconnect()
 
 	slog.Info("bot is running. press ctrl+C to exit program.", "version", configs.MuffinVersion)
 	sc := make(chan os.Signal, 1)
