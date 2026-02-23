@@ -56,7 +56,7 @@ func init() {
 
 			for _, data := range data {
 				userID := snowflake.ID(data.ID)
-				if userID == configs.GetConfig().Bot.OwnerID {
+				if userID == configs.Configs().Bot.OwnerID {
 					continue
 				}
 
@@ -92,7 +92,7 @@ func init() {
 				reason = opt
 			}
 
-			if userID == configs.GetConfig().Bot.OwnerID {
+			if userID == configs.Configs().Bot.OwnerID {
 				_, err := e.UpdateInteractionResponse(
 					discord.NewMessageUpdateV2([]discord.LayoutComponent{
 						builders.MakeErrorContainer("개발자는 차단을 할 수 없어요."),

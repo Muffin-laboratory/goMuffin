@@ -12,7 +12,7 @@ import (
 )
 
 func loadPrompt() (string, string, error) {
-	defaultPrompt, err := os.ReadFile(configs.GetConfig().Chatbot.Gemini.PromptPath)
+	defaultPrompt, err := os.ReadFile(configs.Configs().Chatbot.Gemini.PromptPath)
 	if err != nil {
 		return "", "", err
 	}
@@ -30,7 +30,7 @@ func makePrompt(ctx context.Context, systemPrompt, corePrompt string, user *disc
 
 	knowledgePrompt := "## Knowledge of the user\n"
 
-	if user.ID == configs.GetConfig().Bot.OwnerID {
+	if user.ID == configs.Configs().Bot.OwnerID {
 		userPrompt += fmt.Sprintf(
 			"\n---\n## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is your developer.",
 			user.ID.String(),

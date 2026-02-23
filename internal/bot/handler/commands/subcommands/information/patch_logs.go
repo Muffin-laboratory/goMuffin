@@ -17,7 +17,7 @@ func InfoPatchLogs(e *handler.CommandEvent) error {
 	startPage := e.SlashCommandInteractionData().Int("버전")
 	bot, _ := e.Client().Caches.SelfUser()
 
-	ghConfig := configs.GetConfig().GitHub
+	ghConfig := configs.Configs().GitHub
 	ghClient := repository.GetGHClient()
 
 	ghReleases, _, err := ghClient.Repositories.ListReleases(e.Ctx, ghConfig.Owner, ghConfig.Repository, nil)

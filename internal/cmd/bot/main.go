@@ -39,7 +39,7 @@ func main() {
 
 	developerOnlyGuildCmds := loader.GetDiscommand().DevCommands()
 	if len(developerOnlyGuildCmds) != 0 {
-		developerOnlyGuildID := configs.GetConfig().Command.DeveloperOnlyGuildID
+		developerOnlyGuildID := configs.Configs().Command.DeveloperOnlyGuildID
 		_, err = session.Rest.SetGuildCommands(session.ApplicationID, developerOnlyGuildID, developerOnlyGuildCmds)
 		if err != nil {
 			slog.Error("error in set developer only commands.", "error", err)

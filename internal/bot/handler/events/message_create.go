@@ -17,7 +17,7 @@ import (
 
 // OnMessageCreate is handlers of messageCreate event
 func OnMessageCreate(m *events.MessageCreate) {
-	config := configs.GetConfig()
+	config := configs.Configs()
 	if m.Message.Author.Bot {
 		return
 	}

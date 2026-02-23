@@ -45,7 +45,7 @@ func (c *Chatbot) GetChat(ctx context.Context, user *discord.User, chatID bson.O
 		content = append(content, memory.ToContents()...)
 	}
 
-	chat, err := c.Gemini.Chats.Create(ctx, configs.GetConfig().Chatbot.Gemini.Model, &genai.GenerateContentConfig{
+	chat, err := c.Gemini.Chats.Create(ctx, configs.Configs().Chatbot.Gemini.Model, &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText(prompt, genai.RoleUser),
 		Tools: []*genai.Tool{
 			{

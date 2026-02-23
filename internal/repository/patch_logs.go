@@ -21,7 +21,7 @@ var oldReleasesOnce sync.Once
 
 func OldPatchLogs() []Release {
 	oldReleasesOnce.Do(func() {
-		if configs.GetConfig().GitHub.OldRepository != "" {
+		if configs.Configs().GitHub.OldRepository != "" {
 			bytes, err := os.ReadFile("old_muffin_patch_logs.json")
 			if err != nil {
 				return

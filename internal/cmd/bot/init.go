@@ -22,7 +22,7 @@ func init() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	session, err = disgo.New(configs.GetConfig().Bot.Token,
+	session, err = disgo.New(configs.Configs().Bot.Token,
 		bot.WithGatewayConfigOpts(
 			gateway.WithIntents(
 				gateway.IntentGuilds,

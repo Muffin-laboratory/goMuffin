@@ -42,8 +42,8 @@ func init() {
 							"### %s 가입\n해당 서비스에 가입하실려면 [개인정보처리방침](%s)과 "+
 								"[서비스 이용약관](%s)에 동의해야해요.",
 							bot.Username,
-							configs.GetConfig().Service.PrivacyPolicyURL,
-							configs.GetConfig().Service.TermOfServiceURL,
+							configs.Configs().Service.PrivacyPolicyURL,
+							configs.Configs().Service.TermOfServiceURL,
 						),
 						discord.NewActionRow(
 							discord.NewSuccessButton("동의 및 가입", customid.MakeServiceAgree(userID.String())),

@@ -22,7 +22,7 @@ var instance *Chatbot
 
 func Make(s *bot.Client) error {
 	gemini, err := genai.NewClient(context.Background(), &genai.ClientConfig{
-		APIKey:  configs.GetConfig().Chatbot.Gemini.Token,
+		APIKey:  configs.Configs().Chatbot.Gemini.Token,
 		Backend: genai.BackendGeminiAPI,
 	})
 	if err != nil {

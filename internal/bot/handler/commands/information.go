@@ -31,8 +31,8 @@ func init() {
 		},
 	}
 
-	isOwnerEmpty := configs.GetConfig().GitHub.Owner == ""
-	isRepoEmpty := configs.GetConfig().GitHub.Repository == ""
+	isOwnerEmpty := configs.Configs().GitHub.Owner == ""
+	isRepoEmpty := configs.Configs().GitHub.Repository == ""
 
 	if !isOwnerEmpty && !isRepoEmpty {
 		options = append(options, discord.ApplicationCommandOptionSubCommand{

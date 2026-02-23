@@ -9,7 +9,7 @@ import (
 )
 
 func InfoBot(e *handler.CommandEvent) error {
-	owner, err := e.Client().Rest.GetUser(configs.GetConfig().Bot.OwnerID)
+	owner, err := e.Client().Rest.GetUser(configs.Configs().Bot.OwnerID)
 	if err != nil {
 		return err
 	}
@@ -26,9 +26,9 @@ func InfoBot(e *handler.CommandEvent) error {
 		discord.NewTextDisplayf("- **최근에 업데이트된 날짜**\n> %s", builders.Time(configs.UpdatedAt(), builders.RelativeTime)),
 		discord.NewTextDisplayf("- **봇이 시작한 시각**\n> %s", builders.Time(configs.StartedAt, builders.RelativeTime)),
 		discord.NewActionRow(
-			discord.NewLinkButton("개인정보처리방침", configs.GetConfig().Service.PrivacyPolicyURL).
+			discord.NewLinkButton("개인정보처리방침", configs.Configs().Service.PrivacyPolicyURL).
 				WithEmoji(discord.NewComponentEmoji("🔗")),
-			discord.NewLinkButton("서비스 이용약관", configs.GetConfig().Service.TermOfServiceURL).
+			discord.NewLinkButton("서비스 이용약관", configs.Configs().Service.TermOfServiceURL).
 				WithEmoji(discord.NewComponentEmoji("🔗")),
 		),
 		discord.NewSmallSeparator(),

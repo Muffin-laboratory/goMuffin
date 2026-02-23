@@ -54,9 +54,9 @@ func InfoUser(e *handler.CommandEvent) error {
 				discord.NewTextDisplayf("- **현재 채팅**\n> %s", currentChat.Name),
 				discord.NewTextDisplayf("- **총 채팅량**\n> `%d`개", chatLength),
 				discord.NewActionRow(
-					discord.NewLinkButton("개인정보처리방침", configs.GetConfig().Service.PrivacyPolicyURL).
+					discord.NewLinkButton("개인정보처리방침", configs.Configs().Service.PrivacyPolicyURL).
 						WithEmoji(discord.NewComponentEmoji("🔗")),
-					discord.NewLinkButton("서비스 이용약관", configs.GetConfig().Service.TermOfServiceURL).
+					discord.NewLinkButton("서비스 이용약관", configs.Configs().Service.TermOfServiceURL).
 						WithEmoji(discord.NewComponentEmoji("🔗")),
 					discord.NewDangerButton("탈퇴", customid.MakeUserInformationDeregister(e.User().ID.String())),
 				),

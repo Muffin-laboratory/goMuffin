@@ -30,7 +30,7 @@ var once sync.Once
 
 func GetDatabase() *MuffinDatabase {
 	once.Do(func() {
-		client, err := mongo.Connect(options.Client().ApplyURI(configs.GetConfig().Database.URL))
+		client, err := mongo.Connect(options.Client().ApplyURI(configs.Configs().Database.URL))
 		if err != nil {
 			slog.Error("error while create database.", "error", err)
 			os.Exit(1)
@@ -38,11 +38,11 @@ func GetDatabase() *MuffinDatabase {
 
 		instance = &MuffinDatabase{
 			Client:    client,
-			Knowledge: newKnowledgeCollection(client.Database(configs.GetConfig().Database.Name).Collection("knowledge")),
-			Texts:     newTextCollection(client.Database(configs.GetConfig().Database.Name).Collection("text")),
-			Memory:    newMemoryCollection(client.Database(configs.GetConfig().Database.Name).Collection("memory")),
-			Users:     newUserCollection(client.Database(configs.GetConfig().Database.Name).Collection("user")),
-			Chats:     newChatCollection(client.Database(configs.GetConfig().Database.Name).Collection("chat")),
+			Knowledge: newKnowledgeCollection(client.Database(configs.Configs().Database.Name).Collection("knowledge")),
+			Texts:     newTextCollection(client.Database(configs.Configs().Database.Name).Collection("text")),
+			Memory:    newMemoryCollection(client.Database(configs.Configs().Database.Name).Collection("memory")),
+			Users:     newUserCollection(client.Database(configs.Configs().Database.Name).Collection("user")),
+			Chats:     newChatCollection(client.Database(configs.Configs().Database.Name).Collection("chat")),
 		}
 
 		slog.Info("database is created.")

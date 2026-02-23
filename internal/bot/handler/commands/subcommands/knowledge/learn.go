@@ -20,7 +20,7 @@ func Learn(data discord.SlashCommandInteractionData, e *handler.CommandEvent) er
 	disallows := []string{
 		"@everyone",
 		"@here",
-		fmt.Sprintf("<@%s>", configs.GetConfig().Bot.OwnerID),
+		fmt.Sprintf("<@%s>", configs.Configs().Bot.OwnerID),
 	}
 
 	for _, ig := range ignores {
