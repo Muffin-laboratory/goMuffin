@@ -9,7 +9,10 @@ import (
 func ShowPreviewWarningMessage() handler.Middleware {
 	return func(next handler.Handler) handler.Handler {
 		return func(e *handler.InteractionEvent) error {
-			next(e)
+			err := next(e)
+			if err != nil {
+				return err
+			}
 
 			if e.Type() == discord.InteractionTypeApplicationCommand {
 				_, err := e.CreateFollowupMessage(

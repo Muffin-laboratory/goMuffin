@@ -89,7 +89,12 @@ func (c *UserCollection) All(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close user cursor", "error", err)
+		}
+	}()
 
 	if err = cur.All(ctx, &data); err != nil {
 		return nil, err
@@ -110,7 +115,12 @@ func (c *UserCollection) FindBlockedUser(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close user cursor", "error", err)
+		}
+	}()
 
 	if err = cur.All(ctx, &data); err != nil {
 		return nil, err

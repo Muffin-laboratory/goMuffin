@@ -2,6 +2,7 @@ package builders
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"time"
 
@@ -53,13 +54,17 @@ func NewPaginatedContainer(event creatableEvent, deferred bool) *PaginatedContai
 
 func (p *PaginatedContainer) waitTimerEnd() {
 	<-p.timer.C
-	p.event.Client().Rest.UpdateInteractionResponse(
+	_, err := p.event.Client().Rest.UpdateInteractionResponse(
 		p.event.ApplicationID(),
 		p.event.Token(),
 		discord.NewMessageUpdateV2([]discord.LayoutComponent{
 			p.containers[p.current-1],
 		}),
 	)
+	if err != nil {
+		slog.Error("error while editing paginated-container when timer end", "error", err)
+	}
+
 	delete(paginatedContainers, p.id)
 }
 

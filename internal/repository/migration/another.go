@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 	"sync"
 
@@ -26,7 +27,11 @@ func migrateAnotherCollection(where string, coll *mongo.Collection, ch chan *mig
 		return
 	}
 
-	defer cur.Close(context.Background())
+	defer func() {
+		if err := cur.Close(context.Background()); err != nil {
+			slog.Error("failed to close "+where+" cursor while migrate database", "error", err)
+		}
+	}()
 
 	if err = cur.All(context.Background(), &dataToMigrate); err != nil {
 		ch <- &migrationErr{where, err}

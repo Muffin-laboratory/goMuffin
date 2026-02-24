@@ -57,7 +57,11 @@ func backup(where string, coll *mongo.Collection, ch chan *migrationErr, wg *syn
 		return
 	}
 
-	defer cur.Close(context.Background())
+	defer func() {
+		if err := cur.Close(context.Background()); err != nil {
+			slog.Error("failed to close "+where+" cursor while backup database", "error", err)
+		}
+	}()
 
 	var data []map[string]any
 	if err = cur.All(context.Background(), &data); err != nil {

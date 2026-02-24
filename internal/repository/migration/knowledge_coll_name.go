@@ -27,7 +27,11 @@ func MigrateKnowledgeCollectionName(db *mongo.Database) {
 			return
 		}
 
-		defer cur.Close(context.Background())
+		defer func() {
+			if err := cur.Close(context.Background()); err != nil {
+				slog.Error("failed to close knowledge cursor while change collection name", "error", err)
+			}
+		}()
 
 		if err = cur.All(context.Background(), &data); err != nil {
 			ch <- err

@@ -2,6 +2,7 @@ package migration
 
 import (
 	"context"
+	"log/slog"
 	"strconv"
 	"sync"
 	"time"
@@ -43,7 +44,11 @@ func migrateUser(coll *mongo.Collection, ch chan *migrationErr, wg *sync.WaitGro
 		return
 	}
 
-	defer cur.Close(context.Background())
+	defer func() {
+		if err := cur.Close(context.Background()); err != nil {
+			slog.Error("failed to close user cursor while migrate user id type", "error", err)
+		}
+	}()
 
 	if err = cur.All(context.Background(), &dataToMigrate); err != nil {
 		ch <- &migrationErr{where, err}

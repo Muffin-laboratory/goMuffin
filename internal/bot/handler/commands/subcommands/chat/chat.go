@@ -3,6 +3,7 @@ package chat
 import (
 	"log/slog"
 
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/chatbot"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
@@ -18,12 +19,13 @@ func Chat(data discord.SlashCommandInteractionData, e *handler.CommandEvent) err
 
 	content, err := chatbot.GetChatBot().GetResponse(e.Ctx, e.User(), data.String("내용"), attachment)
 	if err != nil {
-		slog.Error("error in responding chat.", "user_id", e.User().ID, "error", err)
-		e.UpdateInteractionResponse(
-			discord.NewMessageUpdate().
-				WithContent(content),
+		slog.Error("failed to respond chat.", "user_id", e.User().ID, "error", err)
+		_, err := e.UpdateInteractionResponse(
+			discord.NewMessageUpdateV2([]discord.LayoutComponent{
+				builders.MakeErrorContainer("대답하는 데 실패했어요. 잠시 후에 다시 시도해주세요."),
+			}),
 		)
-		return nil
+		return err
 	}
 
 	result := chatbot.ParseResult(content, e)

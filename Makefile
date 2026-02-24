@@ -43,5 +43,8 @@ fmt:
 vet:
 	@go vet $(PKG)
 
+lint:
+	@golangci-lint run
+
 migration:
 	@go run ./internal/cmd/migration

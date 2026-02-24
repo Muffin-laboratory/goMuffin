@@ -38,7 +38,10 @@ func main() {
 	// 봇의 상태메세지 변경
 	go func() {
 		for {
-			session.SetPresence(context.Background(), gateway.WithCustomActivity("ㅅ살려주세요..!"))
+			err := session.SetPresence(context.Background(), gateway.WithCustomActivity("ㅅ살려주세요..!"))
+			if err != nil {
+				slog.Error("failed to change presence", "error", err)
+			}
 			time.Sleep(time.Minute * 10)
 		}
 	}()

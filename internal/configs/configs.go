@@ -24,7 +24,7 @@ var once sync.Once
 
 func Configs() *MuffinConfig {
 	once.Do(func() {
-		godotenv.Load()
+		_ = godotenv.Load()
 		instance = &MuffinConfig{}
 		setConfig(instance)
 	})

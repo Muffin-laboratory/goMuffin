@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
@@ -125,7 +126,12 @@ func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) 
 		return nil, err
 	}
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close memory cursor", "error", err)
+		}
+	}()
 
 	var memory []Memory
 	var ids []bson.ObjectID

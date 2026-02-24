@@ -2,6 +2,7 @@ package chatbot
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -59,8 +60,14 @@ func getFiles(ctx context.Context, client *genai.Client, attachments []discord.A
 			break
 		}
 
+		defer func() {
+			err := resp.Body.Close()
+			if err != nil {
+				slog.Error("error while closing http resp body", "error", err)
+			}
+		}()
+
 		if resp.StatusCode != http.StatusOK {
-			resp.Body.Close()
 			break
 		}
 
@@ -68,8 +75,6 @@ func getFiles(ctx context.Context, client *genai.Client, attachments []discord.A
 			MIMEType:    *attachment.ContentType,
 			DisplayName: attachment.Filename,
 		})
-
-		resp.Body.Close()
 
 		if err != nil {
 			break

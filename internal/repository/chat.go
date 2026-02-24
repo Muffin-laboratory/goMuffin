@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -101,7 +102,12 @@ func (c *ChatCollection) Find(ctx context.Context, filter query.QueryBuilder) ([
 		return nil, err
 	}
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close chat cursor", "error", err)
+		}
+	}()
 
 	var chats []Chat
 	var ids []bson.ObjectID

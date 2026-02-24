@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -73,7 +74,12 @@ func (c *TextCollection) All(ctx context.Context) ([]Text, error) {
 
 	var data []Text
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close text cursor", "error", err)
+		}
+	}()
 
 	if err = cur.All(ctx, &data); err != nil {
 		return nil, err
