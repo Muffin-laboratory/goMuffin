@@ -53,6 +53,7 @@ func NewUserSettings(ctx context.Context, user discord.User) (*UserSettings, err
 		replyUser:                 dbUser.ReplyUser,
 		createNewChatAfter12Hours: dbUser.CreateNewChatAfter12Hours,
 		prompt:                    dbUser.Prompt,
+		chatPerChannel:            dbUser.ChatPerChannel,
 	}
 
 	userSettings[id] = s
