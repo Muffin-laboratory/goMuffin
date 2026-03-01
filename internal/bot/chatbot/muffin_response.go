@@ -16,12 +16,12 @@ func (c *Chatbot) getMuffinResponse(ctx context.Context, question string) (strin
 
 	data, err := repository.GetDatabase().Texts.All(ctx)
 	if err != nil {
-		return "살려주ㅅ세요", err
+		return "", err
 	}
 
 	knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetCommand(question))
 	if err != nil {
-		return "살려주ㅅ세요", err
+		return "", err
 	}
 
 	if x > 2 && len(knowledge) != 0 {
