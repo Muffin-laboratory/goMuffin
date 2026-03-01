@@ -1,9 +1,6 @@
 package chat
 
 import (
-	"fmt"
-	"math/rand"
-
 	"github.com/LoperLee/golang-hangul-toolkit/hangul"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders/customid"
@@ -22,8 +19,7 @@ func Create(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 		return chatSendErrorMessage(e)
 	}
 
-	name := fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))
-
+	var name string
 	if value, ok := data.OptString("이름"); ok {
 		name = value
 	}

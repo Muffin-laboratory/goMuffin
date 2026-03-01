@@ -2,7 +2,9 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
+	"math/rand"
 	"slices"
 	"time"
 
@@ -48,6 +50,10 @@ func (c *ChatCollection) createCache(chat Chat) {
 }
 
 func (c *ChatCollection) Create(ctx context.Context, userID int64, prompt, name string) (*Chat, error) {
+	if name == "" {
+		name = fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))
+	}
+
 	data := Chat{UserID: userID, Name: name, Prompt: prompt, CreatedAt: time.Now()}
 	result, err := c.coll.InsertOne(ctx, data)
 	if err != nil {
