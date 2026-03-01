@@ -20,6 +20,11 @@ func (q *MemoryQuery) SetUserID(userID int64) *MemoryQuery {
 	return q
 }
 
+func (q *MemoryQuery) SetChannelID(channelID int64) *MemoryQuery {
+	q.filter = append(q.filter, bson.E{Key: "channel_id", Value: channelID})
+	return q
+}
+
 func (q *MemoryQuery) Build() bson.D {
 	return q.filter
 }

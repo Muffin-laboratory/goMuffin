@@ -14,12 +14,13 @@ import (
 
 type Memory struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
-	UserID    int64         `bson:"user_id,omitempty"`
-	Content   string        `bson:"content,omitempty"`
-	Answer    string        `bson:"answer,omitempty"`
+	UserID    int64         `bson:"user_id"`
+	Content   string        `bson:"content"`
+	Answer    string        `bson:"answer"`
 	ChatID    bson.ObjectID `bson:"chat_id,omitempty"`
-	CreatedAt time.Time     `bson:"created_at,omitempty"`
+	CreatedAt time.Time     `bson:"created_at"`
 	Files     []File        `bson:"files,omitempty"`
+	ChannelID int64         `bson:"channel_id,omitempty"`
 }
 
 func (c *Memory) ToContents() []*genai.Content {
@@ -71,14 +72,19 @@ func (c *MemoryCollection) createCache(memory Memory) {
 	createIndexCache(c.indexes, memory.ID, index)
 }
 
-func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID int64, content, answer string, files []File) (*Memory, error) {
+func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID int64, content, answer string, files []File, channelID int64) (*Memory, error) {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
 		Answer:    answer,
-		ChatID:    chatID,
 		CreatedAt: time.Now(),
 		Files:     files,
+	}
+
+	if channelID != 0 {
+		data.ChannelID = channelID
+	} else {
+		data.ChatID = chatID
 	}
 
 	createdMemory, err := c.coll.InsertOne(ctx, data)

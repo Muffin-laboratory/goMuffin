@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
@@ -25,10 +26,9 @@ func loadPrompt() (string, string, error) {
 	return string(defaultPrompt), string(corePrompt), nil
 }
 
-func makePrompt(ctx context.Context, systemPrompt, corePrompt string, user *discord.User) (string, error) {
+func makePrompt(ctx context.Context, systemPrompt, corePrompt string, user *discord.User, isChat bool) (string, error) {
 	var userPrompt string
-
-	knowledgePrompt := "## Knowledge of the user\n"
+	var knowledgePrompt strings.Builder
 
 	if user.ID == configs.Configs().Bot.OwnerID {
 		userPrompt += fmt.Sprintf(
@@ -38,24 +38,28 @@ func makePrompt(ctx context.Context, systemPrompt, corePrompt string, user *disc
 		)
 	} else {
 		userPrompt += fmt.Sprintf(
-			"---\n## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is **not** your developer.",
+			"\n---\n## User Information\n* **ID:** %s\n* **Name:** %s\n* **Other:** This user is **not** your developer.",
 			user.ID.String(),
 			*user.GlobalName,
 		)
 	}
 
-	knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetUserID(int64(user.ID)))
-	if err != nil {
-		return "", err
+	if isChat {
+		knowledgePrompt.WriteString("## Knowledge of the user\n")
+
+		knowledge, err := repository.GetDatabase().Knowledge.Find(ctx, query.KnowledgeQueryBuilder().SetUserID(int64(user.ID)))
+		if err != nil {
+			return "", err
+		}
+
+		if len(knowledge) == 0 {
+			knowledgePrompt.WriteString("* **Knowledge of the user(The user is not You.) is None.**")
+		}
+
+		for _, knowledge := range knowledge {
+			fmt.Fprintf(&knowledgePrompt, "* **%s**: %s\n", knowledge.Command, knowledge.Result)
+		}
 	}
 
-	if len(knowledge) == 0 {
-		knowledgePrompt += "* **Knowledge of the user(The user is not You.) is None.**"
-	}
-
-	for _, knowledge := range knowledge {
-		knowledgePrompt += fmt.Sprintf("* **%s**: %s\n", knowledge.Command, knowledge.Result)
-	}
-
-	return systemPrompt + userPrompt + knowledgePrompt + corePrompt, nil
+	return systemPrompt + userPrompt + knowledgePrompt.String() + corePrompt, nil
 }

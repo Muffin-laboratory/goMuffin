@@ -14,41 +14,49 @@ import (
 	"google.golang.org/genai"
 )
 
-func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question string, attachments ...discord.Attachment) (string, error) {
+func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, channelID int64, question string, attachments ...discord.Attachment) (string, error) {
 	const twelveHours = 43_200
+	var chatID any
 
 	dbUser, err := repository.GetDatabase().Users.FindByID(ctx, int64(user.ID))
 	if err != nil {
 		return "", err
 	}
 
-	if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(int64(user.ID))); err != nil {
-		if err == mongo.ErrNoDocuments {
-			if _, err = repository.GetDatabase().Chats.Create(ctx, int64(user.ID), dbUser.Prompt, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
+	if !dbUser.ChatPerChannel {
+		channelID = 0
+		chatID = dbUser.ChatID
+
+		if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(int64(user.ID))); err != nil {
+			if err == mongo.ErrNoDocuments {
+				if _, err = repository.GetDatabase().Chats.Create(ctx, int64(user.ID), dbUser.Prompt, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
+					return "", err
+				}
+			} else {
 				return "", err
 			}
-		} else {
-			return "", err
-		}
-	}
-
-	if dbUser.CreateNewChatAfter12Hours {
-		timestamp, err := repository.GetDatabase().Memory.GetLastMemoryTimestamp(ctx, dbUser.ChatID)
-		if err != nil {
-			return "", err
 		}
 
-		if time.Now().Unix()-timestamp > twelveHours {
-			result, err := repository.GetDatabase().Chats.Create(ctx, int64(user.ID), dbUser.Prompt, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
+		if dbUser.CreateNewChatAfter12Hours {
+			timestamp, err := repository.GetDatabase().Memory.GetLastMemoryTimestamp(ctx, dbUser.ChatID)
 			if err != nil {
 				return "", err
 			}
 
-			dbUser.ChatID = result.ID
+			if time.Now().Unix()-timestamp > twelveHours {
+				result, err := repository.GetDatabase().Chats.Create(ctx, int64(user.ID), dbUser.Prompt, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999)))
+				if err != nil {
+					return "", err
+				}
+
+				dbUser.ChatID = result.ID
+			}
 		}
+	} else {
+		chatID = channelID
 	}
 
-	chat, err := c.GetChat(ctx, &user, dbUser.ChatID)
+	chat, err := c.GetChat(ctx, &user, chatID)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +84,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, question
 	}
 
 	resultText := result.Text()
-	if _, err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, int64(user.ID), question, resultText, files); err != nil {
+	if _, err = repository.GetDatabase().Memory.Create(ctx, dbUser.ChatID, int64(user.ID), question, resultText, files, channelID); err != nil {
 		return "", err
 	}
 

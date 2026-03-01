@@ -8,6 +8,7 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/snowflake/v2"
 	"google.golang.org/genai"
 )
 
@@ -53,7 +54,7 @@ func (c *Chatbot) GetPrompt() string {
 	return c.systemPrompt
 }
 
-func (c *Chatbot) GetResponse(ctx context.Context, user discord.User, question string, attachments ...discord.Attachment) (string, error) {
+func (c *Chatbot) GetResponse(ctx context.Context, user discord.User, channelID snowflake.ID, question string, attachments ...discord.Attachment) (string, error) {
 	mode, err := repository.GetDatabase().Users.GetUserChattingMode(ctx, int64(user.ID))
 	if err != nil {
 		return "살려주ㅅ세요", err
@@ -63,6 +64,6 @@ func (c *Chatbot) GetResponse(ctx context.Context, user discord.User, question s
 	case repository.ChattingMuffinMode:
 		return c.getMuffinResponse(ctx, question)
 	default:
-		return c.getAIResponse(ctx, user, question, attachments...)
+		return c.getAIResponse(ctx, user, int64(channelID), question, attachments...)
 	}
 }

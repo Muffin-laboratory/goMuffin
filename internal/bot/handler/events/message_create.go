@@ -74,7 +74,7 @@ func OnMessageCreate(m *events.MessageCreate) {
 			return
 		}
 
-		str, err := chatbot.GetChatBot().GetResponse(ctx, m.Message.Author, content, m.Message.Attachments...)
+		str, err := chatbot.GetChatBot().GetResponse(ctx, m.Message.Author, m.ChannelID, content, m.Message.Attachments...)
 		if err != nil {
 			slog.Error("failed to respond chat.", "user_id", m.Message.Author.ID, "error", err)
 			if _, err := m.Client().Rest.CreateMessage(

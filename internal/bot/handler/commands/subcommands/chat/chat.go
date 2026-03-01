@@ -17,7 +17,7 @@ func Chat(data discord.SlashCommandInteractionData, e *handler.CommandEvent) err
 		attachment = opt
 	}
 
-	content, err := chatbot.GetChatBot().GetResponse(e.Ctx, e.User(), data.String("내용"), attachment)
+	content, err := chatbot.GetChatBot().GetResponse(e.Ctx, e.User(), e.Channel().ID(), data.String("내용"), attachment)
 	if err != nil {
 		slog.Error("failed to respond chat.", "user_id", e.User().ID, "error", err)
 		_, err := e.UpdateInteractionResponse(
