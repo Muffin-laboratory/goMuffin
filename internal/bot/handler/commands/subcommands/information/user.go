@@ -6,7 +6,6 @@ import (
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository"
 	"github.com/Muffin-laboratory/goMuffin/internal/repository/query"
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 	"github.com/disgoorg/disgo/discord"
 	"github.com/disgoorg/disgo/handler"
 )
@@ -49,7 +48,7 @@ func InfoUser(e *handler.CommandEvent) error {
 				).
 					WithAccessory(discord.NewThumbnail(*bot.AvatarURL())),
 				discord.NewTextDisplayf("- **현재 모드**\n> `%s`", dbUser.ModeString()),
-				discord.NewTextDisplayf("- **답장 멘션 사용 여부**\n> `%s`", utils.BoolToString(dbUser.ReplyUser)),
+				discord.NewTextDisplayf("- **답장 멘션 사용 여부**\n> `%s`", boolToString(dbUser.ReplyUser)),
 				discord.NewTextDisplayf("- **마지막 채팅 이후 12 시간이 지났을 때 새로운 채팅 생성 여부**\n> `%s`", boolToString(dbUser.CreateNewChatAfter12Hours)),
 				discord.NewTextDisplayf("- **현재 채팅**\n> %s", currentChat.Name),
 				discord.NewTextDisplayf("- **총 채팅량**\n> `%d`개", chatLength),
