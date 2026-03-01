@@ -45,8 +45,12 @@ func ParseResult(content string, s *discordgo.Session, m any) string {
 	return result
 }
 
-func getFiles(client *genai.Client, attachments *[]*discordgo.MessageAttachment) (files []*genai.File, err error) {
-	for _, attachment := range *attachments {
+func getFiles(client *genai.Client, attachments []*discordgo.MessageAttachment) (files []*genai.File, err error) {
+	for _, attachment := range attachments {
+		if attachment == nil {
+			continue
+		}
+
 		var file *genai.File
 		var resp *http.Response
 
