@@ -34,6 +34,7 @@ type UserSettings struct {
 	replyUser                 bool
 	createNewChatAfter12Hours bool
 	prompt                    string
+	chatPerChannel            bool
 }
 
 var userSettings = make(map[string]*UserSettings)
@@ -75,6 +76,7 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 			),
 		discord.NewTextDisplay("- **12 시간 후 새로운 채팅**\n> 해당 봇과 대화하고 12시간 뒤에 새로운 대화를 시작할지 여부를 정해요."),
 		discord.NewTextDisplay("- **사용자 지정 프롬프트 설정**\n> 머핀 봇 전체에 적용되는 사용자 지정 프롬프트를 설정해요."),
+		discord.NewTextDisplay("- **채널당 채팅 모드**\n> 채널을 채팅으로 취급해요. 따라서 채팅 내용을 해당 채널을 볼 수 있는 사람과 공유해요."),
 		discord.NewActionRow(
 			discord.NewPrimaryButton(
 				fmt.Sprintf("모드: %s", repository.ModeString(s.chattingMode)),
@@ -93,6 +95,11 @@ func (s *UserSettings) MakeContainer() discord.ContainerComponent {
 			discord.NewPrimaryButton(
 				"사용자 지정 프롬프트 설정",
 				customid.MakeUserSettingsPrompt(s.ID),
+			),
+			discord.NewButton(
+				getStyleFromBool(s.chatPerChannel),
+				fmt.Sprintf("채널당 채팅: %s", boolToString(s.chatPerChannel)),
+				customid.MakeUserSettingsChatPerChannel(s.ID), "", 0,
 			),
 		),
 		discord.NewActionRow(
@@ -144,6 +151,10 @@ func (s *UserSettings) PromptModal(e *handler.ComponentEvent) error {
 func (s *UserSettings) SetPrompt(prompt string) *UserSettings {
 	s.prompt = prompt
 	return s
+}
+
+func (s *UserSettings) ToggleChatPerChannel() {
+	s.chatPerChannel = !s.chatPerChannel
 }
 
 func (s *UserSettings) Submit(ctx context.Context) error {

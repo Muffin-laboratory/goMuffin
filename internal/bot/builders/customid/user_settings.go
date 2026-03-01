@@ -3,14 +3,15 @@ package customid
 import "fmt"
 
 const (
-	UserSettings             = "/muffin/user/settings"
-	UserSettingsChattingMode = "/muffin/user/settings/chatting_mode"
-	UserSettingsReplyUser    = "/muffin/user/settings/reply_user"
-	UserSettings12Hours      = "/muffin/user/settings/12hours"
-	UserSettingsPrompt       = "/muffin/user/settings/prompt"
-	UserSettingsPromptSet    = "/muffin/user/settings/prompt/set"
-	UserSettingsSubmit       = "/muffin/user/settings/submit"
-	UserSettingsCancel       = "/muffin/user/settings/cancel"
+	UserSettings               = "/muffin/user/settings"
+	UserSettingsChattingMode   = UserSettings + "/chatting_mode"
+	UserSettingsReplyUser      = UserSettings + "/reply_user"
+	UserSettings12Hours        = UserSettings + "/12hours"
+	UserSettingsPrompt         = UserSettings + "/prompt"
+	UserSettingsPromptSet      = UserSettings + "/prompt/set"
+	UserSettingsChatPerCHannel = UserSettings + "/chat_per_channel"
+	UserSettingsSubmit         = UserSettings + "/submit"
+	UserSettingsCancel         = UserSettings + "/cancel"
 )
 
 func MakeUserSettingsChattingMode(id string) string {
@@ -27,6 +28,10 @@ func MakeUserSettings12Hours(id string) string {
 
 func MakeUserSettingsPrompt(id string) string {
 	return fmt.Sprintf("%s/%s", UserSettingsPrompt, id)
+}
+
+func MakeUserSettingsChatPerChannel(id string) string {
+	return fmt.Sprintf("%s/%s", UserSettingsChatPerCHannel, id)
 }
 
 func MakeUserSettingsSubmit(id string) string {

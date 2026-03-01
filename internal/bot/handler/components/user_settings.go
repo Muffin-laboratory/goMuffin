@@ -53,6 +53,17 @@ func init() {
 				return builders.GetUserSettings(e.Vars["id"]).PromptModal(e)
 			})
 
+			r.Component("/chat_per_channel/{id}", func(e *handler.ComponentEvent) error {
+				settings := builders.GetUserSettings(e.Vars["id"])
+
+				settings.ToggleChatPerChannel()
+				return e.UpdateMessage(
+					discord.NewMessageUpdateV2([]discord.LayoutComponent{
+						settings.MakeContainer(),
+					}),
+				)
+			})
+
 			r.Component("/cancel/{id}", func(e *handler.ComponentEvent) error {
 				builders.GetUserSettings(e.Vars["id"]).Cancel()
 
