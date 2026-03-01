@@ -2,6 +2,7 @@ package chatbot
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math/rand"
@@ -28,7 +29,7 @@ func (c *Chatbot) getAIResponse(ctx context.Context, user discord.User, channelI
 		chatID = dbUser.ChatID
 
 		if _, err := repository.GetDatabase().Chats.FindOne(ctx, query.ChatQueryBuilder().SetUserID(int64(user.ID))); err != nil {
-			if err == mongo.ErrNoDocuments {
+			if errors.Is(err, mongo.ErrNoDocuments) {
 				if _, err = repository.GetDatabase().Chats.Create(ctx, int64(user.ID), dbUser.Prompt, fmt.Sprintf("새로운 채팅 %06d", rand.Intn(999999))); err != nil {
 					return "", err
 				}
