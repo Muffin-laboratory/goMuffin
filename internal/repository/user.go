@@ -22,6 +22,7 @@ type User struct {
 	ChattingMode              ChattingMode  `bson:"chatting_mode"`
 	ReplyUser                 bool          `bson:"reply_user"`
 	CreateNewChatAfter12Hours bool          `bson:"create_new_chat_after_12_hours"`
+	ChatPerChannel            bool          `bson:"chat_per_channel"`
 	Prompt                    string        `bson:"prompt"`
 }
 
@@ -33,6 +34,7 @@ type UserUpdate struct {
 	ChattingMode              *ChattingMode  `bson:"chatting_mode,omitempty"`
 	ReplyUser                 *bool          `bson:"reply_user,omitempty"`
 	CreateNewChatAfter12Hours *bool          `bson:"create_new_chat_after_12_hours,omitempty"`
+	ChatPerChannel            *bool          `bson:"chat_per_channel,omitempty"`
 	Prompt                    *string        `bson:"prompt,omitempty"`
 }
 

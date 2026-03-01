@@ -163,6 +163,7 @@ func (s *UserSettings) Submit(ctx context.Context) error {
 		ReplyUser:                 &s.replyUser,
 		CreateNewChatAfter12Hours: &s.createNewChatAfter12Hours,
 		Prompt:                    &s.prompt,
+		ChatPerChannel:            &s.chatPerChannel,
 	}); err != nil {
 		return err
 	}
