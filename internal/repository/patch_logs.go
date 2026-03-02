@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -20,6 +20,9 @@ type releaseCacheManager struct {
 	releases []Release
 	mu       *sync.RWMutex
 }
+
+//go:embed old_muffin_patch_logs.json
+var oldMuffinSecondReleasesBytes []byte
 
 var releaseManager = &releaseCacheManager{[]Release{}, &sync.RWMutex{}}
 
@@ -59,14 +62,11 @@ func Releases() ([]Release, error) {
 		return nil, err
 	}
 
-	bytes, err := os.ReadFile("old_muffin_patch_logs.json")
-	if err != nil {
-		return nil, err
-	}
-
 	var oldMuffinSecondReleases []Release
-	if err = json.Unmarshal(bytes, &oldMuffinSecondReleases); err != nil {
-		return nil, err
+	if len(oldMuffinSecondReleasesBytes) > 0 {
+		if err = json.Unmarshal(oldMuffinSecondReleasesBytes, &oldMuffinSecondReleases); err != nil {
+			return nil, err
+		}
 	}
 
 	for _, release := range goMuffinReleases {
