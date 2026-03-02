@@ -69,19 +69,23 @@ func init() {
 				r.Autocomplete("/"+patchNotesCommandName, func(e *handler.AutocompleteEvent) error {
 					var selectedTags []discord.AutocompleteChoice
 
-					tags := repository.Tags()
+					releases, err := repository.Releases()
+					if err != nil {
+						return err
+					}
+
 					focused := e.Data.Focused().String()
 
-					for i, tag := range tags {
+					for i, release := range releases {
 						if focused == "" {
 							selectedTags = append(selectedTags, discord.AutocompleteChoiceInt{
-								Name:  tag,
+								Name:  release.Version,
 								Value: i + 1,
 							})
 						} else {
-							if strings.Contains(tag, focused) {
+							if strings.Contains(release.Version, focused) {
 								selectedTags = append(selectedTags, discord.AutocompleteChoiceInt{
-									Name:  tag,
+									Name:  release.Version,
 									Value: i + 1,
 								})
 							}

@@ -1,12 +1,12 @@
 package repository
 
 import (
+	"context"
 	"encoding/json"
-	"log/slog"
+	"fmt"
 	"os"
-	"os/exec"
-	"strings"
 	"sync"
+	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/configs"
 )
@@ -16,66 +16,78 @@ type Release struct {
 	Body    string `json:"body"`
 }
 
-var oldReleases []Release
-var oldReleasesOnce sync.Once
-
-func OldPatchLogs() []Release {
-	oldReleasesOnce.Do(func() {
-		if configs.Configs().GitHub.OldRepository != "" {
-			bytes, err := os.ReadFile("old_muffin_patch_logs.json")
-			if err != nil {
-				return
-			}
-
-			if err = json.Unmarshal(bytes, &oldReleases); err != nil {
-				return
-			}
-		}
-	})
-
-	oldReleasesCopy := make([]Release, len(oldReleases))
-	copy(oldReleasesCopy, oldReleases)
-	return oldReleasesCopy
+type releaseCacheManager struct {
+	releases []Release
+	mu       *sync.RWMutex
 }
 
-var tags []string
-var tagsOnce sync.Once
+var releaseManager = &releaseCacheManager{[]Release{}, &sync.RWMutex{}}
 
-func Tags() []string {
-	tagsOnce.Do(func() {
-		var out strings.Builder
+var (
+	ErrConfigNotDefined = fmt.Errorf("config is not defined")
+)
 
-		cmd := exec.Command("git", "--no-pager", "tag", "--sort=-creatordate")
-		cmd.Stdout = &out
+func Releases() ([]Release, error) {
+	releaseManager.mu.RLock()
+	if len(releaseManager.releases) != 0 {
+		releasesCopy := make([]Release, len(releaseManager.releases))
+		copy(releasesCopy, releaseManager.releases)
+		releaseManager.mu.RUnlock()
+		return releasesCopy, nil
+	}
 
-		if err := cmd.Run(); err != nil {
-			slog.Error("[Fatal] error while creating patch log choices", "error", err)
-			os.Exit(1)
-		}
+	releaseManager.mu.RUnlock()
 
-		list := strings.Split(out.String(), "\n")
+	var patchedReleases []Release
 
-		if len(list) > 25 {
-			list = list[:25]
-		}
+	config := configs.Configs().GitHub
+	client := GetGHClient()
 
-		for _, v := range list {
-			if v == "" {
-				continue
-			}
+	isOwnerEmpty := configs.Configs().GitHub.Owner == ""
+	isRepoEmpty := configs.Configs().GitHub.Repository == ""
+	if isOwnerEmpty && isRepoEmpty {
+		return nil, ErrConfigNotDefined
+	}
 
-			tags = append(tags, v)
-		}
+	goMuffinReleases, _, err := client.Repositories.ListReleases(context.Background(), config.Owner, config.Repository, nil)
+	if err != nil {
+		return nil, err
+	}
 
-		tags = append(tags, "4.1.1-Pudding", "4.1.0-Pudding", "4.0.0-Pudding")
-		tags = append(tags, "3.2.1-Cake", "3.2.0-Cake", "3.1.0-Cake", "3.0.2-Cake", "3.0.1-Cake", "3.0.0-Cake")
+	oldMuffinReleases, _, err := client.Repositories.ListReleases(context.Background(), config.Owner, config.OldRepository, nil)
+	if err != nil {
+		return nil, err
+	}
 
-		for _, v := range OldPatchLogs() {
-			tags = append(tags, v.Version)
-		}
-	})
+	bytes, err := os.ReadFile("old_muffin_patch_logs.json")
+	if err != nil {
+		return nil, err
+	}
 
-	tagsCopy := make([]string, len(tags))
-	copy(tagsCopy, tags)
-	return tagsCopy
+	var oldMuffinSecondReleases []Release
+	if err = json.Unmarshal(bytes, &oldMuffinSecondReleases); err != nil {
+		return nil, err
+	}
+
+	for _, release := range goMuffinReleases {
+		patchedReleases = append(patchedReleases, Release{*release.TagName, *release.Body})
+	}
+
+	for _, release := range oldMuffinReleases {
+		patchedReleases = append(patchedReleases, Release{*release.TagName, *release.Body})
+	}
+
+	patchedReleases = append(patchedReleases, oldMuffinSecondReleases...)
+	releaseManager.mu.Lock()
+	copy(releaseManager.releases, patchedReleases)
+	releaseManager.mu.Unlock()
+
+	go func() {
+		time.Sleep(1 * time.Hour)
+		releaseManager.mu.Lock()
+		releaseManager.releases = nil
+		releaseManager.mu.Unlock()
+	}()
+
+	return patchedReleases, nil
 }
