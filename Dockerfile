@@ -1,4 +1,4 @@
-FROM golang:1.24.5
+FROM golang:1.26.0
 
 # 폴더 생성
 RUN mkdir /app

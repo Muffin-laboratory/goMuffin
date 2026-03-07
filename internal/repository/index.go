@@ -24,7 +24,7 @@ func indexItemBuilder(ids ...bson.ObjectID) *indexItem {
 }
 
 type chatIndex struct {
-	userID *string
+	userID *int64
 	name   *string
 }
 
@@ -32,7 +32,7 @@ func chatIndexBuilder() *chatIndex {
 	return &chatIndex{}
 }
 
-func (c *chatIndex) setUserID(userID string) *chatIndex {
+func (c *chatIndex) setUserID(userID int64) *chatIndex {
 	c.userID = &userID
 	return c
 }
@@ -46,7 +46,7 @@ func (c *chatIndex) build() string {
 	index := "chat:"
 
 	if c.userID != nil {
-		index += fmt.Sprintf("userID:%s", *c.userID)
+		index += fmt.Sprintf("userID:%d", *c.userID)
 	}
 
 	if c.name != nil {
@@ -58,7 +58,7 @@ func (c *chatIndex) build() string {
 
 type memoryIndex struct {
 	chatID *bson.ObjectID
-	userID *string
+	userID *int64
 }
 
 func memoryIndexBuilder() *memoryIndex {
@@ -70,7 +70,7 @@ func (m *memoryIndex) setChatID(chatID bson.ObjectID) *memoryIndex {
 	return m
 }
 
-func (m *memoryIndex) setUserID(userID string) *memoryIndex {
+func (m *memoryIndex) setUserID(userID int64) *memoryIndex {
 	m.userID = &userID
 	return m
 }
@@ -83,14 +83,14 @@ func (m *memoryIndex) build() string {
 	}
 
 	if m.userID != nil {
-		index += fmt.Sprintf("&userID:%s", *m.userID)
+		index += fmt.Sprintf("&userID:%d", *m.userID)
 	}
 
 	return index
 }
 
 type knowledgeIndex struct {
-	userID  *string
+	userID  *int64
 	command *string
 }
 
@@ -98,7 +98,7 @@ func knowledgeIndexBuilder() *knowledgeIndex {
 	return &knowledgeIndex{}
 }
 
-func (k *knowledgeIndex) setUserID(userID string) *knowledgeIndex {
+func (k *knowledgeIndex) setUserID(userID int64) *knowledgeIndex {
 	k.userID = &userID
 	return k
 }
@@ -112,7 +112,7 @@ func (k *knowledgeIndex) build() string {
 	index := "knowledge:"
 
 	if k.userID != nil {
-		index += fmt.Sprintf("userID:%s", *k.userID)
+		index += fmt.Sprintf("userID:%d", *k.userID)
 	}
 
 	if k.command != nil {

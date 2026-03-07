@@ -1,38 +1,58 @@
 package loader
 
 import (
+	"strings"
 	"sync"
+	"time"
 
-	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
+	"github.com/Muffin-laboratory/goMuffin/internal/configs"
+	"github.com/disgoorg/disgo/discord"
+	"github.com/disgoorg/disgo/handler"
 )
-
-type run func(inter *builders.InteractionCreate) error
-type parse func(inter *builders.InteractionCreate) bool
 
 type Discommand struct {
-	Commands   map[string]*Command
-	Components []*Component
-	Modals     []*Modal
+	router      handler.Router
+	commands    []discord.ApplicationCommandCreate
+	devCommands []discord.ApplicationCommandCreate
 }
 
-var (
-	commandMutex   sync.Mutex
-	componentMutex sync.Mutex
-	modalMutex     sync.Mutex
-)
-
 var once sync.Once
-
 var instance *Discommand
+var timeout = 1 * time.Minute
+
+func Timeout() time.Duration {
+	return timeout
+}
+
+func initRouter() handler.Router {
+	r := handler.New()
+	r.Use(middlewares.SendErrorMessage())
+
+	if !strings.Contains(configs.MuffinVersion, "release") {
+		r.Use(middlewares.ShowPreviewWarningMessage())
+	}
+
+	return r
+}
 
 func GetDiscommand() *Discommand {
 	once.Do(func() {
 		instance = &Discommand{
-			Commands:   map[string]*Command{},
-			Components: []*Component{},
-			Modals:     []*Modal{},
+			router: initRouter(),
 		}
+
 	})
 
 	return instance
+}
+
+func (d *Discommand) Router() handler.Router {
+	return d.router
+}
+
+func (d *Discommand) RegisterHandler(handlerFunc func(r handler.Router)) {
+	d.Router().Group(func(r handler.Router) {
+		handlerFunc(r)
+	})
 }

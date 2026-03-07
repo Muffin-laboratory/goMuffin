@@ -15,8 +15,13 @@ func (q *MemoryQuery) SetChatID(chatID bson.ObjectID) *MemoryQuery {
 	return q
 }
 
-func (q *MemoryQuery) SetUserID(userID string) *MemoryQuery {
+func (q *MemoryQuery) SetUserID(userID int64) *MemoryQuery {
 	q.filter = append(q.filter, bson.E{Key: "user_id", Value: userID})
+	return q
+}
+
+func (q *MemoryQuery) SetChannelID(channelID int64) *MemoryQuery {
+	q.filter = append(q.filter, bson.E{Key: "channel_id", Value: channelID})
 	return q
 }
 

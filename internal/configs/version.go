@@ -1,41 +1,22 @@
 package configs
 
 import (
-	"fmt"
-	"os/exec"
 	"strconv"
-	"strings"
 	"time"
-
-	"github.com/Muffin-laboratory/goMuffin/internal/utils"
 )
 
-var MuffinVersion = fmt.Sprintf("7.3.5-pretzel_%s.260301a", CurrentBranch)
+var (
+	MuffinVersion = "0.0.0-local_debug.0002110000.000211"
+	updatedString = "0002110000"
+)
 
-var updatedString string = utils.RegexpDecimals.FindAllStringSubmatch(MuffinVersion, -1)[3][0]
-
-var UpdatedAt *time.Time = func() *time.Time {
+func UpdatedAt() *time.Time {
 	year, _ := strconv.Atoi("20" + updatedString[0:2])
 	monthInt, _ := strconv.Atoi(updatedString[2:4])
 	month := time.Month(monthInt)
 	day, _ := strconv.Atoi(updatedString[4:6])
-	time := time.Date(year, month, day, 0, 0, 0, 0, &time.Location{})
+	hour, _ := strconv.Atoi(updatedString[6:8])
+	minute, _ := strconv.Atoi(updatedString[8:10])
+	time := time.Date(year, month, day, hour, minute, 0, 0, time.Local)
 	return &time
-}()
-
-var CurrentBranch = func() string {
-	var out strings.Builder
-
-	cmd := exec.Command("git", "branch", "--show-current")
-	cmd.Stdout = &out
-
-	if err := cmd.Run(); err != nil {
-		return "release"
-	}
-
-	if strings.Contains(out.String(), "main") {
-		return "release"
-	}
-
-	return strings.Trim(out.String(), "\n")
-}()
+}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/Muffin-laboratory/goMuffin/internal/cache"
@@ -13,12 +14,13 @@ import (
 
 type Memory struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
-	UserID    string        `bson:"user_id,omitempty"`
-	Content   string        `bson:"content,omitempty"`
-	Answer    string        `bson:"answer,omitempty"`
+	UserID    int64         `bson:"user_id"`
+	Content   string        `bson:"content"`
+	Answer    string        `bson:"answer"`
 	ChatID    bson.ObjectID `bson:"chat_id,omitempty"`
-	CreatedAt time.Time     `bson:"created_at,omitempty"`
+	CreatedAt time.Time     `bson:"created_at"`
 	Files     []File        `bson:"files,omitempty"`
+	ChannelID int64         `bson:"channel_id,omitempty"`
 }
 
 func (c *Memory) ToContents() []*genai.Content {
@@ -70,14 +72,19 @@ func (c *MemoryCollection) createCache(memory Memory) {
 	createIndexCache(c.indexes, memory.ID, index)
 }
 
-func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID, content, answer string, files []File) (*Memory, error) {
+func (c *MemoryCollection) Create(ctx context.Context, chatID bson.ObjectID, userID int64, content, answer string, files []File, channelID int64) (*Memory, error) {
 	data := Memory{
 		UserID:    userID,
 		Content:   content,
 		Answer:    answer,
-		ChatID:    chatID,
 		CreatedAt: time.Now(),
 		Files:     files,
+	}
+
+	if channelID != 0 {
+		data.ChannelID = channelID
+	} else {
+		data.ChatID = chatID
 	}
 
 	createdMemory, err := c.coll.InsertOne(ctx, data)
@@ -100,12 +107,12 @@ func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) 
 		case "chat_id":
 			index.setChatID(filter.Value.(bson.ObjectID))
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		}
 	}
 
 	if idx, ok := c.indexes.Get(index.build()); ok {
-		var memory []Memory
+		memory := make([]Memory, len(idx.ids))
 
 		idx.mu.RLock()
 		for _, id := range idx.ids {
@@ -125,7 +132,12 @@ func (c *MemoryCollection) Find(ctx context.Context, filter query.QueryBuilder) 
 		return nil, err
 	}
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close memory cursor", "error", err)
+		}
+	}()
 
 	var memory []Memory
 	var ids []bson.ObjectID
@@ -176,7 +188,7 @@ func (c *MemoryCollection) DeleteMany(ctx context.Context, filter query.QueryBui
 		case "chat_id":
 			index.setChatID(filter.Value.(bson.ObjectID))
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		}
 	}
 

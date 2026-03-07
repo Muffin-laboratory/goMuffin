@@ -2,7 +2,8 @@ package repository
 
 import (
 	"context"
-	"log"
+	"log/slog"
+	"os"
 	"sync"
 	"time"
 
@@ -29,25 +30,28 @@ var once sync.Once
 
 func GetDatabase() *MuffinDatabase {
 	once.Do(func() {
-		client, err := mongo.Connect(options.Client().ApplyURI(configs.GetConfig().Database.URL))
+		client, err := mongo.Connect(options.Client().ApplyURI(configs.Configs().Database.URL))
 		if err != nil {
-			log.Panicln(err)
+			slog.Error("error while create database.", "error", err)
+			os.Exit(1)
 		}
 
 		instance = &MuffinDatabase{
 			Client:    client,
-			Knowledge: newKnowledgeCollection(client.Database(configs.GetConfig().Database.Name).Collection("learn")),
-			Texts:     newTextCollection(client.Database(configs.GetConfig().Database.Name).Collection("text")),
-			Memory:    newMemoryCollection(client.Database(configs.GetConfig().Database.Name).Collection("memory")),
-			Users:     &UserCollection{client.Database(configs.GetConfig().Database.Name).Collection("user"), cache.New[string, User](timeToExpire)},
-			Chats:     newChatCollection(client.Database(configs.GetConfig().Database.Name).Collection("chat")),
+			Knowledge: newKnowledgeCollection(client.Database(configs.Configs().Database.Name).Collection("knowledge")),
+			Texts:     newTextCollection(client.Database(configs.Configs().Database.Name).Collection("text")),
+			Memory:    newMemoryCollection(client.Database(configs.Configs().Database.Name).Collection("memory")),
+			Users:     newUserCollection(client.Database(configs.Configs().Database.Name).Collection("user")),
+			Chats:     newChatCollection(client.Database(configs.Configs().Database.Name).Collection("chat")),
 		}
+
+		slog.Info("database is created.")
 	})
 	return instance
 }
 
-func (d *MuffinDatabase) Disconnect() {
-	GetDatabase().Client.Disconnect(context.TODO())
+func (d *MuffinDatabase) Disconnect() error {
+	return GetDatabase().Client.Disconnect(context.Background())
 }
 
 func createIndexCache(im *cache.CacheManager[string, *indexItem], id bson.ObjectID, index indexBuilder) {

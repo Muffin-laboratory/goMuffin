@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -15,7 +16,7 @@ type Knowledge struct {
 	ID        bson.ObjectID `bson:"_id,omitempty"`
 	Command   string        `bson:"command,omitempty"`
 	Result    string        `bson:"result,omitempty"`
-	UserID    string        `bson:"user_id,omitempty"`
+	UserID    int64         `bson:"user_id,omitempty"`
 	CreatedAt time.Time     `bson:"created_at,omitempty"`
 }
 
@@ -46,7 +47,7 @@ func (c *KnowledgeCollection) createCache(data Knowledge) {
 	createIndexCache(c.indexes, data.ID, index)
 }
 
-func (c *KnowledgeCollection) Create(ctx context.Context, userID, command, answer string) (*Knowledge, error) {
+func (c *KnowledgeCollection) Create(ctx context.Context, userID int64, command, answer string) (*Knowledge, error) {
 	data := Knowledge{
 		UserID:    userID,
 		Command:   command,
@@ -71,7 +72,7 @@ func (c *KnowledgeCollection) Find(ctx context.Context, filter query.QueryBuilde
 	for _, filter := range rawFilter {
 		switch filter.Key {
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		case "command":
 			if value, ok := filter.Value.(string); ok {
 				index.setCommand(value)
@@ -80,7 +81,7 @@ func (c *KnowledgeCollection) Find(ctx context.Context, filter query.QueryBuilde
 	}
 
 	if idx, ok := c.indexes.Get(index.build()); ok {
-		var knowledge []Knowledge
+		knowledge := make([]Knowledge, len(idx.ids))
 
 		idx.mu.RLock()
 		for _, id := range idx.ids {
@@ -103,7 +104,12 @@ func (c *KnowledgeCollection) Find(ctx context.Context, filter query.QueryBuilde
 		return nil, err
 	}
 
-	defer cur.Close(ctx)
+	defer func() {
+		ctx := context.WithoutCancel(ctx)
+		if err := cur.Close(ctx); err != nil {
+			slog.Error("failed to close knowledge cursor", "error", err)
+		}
+	}()
 
 	if err = cur.All(ctx, &knowledge); err != nil {
 		return nil, err
@@ -132,7 +138,7 @@ func (c *KnowledgeCollection) DeleteMany(ctx context.Context, filter query.Query
 	for _, filter := range rawFilter {
 		switch filter.Key {
 		case "user_id":
-			index.setUserID(filter.Value.(string))
+			index.setUserID(filter.Value.(int64))
 		case "command":
 			index.setCommand(filter.Value.(string))
 		}

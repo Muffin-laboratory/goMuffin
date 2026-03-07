@@ -1,6 +1,17 @@
 APP_NAME := goMuffin
 BIN_DIR := build
 
+VERSION := 8.0.0
+CODENAME := tiramisu
+
+CONFIG_PKG := $(shell go list ./internal/configs)
+
+BRANCH := $(shell git branch --show-current)
+DATE := $(shell date +%y%m%d%H%M)
+COMMIT_HASH := $(shell git rev-parse --short HEAD)
+LD_FLAGS := -ldflags "-X '$(CONFIG_PKG).MuffinVersion=$(VERSION)-$(CODENAME)_$(BRANCH).$(DATE).$(COMMIT_HASH)' \
+-X '$(CONFIG_PKG).updatedString=$(DATE)'"
+
 EXT :=
 ifeq ($(OS),Windows_NT)
 	EXT := .exe
@@ -15,7 +26,7 @@ all: build
 
 build:
 	@mkdir -p $(BIN_DIR)
-	@go build -o $(BIN) $(PKG)
+	@go build $(LD_FLAGS) -o $(BIN) $(PKG)
 
 run:
 	@go run $(PKG)
@@ -31,3 +42,9 @@ fmt:
 
 vet:
 	@go vet $(PKG)
+
+lint:
+	@golangci-lint run
+
+migration:
+	@go run ./internal/cmd/migration
