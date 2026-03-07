@@ -6,7 +6,7 @@ services:
       - "./.env"
     volumes:
       - "/etc/localtime:/etc/localtime"
-      - "logs:logs"
+      - "./logs:/app/logs"
     depends_on:
       - database
     environment:
