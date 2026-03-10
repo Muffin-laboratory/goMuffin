@@ -1,7 +1,9 @@
 APP_NAME := goMuffin
 BIN_DIR := build
 
-VERSION := 8.0.0
+MAJOR := 8
+MINER := 1
+PATCH := 0
 CODENAME := tiramisu
 
 CONFIG_PKG := $(shell go list ./internal/configs)
@@ -9,7 +11,7 @@ CONFIG_PKG := $(shell go list ./internal/configs)
 BRANCH := $(shell git branch --show-current)
 DATE := $(shell date +%y%m%d%H%M)
 COMMIT_HASH := $(shell git rev-parse --short HEAD)
-LD_FLAGS := -ldflags "-X '$(CONFIG_PKG).MuffinVersion=$(VERSION)-$(CODENAME)_$(BRANCH).$(DATE).$(COMMIT_HASH)' \
+LD_FLAGS := -ldflags "-X '$(CONFIG_PKG).MuffinVersion=$(MAJOR).$(MINER).$(PATCH)-$(CODENAME)_$(BRANCH).$(DATE).$(COMMIT_HASH)' \
 -X '$(CONFIG_PKG).updatedString=$(DATE)'"
 
 EXT :=

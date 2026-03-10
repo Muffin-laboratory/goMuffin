@@ -57,14 +57,9 @@ func Releases() ([]Release, error) {
 		return nil, err
 	}
 
-	oldMuffinReleases, _, err := client.Repositories.ListReleases(context.Background(), config.Owner, config.OldRepository, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var oldMuffinSecondReleases []Release
+	var oldMuffinReleases []Release
 	if len(oldMuffinSecondReleasesBytes) > 0 {
-		if err = json.Unmarshal(oldMuffinSecondReleasesBytes, &oldMuffinSecondReleases); err != nil {
+		if err = json.Unmarshal(oldMuffinSecondReleasesBytes, &oldMuffinReleases); err != nil {
 			return nil, err
 		}
 	}
@@ -73,11 +68,7 @@ func Releases() ([]Release, error) {
 		patchedReleases = append(patchedReleases, Release{*release.TagName, *release.Body})
 	}
 
-	for _, release := range oldMuffinReleases {
-		patchedReleases = append(patchedReleases, Release{*release.TagName, *release.Body})
-	}
-
-	patchedReleases = append(patchedReleases, oldMuffinSecondReleases...)
+	patchedReleases = append(patchedReleases, oldMuffinReleases...)
 	releaseManager.mu.Lock()
 	copy(releaseManager.releases, patchedReleases)
 	releaseManager.mu.Unlock()
