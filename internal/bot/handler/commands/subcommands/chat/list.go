@@ -18,10 +18,6 @@ func List(e *handler.CommandEvent) error {
 		return err
 	}
 
-	if dbUser.ChattingMode == repository.ChattingMuffinMode {
-		return chatSendErrorMessage(e)
-	}
-
 	data, err := repository.GetDatabase().Chats.Find(e.Ctx, query.ChatQueryBuilder().SetUserID(int64(e.User().ID)))
 	if err != nil {
 		return err

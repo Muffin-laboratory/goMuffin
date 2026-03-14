@@ -15,10 +15,6 @@ func Create(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 		return err
 	}
 
-	if dbUser.ChattingMode == repository.ChattingMuffinMode {
-		return chatSendErrorMessage(e)
-	}
-
 	var name string
 	if value, ok := data.OptString("이름"); ok {
 		name = value

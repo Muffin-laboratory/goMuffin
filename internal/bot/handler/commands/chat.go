@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"github.com/Muffin-laboratory/goMuffin/internal/bot/builders"
 	subcommands "github.com/Muffin-laboratory/goMuffin/internal/bot/handler/commands/subcommands/chat"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader"
 	"github.com/Muffin-laboratory/goMuffin/internal/bot/loader/middlewares"
@@ -117,17 +118,50 @@ func init() {
 
 		r.Route("/"+name, func(r handler.Router) {
 			r.Group(func(r handler.Router) {
+				r.Use(checkAIMode())
 				r.SlashCommand("/"+createCommandName, subcommands.Create)
 			})
 
 			r.Group(func(r handler.Router) {
 				r.Use(middleware.Defer(discord.InteractionTypeApplicationCommand, false, true))
 
-				r.Command("/"+listCommandName, subcommands.List)
+				r.Group(func(r handler.Router) {
+					r.Use(checkAIMode())
+					r.Command("/"+listCommandName, subcommands.List)
+					r.SlashCommand("/"+deleteCommandName, subcommands.Delete)
+				})
+
 				r.SlashCommand("/"+chatCommandName, subcommands.Chat)
-				r.SlashCommand("/"+deleteCommandName, subcommands.Delete)
 				r.Command("/"+setCommandName, subcommands.Settings)
 			})
 		})
 	})
+}
+
+func checkAIMode() handler.Middleware {
+	return func(next handler.Handler) handler.Handler {
+		return func(e *handler.InteractionEvent) error {
+			dbUser, err := repository.GetDatabase().Users.FindByID(e.Ctx, int64(e.User().ID))
+			if err != nil {
+				return err
+			}
+
+			if dbUser.ChattingMode == repository.ChattingMuffinMode {
+				container := builders.MakeErrorContainer("채팅모드가 %s여야해요.", repository.ModeString(repository.ChattingAIMode))
+
+				if err := e.CreateMessage(
+					discord.NewMessageCreateV2(container).
+						WithEphemeral(true),
+				); err != nil {
+					_, err = e.UpdateInteractionResponse(
+						discord.NewMessageUpdateV2([]discord.LayoutComponent{container}),
+					)
+				}
+
+				return err
+			}
+
+			return next(e)
+		}
+	}
 }

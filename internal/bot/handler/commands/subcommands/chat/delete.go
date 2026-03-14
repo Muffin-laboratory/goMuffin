@@ -17,10 +17,6 @@ func Delete(data discord.SlashCommandInteractionData, e *handler.CommandEvent) e
 		return err
 	}
 
-	if dbUser.ChattingMode == repository.ChattingMuffinMode {
-		return chatSendErrorMessage(e)
-	}
-
 	filter := query.ChatQueryBuilder().SetUserID(dbUser.ID).SetName(name)
 	chats, err := repository.GetDatabase().Chats.Find(e.Ctx, filter)
 	if err != nil {
